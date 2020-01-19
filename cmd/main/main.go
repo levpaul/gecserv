@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
+	"github.com/levpaul/idolscape-backend/internal/network"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"net/http"
 	"time"
 
@@ -12,6 +14,7 @@ import (
 )
 
 func main() {
+	rand.Seed(time.Now().UnixNano())
 	startWebServer()
 }
 
@@ -76,6 +79,7 @@ func newRTCSessionHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func initPeerConnection(peerConnection *webrtc.PeerConnection) (*webrtc.DataChannel, error) {
+	var conn *network.Connection
 	// Create a datachannel with label 'data'
 	dataChannel, err := peerConnection.CreateDataChannel("data", nil)
 	if err != nil {
@@ -96,10 +100,14 @@ func initPeerConnection(peerConnection *webrtc.PeerConnection) (*webrtc.DataChan
 	dataChannel.OnOpen(func() {
 		fmt.Printf("Data channel '%s'-'%d' open. Random messages will now be sent to any connected DataChannels every 5 seconds\n", dataChannel.Label(), dataChannel.ID())
 
+		conn = network.NewConnection(peerConnection, dataChannel)
+		log.Printf("New connection opened; uuid: '%s'\n", conn.Uuid)
+
+		initX, initY := conn.GS.GetPos()
+		dataChannel.SendText(fmt.Sprintf(`{"type": "initpos", "x":%f,"y":%f}`, initX, initY))
+
 		ticker := time.NewTicker(5 * time.Second)
-
 		dataChannel.OnClose(func() { ticker.Stop() })
-
 		for range ticker.C {
 			message := signal.RandSeq(15)
 			fmt.Printf("Sending '%s'\n", message)
@@ -115,7 +123,16 @@ func initPeerConnection(peerConnection *webrtc.PeerConnection) (*webrtc.DataChan
 
 	// Register text message handling
 	dataChannel.OnMessage(func(msg webrtc.DataChannelMessage) {
-		fmt.Printf("Message from DataChannel '%s': '%s'\n", dataChannel.Label(), string(msg.Data))
+		fmt.Printf("[%s] Message from DataChannel '%s': '%s'\n", conn.Uuid, dataChannel.Label(), string(msg.Data))
+		// Assume message is a move message
+		//var move = new(network.MoveMessage)
+		//move, err := json.Unmarshal(msg.Data)
+		//if err != nil {
+		//	log.Printf("Error reading message, err='%s'\n", err)
+		//	return
+		//}
+		//uuid
+
 	})
 	return dataChannel, nil
 }
