@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/levpaul/idolscape-backend/internal/network"
 	"io/ioutil"
@@ -99,8 +100,7 @@ func initPeerConnection(peerConnection *webrtc.PeerConnection) (*webrtc.DataChan
 	dataChannel.OnOpen(func() {
 		conn = network.NewConnection(peerConnection, dataChannel)
 		log.Printf("New connection opened; uuid: '%s'\n", conn.Uuid)
-		initX, initY := conn.GS.GetPos()
-		dataChannel.SendText(fmt.Sprintf(`{"type": "initpos", "color": %d, "x":%f,"y":%f}`, conn.GS.GetCol(), initX, initY))
+		conn.SendInitState()
 	})
 
 	dataChannel.OnClose(func() {
@@ -110,15 +110,17 @@ func initPeerConnection(peerConnection *webrtc.PeerConnection) (*webrtc.DataChan
 	// Register text message handling
 	dataChannel.OnMessage(func(msg webrtc.DataChannelMessage) {
 		fmt.Printf("[%s] Message from DataChannel '%s': '%s'\n", conn.Uuid, dataChannel.Label(), string(msg.Data))
-		// Assume message is a move message
-		//var move = new(network.MoveMessage)
-		//move, err := json.Unmarshal(msg.Data)
-		//if err != nil {
-		//	log.Printf("Error reading message, err='%s'\n", err)
-		//	return
-		//}
-		//uuid
 
+		messageType := struct{ Type string }{}
+		err := json.Unmarshal(msg.Data, &messageType)
+		if err != nil {
+			fmt.Println("Error unmarshalling messgae type: ", err.Error())
+			return
+		}
+
+		if messageType.Type == "getchars" {
+			conn.SendOtherCharsState()
+		}
 	})
 	return dataChannel, nil
 }
