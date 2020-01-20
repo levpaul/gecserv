@@ -15,7 +15,9 @@ import (
 
 func main() {
 	rand.Seed(time.Now().UnixNano())
-	startWebServer()
+	go network.StartNetworkManager()
+	go startWebServer()
+	select {}
 }
 
 func startWebServer() {
@@ -37,7 +39,6 @@ func newRTCSessionHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	clientSD, _ := ioutil.ReadAll(r.Body)
-	log.Println(string(clientSD))
 
 	// Create a new RTCPeerConnection
 	peerConnection, err := webrtc.NewPeerConnection(config)
@@ -72,7 +73,6 @@ func newRTCSessionHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Output the offer in base64 so we can paste it in browser
 	encodedAnswer := signal.Encode(answer)
-	log.Println(encodedAnswer)
 
 	w.Header().Add("Access-Control-Allow-Origin", "*")
 	w.Write([]byte(encodedAnswer))
@@ -96,29 +96,15 @@ func initPeerConnection(peerConnection *webrtc.PeerConnection) (*webrtc.DataChan
 		}
 	})
 
-	// Register channel opening handling
 	dataChannel.OnOpen(func() {
-		fmt.Printf("Data channel '%s'-'%d' open. Random messages will now be sent to any connected DataChannels every 5 seconds\n", dataChannel.Label(), dataChannel.ID())
-
 		conn = network.NewConnection(peerConnection, dataChannel)
 		log.Printf("New connection opened; uuid: '%s'\n", conn.Uuid)
-
 		initX, initY := conn.GS.GetPos()
-		dataChannel.SendText(fmt.Sprintf(`{"type": "initpos", "x":%f,"y":%f}`, initX, initY))
+		dataChannel.SendText(fmt.Sprintf(`{"type": "initpos", "color": %d, "x":%f,"y":%f}`, conn.GS.GetCol(), initX, initY))
+	})
 
-		ticker := time.NewTicker(5 * time.Second)
-		dataChannel.OnClose(func() { ticker.Stop() })
-		for range ticker.C {
-			message := signal.RandSeq(15)
-			fmt.Printf("Sending '%s'\n", message)
-
-			// Send the message as text
-			sendErr := dataChannel.SendText(message)
-			if sendErr != nil {
-				log.Println("Failed to send message, err: ", err)
-				return
-			}
-		}
+	dataChannel.OnClose(func() {
+		conn.Disconnect()
 	})
 
 	// Register text message handling

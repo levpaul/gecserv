@@ -2,18 +2,24 @@ package game
 
 import "math/rand"
 
-type GameState struct {
-	charX float32
-	charY float32
+type CharState struct {
+	color int32
+	xPos  float32
+	yPos  float32
 }
 
-func NewGameState() *GameState {
-	return &GameState{
-		charX: rand.Float32() * 200,
-		charY: rand.Float32() * 200,
+func NewGameState() *CharState {
+	return &CharState{
+		color: rand.Int31() % 0xffffff,
+		xPos:  rand.Float32() * 20,
+		yPos:  rand.Float32() * 20,
 	}
 }
 
-func (gs *GameState) GetPos() (float32, float32) {
-	return gs.charX, gs.charY
+func (gs *CharState) GetPos() (float32, float32) {
+	return gs.xPos, gs.yPos
+}
+
+func (gs *CharState) GetCol() int32 {
+	return gs.color
 }
