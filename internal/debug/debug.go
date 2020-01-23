@@ -21,11 +21,11 @@ func StartDebugServer() {
 	defer socket.Close()
 
 	for {
-		log.Info().Msg("Listning")
 		conn, err := socket.Accept()
 		if err != nil {
 			log.Fatal().Msg("Failed to accept socket connection")
 		}
+		log.Info().Strs("Addresses", []string{conn.LocalAddr().String(), conn.RemoteAddr().String()}).Msg("Accepted new client")
 
 		newClient := &client{conn: conn}
 		go newClient.handle()

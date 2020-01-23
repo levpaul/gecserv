@@ -2,25 +2,36 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
+	"flag"
 	"github.com/levpaul/idolscape-backend/internal/debug"
 	"github.com/levpaul/idolscape-backend/internal/network"
-	"github.com/rs/zerolog/log"
-	"io/ioutil"
-
-	"math/rand"
-	"net/http"
-	"time"
-
 	"github.com/levpaul/scratch/pkg/signal"
 	"github.com/pion/webrtc"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
+	"io/ioutil"
+	"math/rand"
+	"net/http"
+	"os"
+	"time"
 )
 
-func main() {
+func init() {
 	rand.Seed(time.Now().UnixNano())
+}
+
+var devMode = flag.Bool("devmode", false, "Start server in development mode, enabling debug interface and pretty logs")
+
+func main() {
+	flag.Parse()
+
+	if *devMode == true {
+		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+		go debug.StartDebugServer()
+	}
+
 	go network.StartNetworkManager()
 	go startWebServer()
-	go debug.StartDebugServer()
 	select {}
 }
 
@@ -93,16 +104,14 @@ func initPeerConnection(peerConnection *webrtc.PeerConnection) (*webrtc.DataChan
 	// Set the handler for ICE connection state
 	// This will notify you when the peer has connected/disconnected
 	peerConnection.OnICEConnectionStateChange(func(connectionState webrtc.ICEConnectionState) {
-		fmt.Printf("ICE Connection State has changed: %s\n", connectionState.String())
 		if connectionState == webrtc.ICEConnectionStateDisconnected {
-			log.Err(dataChannel.Close()).Msg("Closing data channel")
-			log.Err(peerConnection.Close()).Msg("Closing peer connection")
+			dataChannel.Close()
+			peerConnection.Close()
 		}
 	})
 
 	dataChannel.OnOpen(func() {
 		conn = network.NewConnection(peerConnection, dataChannel)
-		log.Printf("New connection opened; uuid: '%s'\n", conn.Uuid)
 		conn.SendInitState()
 	})
 
@@ -112,12 +121,11 @@ func initPeerConnection(peerConnection *webrtc.PeerConnection) (*webrtc.DataChan
 
 	// Register text message handling
 	dataChannel.OnMessage(func(msg webrtc.DataChannelMessage) {
-		fmt.Printf("[%s] Message from DataChannel '%s': '%s'\n", conn.Uuid, dataChannel.Label(), string(msg.Data))
 
 		messageType := struct{ Type string }{}
 		err := json.Unmarshal(msg.Data, &messageType)
 		if err != nil {
-			fmt.Println("Error unmarshalling messgae type: ", err.Error())
+			log.Err(err).Str("Message Data", string(msg.Data)).Msg("Error unmarshalling message from client")
 			return
 		}
 

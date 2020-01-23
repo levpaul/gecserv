@@ -6,7 +6,7 @@ import (
 	uuid2 "github.com/google/uuid"
 	"github.com/levpaul/idolscape-backend/internal/game"
 	"github.com/pion/webrtc"
-	"log"
+	"github.com/rs/zerolog/log"
 	"strings"
 	"sync"
 )
@@ -52,7 +52,7 @@ func (c *Connection) SendDisconnectedPlayer(p *Connection) {
 }
 
 func (c *Connection) Disconnect() {
-	log.Println("Disconnecting client - Levi - UUID:", c.Uuid)
+	log.Info().Str("UUID", c.Uuid.String()).Msg("Disconnecting client")
 	connsLock.Lock()
 	defer connsLock.Unlock()
 
@@ -95,7 +95,7 @@ func (c *Connection) SendOtherCharsState() {
 		Chars: otherConns,
 	})
 	if err != nil {
-		fmt.Printf("Error marshalling channel list to send back: '%s'\n", err)
+		log.Err(err).Msg("Error marshalling channel list to send back")
 		return
 	}
 

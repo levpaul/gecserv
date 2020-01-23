@@ -1,7 +1,7 @@
 package network
 
 import (
-	"fmt"
+	"github.com/rs/zerolog/log"
 	"time"
 )
 
@@ -16,10 +16,10 @@ func StartNetworkManager() {
 		// Send updates for new connections
 		newConnLock.Lock()
 		for _, c := range newConns {
-			fmt.Println("new connection: %-v", c)
+			log.Info().Interface("Conn", c).Msg("New connection")
 			for _, liveC := range conns {
 				if c.Uuid != liveC.Uuid {
-					fmt.Println("Sending update to a player", liveC.Uuid)
+					log.Info().Str("UUID", liveC.Uuid.String()).Msg("Sending update to player")
 					liveC.SendNewPlayer(c)
 				}
 			}
@@ -30,9 +30,7 @@ func StartNetworkManager() {
 		// Send disconnects to everyone
 		discConnLock.Lock()
 		for _, c := range discConns {
-			fmt.Println("Starting disconnect update")
 			for _, liveC := range conns {
-				fmt.Printf("Discon: %v %v \n", c.Uuid, liveC.Uuid)
 				liveC.SendDisconnectedPlayer(c)
 			}
 		}
