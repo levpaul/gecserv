@@ -3,8 +3,10 @@ package network
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/golang/protobuf/proto"
 	uuid2 "github.com/google/uuid"
 	"github.com/levpaul/idolscape-backend/internal/game"
+	"github.com/levpaul/idolscape-backend/internal/state"
 	"github.com/pion/webrtc"
 	"github.com/rs/zerolog/log"
 	"strings"
@@ -101,6 +103,17 @@ func (c *Connection) SendOtherCharsState() {
 
 	// TODO: Replace all this stuff with protobuffs or something
 	c.dc.SendText(strings.ToLower(string(b)))
+}
+
+// ===========================================================================
+// Protobuff methods
+
+func (c *Connection) SendNewPlayerState(s *state.State) {
+	b, err := proto.Marshal(s)
+	if err != nil {
+		log.Err(err).Msg("Failed to marshal proto for new player state")
+	}
+	c.dc.Send(b)
 }
 
 // ===========================================================================

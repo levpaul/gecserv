@@ -1,6 +1,8 @@
 package debug
 
 import (
+	"github.com/levpaul/idolscape-backend/internal/network"
+	"github.com/levpaul/idolscape-backend/internal/state"
 	"github.com/rs/zerolog/log"
 	"net"
 	"os"
@@ -46,8 +48,17 @@ func (c *client) handle() {
 }
 
 func (c *client) handleInputLine(input string) {
-	_, err := c.conn.Write([]byte("Right back at you: " + input))
+	conn, err := network.DebugGetLiveConnection()
 	if err != nil {
-		log.Fatal().Err(err).Send()
+		c.conn.Write([]byte("No active connections found\n"))
+		return
 	}
+	c.conn.Write([]byte("Adding new player\n"))
+	conn.SendNewPlayerState(&state.State{
+		Uuid:   "1234",
+		Color:  34534534,
+		X:      0,
+		Y:      0,
+		Action: "login",
+	})
 }

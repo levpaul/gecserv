@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	"flag"
+	"github.com/levpaul/idolscape-backend/internal/cmdflags"
 	"github.com/levpaul/idolscape-backend/internal/debug"
 	"github.com/levpaul/idolscape-backend/internal/network"
 	"github.com/levpaul/scratch/pkg/signal"
@@ -18,14 +18,11 @@ import (
 
 func init() {
 	rand.Seed(time.Now().UnixNano())
+	cmdflags.Parse()
 }
 
-var devMode = flag.Bool("devmode", false, "Start server in development mode, enabling debug interface and pretty logs")
-
 func main() {
-	flag.Parse()
-
-	if *devMode == true {
+	if *cmdflags.DevMode == true {
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 		go debug.StartDebugServer()
 	}
