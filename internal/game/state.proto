@@ -1,0 +1,10 @@
+syntax="proto3";
+package main;
+
+message State {
+	string uuid = 1;
+	int32 color = 2;
+	float x = 3;
+	float y = 4;
+	string action = 5;
+}
