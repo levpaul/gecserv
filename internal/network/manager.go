@@ -38,6 +38,7 @@ func StartNetworkManager() {
 		}
 		discConns = nil
 		discConnLock.Unlock()
-
 	}
+
+	panic("Network manager game loop exited!")
 }

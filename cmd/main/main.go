@@ -3,9 +3,11 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/levpaul/idolscape-backend/internal/debug"
 	"github.com/levpaul/idolscape-backend/internal/network"
+	"github.com/rs/zerolog/log"
 	"io/ioutil"
-	"log"
+
 	"math/rand"
 	"net/http"
 	"time"
@@ -18,6 +20,7 @@ func main() {
 	rand.Seed(time.Now().UnixNano())
 	go network.StartNetworkManager()
 	go startWebServer()
+	go debug.StartDebugServer()
 	select {}
 }
 
@@ -25,7 +28,7 @@ func startWebServer() {
 	server := http.NewServeMux()
 	server.HandleFunc("/new_rtc_session", newRTCSessionHandler)
 	addr := "0.0.0.0:8899"
-	log.Println("Start web server on ", addr)
+	log.Info().Msg("Start web server on " + addr)
 	if err := http.ListenAndServe(addr, server); err != nil {
 		panic(err.Error())
 	}
@@ -51,7 +54,7 @@ func newRTCSessionHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	log.Println("DataChan: ", dataChannel)
+	log.Info().Interface("DataChannel", dataChannel).Send()
 
 	offer := webrtc.SessionDescription{}
 	signal.Decode(string(clientSD), &offer)
@@ -92,8 +95,8 @@ func initPeerConnection(peerConnection *webrtc.PeerConnection) (*webrtc.DataChan
 	peerConnection.OnICEConnectionStateChange(func(connectionState webrtc.ICEConnectionState) {
 		fmt.Printf("ICE Connection State has changed: %s\n", connectionState.String())
 		if connectionState == webrtc.ICEConnectionStateDisconnected {
-			log.Println("Closing data channel, err: ", dataChannel.Close())
-			log.Println("Closing peer connection, err: ", peerConnection.Close())
+			log.Err(dataChannel.Close()).Msg("Closing data channel")
+			log.Err(peerConnection.Close()).Msg("Closing peer connection")
 		}
 	})
 
