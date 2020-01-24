@@ -65,9 +65,9 @@ func genRandomPlayer() []byte {
 	puuid := b.CreateString("asdf")
 
 	player.PlayerStart(b)
-	player.PlayerAddCol(b, player.Color(rand.Intn(len(player.EnumNamesColor))))
+	player.PlayerAddCol(b, player.Color(rand.Intn(6)))
 	player.PlayerAddUuid(b, puuid)
-	player.PlayerAddPos(b, player.CreateVec2(b, 1.5, 3.5))
+	player.PlayerAddPos(b, player.CreateVec2(b, rand.Float32()*10, rand.Float32()*10))
 	player.PlayerAddUpdateMsg(b, player.UpdateMsglogin)
 
 	b.Finish(player.PlayerEnd(b))
