@@ -1,0 +1,19 @@
+namespace player;
+
+enum Color:byte { Red = 0, Green, Blue, Yellow, Pink, Gray, Orange}
+enum UpdateMsg:byte { login = 0, logout, sync }
+
+struct Vec3 {
+  x:float;
+  y:float;
+  z:float;
+}
+
+table Player{
+  pos: Vec3;
+  uuid: string;
+  col: Color;
+  updateMsg: UpdateMsg;
+}
+
+root_type Player;

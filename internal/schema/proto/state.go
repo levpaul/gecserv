@@ -1,4 +1,4 @@
-package game
+package proto
 
 import "math/rand"
 
