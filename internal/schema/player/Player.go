@@ -26,12 +26,12 @@ func (rcv *Player) Table() flatbuffers.Table {
 	return rcv._tab
 }
 
-func (rcv *Player) Pos(obj *Vec3) *Vec3 {
+func (rcv *Player) Pos(obj *Vec2) *Vec2 {
 	o := flatbuffers.UOffsetT(rcv._tab.Offset(4))
 	if o != 0 {
 		x := o + rcv._tab.Pos
 		if obj == nil {
-			obj = new(Vec3)
+			obj = new(Vec2)
 		}
 		obj.Init(rcv._tab.Bytes, x)
 		return obj

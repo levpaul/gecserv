@@ -3,10 +3,8 @@ package network
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/golang/protobuf/proto"
 	uuid2 "github.com/google/uuid"
-	"github.com/levpaul/idolscape-backend/internal/game"
-	"github.com/levpaul/idolscape-backend/internal/state"
+	proto2 "github.com/levpaul/idolscape-backend/internal/schema/proto"
 	"github.com/pion/webrtc"
 	"github.com/rs/zerolog/log"
 	"strings"
@@ -25,7 +23,7 @@ type Connection struct {
 	Uuid uuid2.UUID
 	pc   *webrtc.PeerConnection
 	dc   *webrtc.DataChannel
-	GS   *game.CharState
+	GS   *proto2.CharState
 }
 
 func NewConnection(pc *webrtc.PeerConnection, dc *webrtc.DataChannel) *Connection {
@@ -35,7 +33,7 @@ func NewConnection(pc *webrtc.PeerConnection, dc *webrtc.DataChannel) *Connectio
 		Uuid: uuid2.New(),
 		pc:   pc,
 		dc:   dc,
-		GS:   game.NewGameState(),
+		GS:   proto2.NewGameState(),
 	})
 
 	newConnLock.Lock()
@@ -106,13 +104,9 @@ func (c *Connection) SendOtherCharsState() {
 }
 
 // ===========================================================================
-// Protobuff methods
+// Flatbuffer methods
 
-func (c *Connection) SendNewPlayerState(s *state.State) {
-	b, err := proto.Marshal(s)
-	if err != nil {
-		log.Err(err).Msg("Failed to marshal proto for new player state")
-	}
+func (c *Connection) SendNewPlayerState(b []byte) {
 	c.dc.Send(b)
 }
 

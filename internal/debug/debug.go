@@ -1,9 +1,11 @@
 package debug
 
 import (
+	flatbuffers "github.com/google/flatbuffers/go"
 	"github.com/levpaul/idolscape-backend/internal/network"
-	"github.com/levpaul/idolscape-backend/internal/state"
+	"github.com/levpaul/idolscape-backend/internal/schema/player"
 	"github.com/rs/zerolog/log"
+	"math/rand"
 	"net"
 	"os"
 )
@@ -54,11 +56,20 @@ func (c *client) handleInputLine(input string) {
 		return
 	}
 	c.conn.Write([]byte("Adding new player\n"))
-	conn.SendNewPlayerState(&state.State{
-		Uuid:   "1234",
-		Color:  34534534,
-		X:      0,
-		Y:      0,
-		Action: "login",
-	})
+	conn.SendNewPlayerState(genRandomPlayer())
+}
+
+func genRandomPlayer() []byte {
+	b := flatbuffers.NewBuilder(2)
+
+	puuid := b.CreateString("asdf")
+
+	player.PlayerStart(b)
+	player.PlayerAddCol(b, player.Color(rand.Intn(len(player.EnumNamesColor))))
+	player.PlayerAddUuid(b, puuid)
+	player.PlayerAddPos(b, player.CreateVec2(b, 1.5, 3.5))
+	player.PlayerAddUpdateMsg(b, player.UpdateMsglogin)
+
+	b.Finish(player.PlayerEnd(b))
+	return b.FinishedBytes()
 }
