@@ -2,8 +2,8 @@ package debug
 
 import (
 	flatbuffers "github.com/google/flatbuffers/go"
+	"github.com/levpaul/idolscape-backend/internal/fb"
 	"github.com/levpaul/idolscape-backend/internal/network"
-	"github.com/levpaul/idolscape-backend/internal/schema/player"
 	"github.com/rs/zerolog/log"
 	"math/rand"
 	"net"
@@ -60,16 +60,17 @@ func (c *client) handleInputLine(input string) {
 }
 
 func genRandomPlayer() []byte {
-	b := flatbuffers.NewBuilder(2)
+	mss := fb.MessageT{
+		Type: fb.MessageTypelogin,
+		Player: &fb.PlayerT{
+			Pos:  &fb.Vec2T{rand.Float32() * 10, rand.Float32() * 10},
+			Uuid: "asdfasdf",
+			Col:  fb.ColorBlue,
+		},
+	}
 
-	puuid := b.CreateString("asdf")
+	b := flatbuffers.NewBuilder(50)
+	b.Finish(mss.Pack(b))
 
-	player.PlayerStart(b)
-	player.PlayerAddCol(b, player.Color(rand.Intn(6)))
-	player.PlayerAddUuid(b, puuid)
-	player.PlayerAddPos(b, player.CreateVec2(b, rand.Float32()*10, rand.Float32()*10))
-	player.PlayerAddUpdateMsg(b, player.UpdateMsglogin)
-
-	b.Finish(player.PlayerEnd(b))
 	return b.FinishedBytes()
 }

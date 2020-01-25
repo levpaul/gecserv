@@ -1,0 +1,14 @@
+// flatc -g --gen-object-api  --gen-onefile --gen-all --go-namespace fb  msg.fbs
+include 'core.fbs';
+include 'player.fbs';
+
+namespace msg;
+
+enum MessageType:byte { login = 0, logout, sync }
+
+table Message {
+    type: MessageType;
+    player: Player;
+}
+
+root_type Message;

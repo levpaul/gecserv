@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	uuid2 "github.com/google/uuid"
-	proto2 "github.com/levpaul/idolscape-backend/internal/schema/proto"
+	proto2 "github.com/levpaul/idolscape-backend/internal/fb/proto"
 	"github.com/pion/webrtc"
 	"github.com/rs/zerolog/log"
 	"strings"
