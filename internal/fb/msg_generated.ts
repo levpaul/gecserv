@@ -18,10 +18,17 @@ export enum Color{
  * @enum {number}
  */
 export namespace msg{
-export enum MessageType{
-  login= 0,
-  logout= 1,
-  sync= 2
+export enum SID{
+  NONE= 0
+}};
+
+/**
+ * @enum {number}
+ */
+export namespace msg{
+export enum GameMessage{
+  NONE= 0,
+  MapUpdate= 1
 }};
 
 /**
@@ -177,14 +184,11 @@ pos(obj?:msg.Vec2):msg.Vec2|null {
 };
 
 /**
- * @param flatbuffers.Encoding= optionalEncoding
- * @returns string|Uint8Array|null
+ * @returns flatbuffers.Long
  */
-uuid():string|null
-uuid(optionalEncoding:flatbuffers.Encoding):string|Uint8Array|null
-uuid(optionalEncoding?:any):string|Uint8Array|null {
+sid():flatbuffers.Long {
   var offset = this.bb!.__offset(this.bb_pos, 6);
-  return offset ? this.bb!.__string(this.bb_pos + offset, optionalEncoding) : null;
+  return offset ? /**  */ (this.bb!.readUint64(this.bb_pos + offset)) : msg.SID.NONE;
 };
 
 /**
@@ -212,10 +216,10 @@ static addPos(builder:flatbuffers.Builder, posOffset:flatbuffers.Offset) {
 
 /**
  * @param flatbuffers.Builder builder
- * @param flatbuffers.Offset uuidOffset
+ * @param flatbuffers.Long sid
  */
-static addUuid(builder:flatbuffers.Builder, uuidOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(1, uuidOffset, 0);
+static addSid(builder:flatbuffers.Builder, sid:flatbuffers.Long) {
+  builder.addFieldInt64(1, sid, msg.SID.NONE);
 };
 
 /**
@@ -235,10 +239,10 @@ static end(builder:flatbuffers.Builder):flatbuffers.Offset {
   return offset;
 };
 
-static create(builder:flatbuffers.Builder, posOffset:flatbuffers.Offset, uuidOffset:flatbuffers.Offset, col:msg.Color):flatbuffers.Offset {
+static create(builder:flatbuffers.Builder, posOffset:flatbuffers.Offset, sid:flatbuffers.Long, col:msg.Color):flatbuffers.Offset {
   Player.start(builder);
   Player.addPos(builder, posOffset);
-  Player.addUuid(builder, uuidOffset);
+  Player.addSid(builder, sid);
   Player.addCol(builder, col);
   return Player.end(builder);
 }
@@ -283,20 +287,20 @@ static getSizePrefixedRoot(bb:flatbuffers.ByteBuffer, obj?:Message):Message {
 };
 
 /**
- * @returns msg.MessageType
+ * @returns msg.GameMessage
  */
-type():msg.MessageType {
+dataType():msg.GameMessage {
   var offset = this.bb!.__offset(this.bb_pos, 4);
-  return offset ? /**  */ (this.bb!.readInt8(this.bb_pos + offset)) : msg.MessageType.login;
+  return offset ? /**  */ (this.bb!.readUint8(this.bb_pos + offset)) : msg.GameMessage.NONE;
 };
 
 /**
- * @param msg.Player= obj
- * @returns msg.Player|null
+ * @param flatbuffers.Table obj
+ * @returns ?flatbuffers.Table
  */
-player(obj?:msg.Player):msg.Player|null {
+data<T extends flatbuffers.Table>(obj:T):T|null {
   var offset = this.bb!.__offset(this.bb_pos, 6);
-  return offset ? (obj || new msg.Player()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
+  return offset ? this.bb!.__union(obj, this.bb_pos + offset) : null;
 };
 
 /**
@@ -308,18 +312,18 @@ static start(builder:flatbuffers.Builder) {
 
 /**
  * @param flatbuffers.Builder builder
- * @param msg.MessageType type
+ * @param msg.GameMessage dataType
  */
-static addType(builder:flatbuffers.Builder, type:msg.MessageType) {
-  builder.addFieldInt8(0, type, msg.MessageType.login);
+static addDataType(builder:flatbuffers.Builder, dataType:msg.GameMessage) {
+  builder.addFieldInt8(0, dataType, msg.GameMessage.NONE);
 };
 
 /**
  * @param flatbuffers.Builder builder
- * @param flatbuffers.Offset playerOffset
+ * @param flatbuffers.Offset dataOffset
  */
-static addPlayer(builder:flatbuffers.Builder, playerOffset:flatbuffers.Offset) {
-  builder.addFieldOffset(1, playerOffset, 0);
+static addData(builder:flatbuffers.Builder, dataOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(1, dataOffset, 0);
 };
 
 /**
@@ -347,11 +351,231 @@ static finishSizePrefixedBuffer(builder:flatbuffers.Builder, offset:flatbuffers.
   builder.finish(offset, undefined, true);
 };
 
-static create(builder:flatbuffers.Builder, type:msg.MessageType, playerOffset:flatbuffers.Offset):flatbuffers.Offset {
+static create(builder:flatbuffers.Builder, dataType:msg.GameMessage, dataOffset:flatbuffers.Offset):flatbuffers.Offset {
   Message.start(builder);
-  Message.addType(builder, type);
-  Message.addPlayer(builder, playerOffset);
+  Message.addDataType(builder, dataType);
+  Message.addData(builder, dataOffset);
   return Message.end(builder);
+}
+}
+}
+/**
+ * @constructor
+ */
+export namespace msg{
+export class MapUpdate {
+  bb: flatbuffers.ByteBuffer|null = null;
+
+  bb_pos:number = 0;
+/**
+ * @param number i
+ * @param flatbuffers.ByteBuffer bb
+ * @returns MapUpdate
+ */
+__init(i:number, bb:flatbuffers.ByteBuffer):MapUpdate {
+  this.bb_pos = i;
+  this.bb = bb;
+  return this;
+};
+
+/**
+ * @param flatbuffers.ByteBuffer bb
+ * @param MapUpdate= obj
+ * @returns MapUpdate
+ */
+static getRoot(bb:flatbuffers.ByteBuffer, obj?:MapUpdate):MapUpdate {
+  return (obj || new MapUpdate()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @param flatbuffers.ByteBuffer bb
+ * @param MapUpdate= obj
+ * @returns MapUpdate
+ */
+static getSizePrefixedRoot(bb:flatbuffers.ByteBuffer, obj?:MapUpdate):MapUpdate {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new MapUpdate()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @returns number
+ */
+seq():number {
+  var offset = this.bb!.__offset(this.bb_pos, 4);
+  return offset ? this.bb!.readUint32(this.bb_pos + offset) : 0;
+};
+
+/**
+ * @param number index
+ * @param msg.Player= obj
+ * @returns msg.Player
+ */
+logins(index: number, obj?:msg.Player):msg.Player|null {
+  var offset = this.bb!.__offset(this.bb_pos, 6);
+  return offset ? (obj || new msg.Player()).__init(this.bb!.__indirect(this.bb!.__vector(this.bb_pos + offset) + index * 4), this.bb!) : null;
+};
+
+/**
+ * @returns number
+ */
+loginsLength():number {
+  var offset = this.bb!.__offset(this.bb_pos, 6);
+  return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
+};
+
+/**
+ * @param number index
+ * @returns flatbuffers.Long
+ */
+logouts(index: number):flatbuffers.Long|null {
+  var offset = this.bb!.__offset(this.bb_pos, 8);
+  return offset ? /**  */ (this.bb!.readUint64(this.bb!.__vector(this.bb_pos + offset) + index * 8)) : this.bb!.createLong(0, 0);
+};
+
+/**
+ * @returns number
+ */
+logoutsLength():number {
+  var offset = this.bb!.__offset(this.bb_pos, 8);
+  return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
+};
+
+/**
+ * @param number index
+ * @param msg.Player= obj
+ * @returns msg.Player
+ */
+psyncs(index: number, obj?:msg.Player):msg.Player|null {
+  var offset = this.bb!.__offset(this.bb_pos, 10);
+  return offset ? (obj || new msg.Player()).__init(this.bb!.__indirect(this.bb!.__vector(this.bb_pos + offset) + index * 4), this.bb!) : null;
+};
+
+/**
+ * @returns number
+ */
+psyncsLength():number {
+  var offset = this.bb!.__offset(this.bb_pos, 10);
+  return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
+};
+
+/**
+ * @param flatbuffers.Builder builder
+ */
+static start(builder:flatbuffers.Builder) {
+  builder.startObject(4);
+};
+
+/**
+ * @param flatbuffers.Builder builder
+ * @param number seq
+ */
+static addSeq(builder:flatbuffers.Builder, seq:number) {
+  builder.addFieldInt32(0, seq, 0);
+};
+
+/**
+ * @param flatbuffers.Builder builder
+ * @param flatbuffers.Offset loginsOffset
+ */
+static addLogins(builder:flatbuffers.Builder, loginsOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(1, loginsOffset, 0);
+};
+
+/**
+ * @param flatbuffers.Builder builder
+ * @param Array.<flatbuffers.Offset> data
+ * @returns flatbuffers.Offset
+ */
+static createLoginsVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
+  builder.startVector(4, data.length, 4);
+  for (var i = data.length - 1; i >= 0; i--) {
+    builder.addOffset(data[i]);
+  }
+  return builder.endVector();
+};
+
+/**
+ * @param flatbuffers.Builder builder
+ * @param number numElems
+ */
+static startLoginsVector(builder:flatbuffers.Builder, numElems:number) {
+  builder.startVector(4, numElems, 4);
+};
+
+/**
+ * @param flatbuffers.Builder builder
+ * @param flatbuffers.Offset logoutsOffset
+ */
+static addLogouts(builder:flatbuffers.Builder, logoutsOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(2, logoutsOffset, 0);
+};
+
+/**
+ * @param flatbuffers.Builder builder
+ * @param Array.<flatbuffers.Long> data
+ * @returns flatbuffers.Offset
+ */
+static createLogoutsVector(builder:flatbuffers.Builder, data:flatbuffers.Long[]):flatbuffers.Offset {
+  builder.startVector(8, data.length, 8);
+  for (var i = data.length - 1; i >= 0; i--) {
+    builder.addInt64(data[i]);
+  }
+  return builder.endVector();
+};
+
+/**
+ * @param flatbuffers.Builder builder
+ * @param number numElems
+ */
+static startLogoutsVector(builder:flatbuffers.Builder, numElems:number) {
+  builder.startVector(8, numElems, 8);
+};
+
+/**
+ * @param flatbuffers.Builder builder
+ * @param flatbuffers.Offset psyncsOffset
+ */
+static addPsyncs(builder:flatbuffers.Builder, psyncsOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(3, psyncsOffset, 0);
+};
+
+/**
+ * @param flatbuffers.Builder builder
+ * @param Array.<flatbuffers.Offset> data
+ * @returns flatbuffers.Offset
+ */
+static createPsyncsVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
+  builder.startVector(4, data.length, 4);
+  for (var i = data.length - 1; i >= 0; i--) {
+    builder.addOffset(data[i]);
+  }
+  return builder.endVector();
+};
+
+/**
+ * @param flatbuffers.Builder builder
+ * @param number numElems
+ */
+static startPsyncsVector(builder:flatbuffers.Builder, numElems:number) {
+  builder.startVector(4, numElems, 4);
+};
+
+/**
+ * @param flatbuffers.Builder builder
+ * @returns flatbuffers.Offset
+ */
+static end(builder:flatbuffers.Builder):flatbuffers.Offset {
+  var offset = builder.endObject();
+  return offset;
+};
+
+static create(builder:flatbuffers.Builder, seq:number, loginsOffset:flatbuffers.Offset, logoutsOffset:flatbuffers.Offset, psyncsOffset:flatbuffers.Offset):flatbuffers.Offset {
+  MapUpdate.start(builder);
+  MapUpdate.addSeq(builder, seq);
+  MapUpdate.addLogins(builder, loginsOffset);
+  MapUpdate.addLogouts(builder, logoutsOffset);
+  MapUpdate.addPsyncs(builder, psyncsOffset);
+  return MapUpdate.end(builder);
 }
 }
 }

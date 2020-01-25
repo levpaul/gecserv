@@ -60,16 +60,22 @@ func (c *client) handleInputLine(input string) {
 }
 
 func genRandomPlayer() []byte {
-	mss := fb.MessageT{
-		Type: fb.MessageTypelogin,
-		Player: &fb.PlayerT{
-			Pos:  &fb.Vec2T{rand.Float32() * 10, rand.Float32() * 10},
-			Uuid: "asdfasdf",
-			Col:  fb.ColorBlue,
+	mss := new(fb.MessageT)
+	mss.Data = &fb.GameMessageT{
+		Type: fb.GameMessageMapUpdate,
+		Value: &fb.MapUpdateT{
+			Seq: 234235523,
+			Logins: []*fb.PlayerT{{
+				Pos: &fb.Vec2T{rand.Float32() * 10, rand.Float32() * 10},
+				Sid: 12342345,
+				Col: fb.ColorBlue,
+			}},
+			Logouts: nil,
+			Psyncs:  nil,
 		},
 	}
 
-	b := flatbuffers.NewBuilder(50)
+	b := flatbuffers.NewBuilder(500)
 	b.Finish(mss.Pack(b))
 
 	return b.FinishedBytes()

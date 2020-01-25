@@ -2,8 +2,10 @@ include 'core.fbs';
 
 namespace msg;
 
+enum SID:uint64 {}
+
 table Player {
     pos: Vec2;
-    uuid: string;
+    sid: SID;
     col: Color;
 }

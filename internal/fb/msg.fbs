@@ -5,11 +5,17 @@ include 'player.fbs';
 
 namespace msg;
 
-enum MessageType:byte { login = 0, logout, sync }
+union GameMessage { MapUpdate }
 
 table Message {
-    type: MessageType;
-    player: Player;
+    data: GameMessage;
+}
+
+table MapUpdate {
+    seq: uint32;
+    logins: [Player];
+    logouts: [SID];
+    psyncs: [Player];
 }
 
 root_type Message;
