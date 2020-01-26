@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"github.com/levpaul/idolscape-backend/internal/cmdflags"
 	"github.com/levpaul/idolscape-backend/internal/debug"
 	"github.com/levpaul/idolscape-backend/internal/flusher"
@@ -11,6 +12,7 @@ import (
 	"github.com/levpaul/idolscape-backend/internal/validation"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/viper"
 	"math/rand"
 	"os"
 	"time"
@@ -26,8 +28,11 @@ var pipelineErrCh = make(chan error)
 func main() {
 	if *cmdflags.DevMode == true {
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+		viper.SetConfigName("dev")
 		go debug.StartDebugServer()
 	}
+
+	viperConfig()
 
 	// Legacy - to be replaced by flusher pipeline
 	go network.StartNetworkManager()
@@ -41,6 +46,15 @@ func main() {
 	case err := <-pipelineErrCh:
 		log.Err(err).Send()
 		return
+	}
+}
+
+func viperConfig() {
+	viper.SetConfigName("dev")
+	viper.SetConfigType("toml")
+	viper.AddConfigPath("./config")
+	if err := viper.ReadInConfig(); err != nil {
+		panic(fmt.Errorf("Fatal error config file: %s \n", err))
 	}
 }
 
