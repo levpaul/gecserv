@@ -3,12 +3,12 @@ namespace msg;
 enum Color:byte { Red = 0, Green, Blue, Yellow, Pink, Gray, Orange}
 
 struct Vec2 {
-  x:float;
-  y:float;
+  x: float;
+  y: float;
 }
 
 struct Vec3 {
-  x:float;
-  y:float;
+  x: float;
+  y: float;
   z: float;
 }

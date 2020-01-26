@@ -5,6 +5,7 @@ import (
 	"github.com/levpaul/idolscape-backend/internal/fb"
 	"github.com/levpaul/idolscape-backend/internal/network"
 	"github.com/rs/zerolog/log"
+	"math"
 	"math/rand"
 	"net"
 	"os"
@@ -15,6 +16,9 @@ const debugSocket = "/opt/idolscape/debug.sock"
 type client struct {
 	conn net.Conn
 }
+
+var count float64
+var tiny = math.Float64frombits(1)
 
 func StartDebugServer() {
 	os.Remove(debugSocket)
@@ -64,10 +68,10 @@ func genRandomPlayer() []byte {
 	mss.Data = &fb.GameMessageT{
 		Type: fb.GameMessageMapUpdate,
 		Value: &fb.MapUpdateT{
-			Seq: 234235523,
+			Seq: 12342345,
 			Logins: []*fb.PlayerT{{
 				Pos: &fb.Vec2T{rand.Float32() * 10, rand.Float32() * 10},
-				Sid: 12342345,
+				Sid: count,
 				Col: fb.ColorBlue,
 			}},
 			Logouts: nil,
@@ -75,7 +79,9 @@ func genRandomPlayer() []byte {
 		},
 	}
 
-	b := flatbuffers.NewBuilder(500)
+	count += tiny
+
+	b := flatbuffers.NewBuilder(1024)
 	b.Finish(mss.Pack(b))
 
 	return b.FinishedBytes()

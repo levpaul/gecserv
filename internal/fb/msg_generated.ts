@@ -18,14 +18,6 @@ export enum Color{
  * @enum {number}
  */
 export namespace msg{
-export enum SID{
-  NONE= 0
-}};
-
-/**
- * @enum {number}
- */
-export namespace msg{
 export enum GameMessage{
   NONE= 0,
   MapUpdate= 1
@@ -184,11 +176,11 @@ pos(obj?:msg.Vec2):msg.Vec2|null {
 };
 
 /**
- * @returns flatbuffers.Long
+ * @returns number
  */
-sid():flatbuffers.Long {
+sid():number {
   var offset = this.bb!.__offset(this.bb_pos, 6);
-  return offset ? /**  */ (this.bb!.readUint64(this.bb_pos + offset)) : msg.SID.NONE;
+  return offset ? this.bb!.readFloat64(this.bb_pos + offset) : 0.0;
 };
 
 /**
@@ -216,10 +208,10 @@ static addPos(builder:flatbuffers.Builder, posOffset:flatbuffers.Offset) {
 
 /**
  * @param flatbuffers.Builder builder
- * @param flatbuffers.Long sid
+ * @param number sid
  */
-static addSid(builder:flatbuffers.Builder, sid:flatbuffers.Long) {
-  builder.addFieldInt64(1, sid, msg.SID.NONE);
+static addSid(builder:flatbuffers.Builder, sid:number) {
+  builder.addFieldFloat64(1, sid, 0.0);
 };
 
 /**
@@ -239,7 +231,7 @@ static end(builder:flatbuffers.Builder):flatbuffers.Offset {
   return offset;
 };
 
-static create(builder:flatbuffers.Builder, posOffset:flatbuffers.Offset, sid:flatbuffers.Long, col:msg.Color):flatbuffers.Offset {
+static create(builder:flatbuffers.Builder, posOffset:flatbuffers.Offset, sid:number, col:msg.Color):flatbuffers.Offset {
   Player.start(builder);
   Player.addPos(builder, posOffset);
   Player.addSid(builder, sid);
@@ -425,11 +417,11 @@ loginsLength():number {
 
 /**
  * @param number index
- * @returns flatbuffers.Long
+ * @returns number
  */
-logouts(index: number):flatbuffers.Long|null {
+logouts(index: number):number|null {
   var offset = this.bb!.__offset(this.bb_pos, 8);
-  return offset ? /**  */ (this.bb!.readUint64(this.bb!.__vector(this.bb_pos + offset) + index * 8)) : this.bb!.createLong(0, 0);
+  return offset ? this.bb!.readFloat64(this.bb!.__vector(this.bb_pos + offset) + index * 8) : 0;
 };
 
 /**
@@ -438,6 +430,14 @@ logouts(index: number):flatbuffers.Long|null {
 logoutsLength():number {
   var offset = this.bb!.__offset(this.bb_pos, 8);
   return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
+};
+
+/**
+ * @returns Float64Array
+ */
+logoutsArray():Float64Array|null {
+  var offset = this.bb!.__offset(this.bb_pos, 8);
+  return offset ? new Float64Array(this.bb!.bytes().buffer, this.bb!.bytes().byteOffset + this.bb!.__vector(this.bb_pos + offset), this.bb!.__vector_len(this.bb_pos + offset)) : null;
 };
 
 /**
@@ -512,13 +512,13 @@ static addLogouts(builder:flatbuffers.Builder, logoutsOffset:flatbuffers.Offset)
 
 /**
  * @param flatbuffers.Builder builder
- * @param Array.<flatbuffers.Long> data
+ * @param Array.<number> data
  * @returns flatbuffers.Offset
  */
-static createLogoutsVector(builder:flatbuffers.Builder, data:flatbuffers.Long[]):flatbuffers.Offset {
+static createLogoutsVector(builder:flatbuffers.Builder, data:number[] | Uint8Array):flatbuffers.Offset {
   builder.startVector(8, data.length, 8);
   for (var i = data.length - 1; i >= 0; i--) {
-    builder.addInt64(data[i]);
+    builder.addFloat64(data[i]);
   }
   return builder.endVector();
 };

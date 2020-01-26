@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	uuid2 "github.com/google/uuid"
-	proto2 "github.com/levpaul/idolscape-backend/internal/fb/proto"
+	"github.com/levpaul/idolscape-backend/internal/state"
 	"github.com/pion/webrtc"
 	"github.com/rs/zerolog/log"
 	"strings"
@@ -23,7 +23,7 @@ type Connection struct {
 	Uuid uuid2.UUID
 	pc   *webrtc.PeerConnection
 	dc   *webrtc.DataChannel
-	GS   *proto2.CharState
+	GS   *state.CharState
 }
 
 func NewConnection(pc *webrtc.PeerConnection, dc *webrtc.DataChannel) *Connection {
@@ -33,7 +33,7 @@ func NewConnection(pc *webrtc.PeerConnection, dc *webrtc.DataChannel) *Connectio
 		Uuid: uuid2.New(),
 		pc:   pc,
 		dc:   dc,
-		GS:   proto2.NewGameState(),
+		GS:   state.NewGameState(),
 	})
 
 	newConnLock.Lock()

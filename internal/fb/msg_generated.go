@@ -47,27 +47,6 @@ func (v Color) String() string {
 	return "Color(" + strconv.FormatInt(int64(v), 10) + ")"
 }
 
-type SID uint64
-
-const (
-	SIDNONE SID = 0
-)
-
-var EnumNamesSID = map[SID]string{
-	SIDNONE: "NONE",
-}
-
-var EnumValuesSID = map[string]SID{
-	"NONE": SIDNONE,
-}
-
-func (v SID) String() string {
-	if s, ok := EnumNamesSID[v]; ok {
-		return s
-	}
-	return "SID(" + strconv.FormatInt(int64(v), 10) + ")"
-}
-
 type GameMessage byte
 
 const (
@@ -237,7 +216,7 @@ func CreateVec3(builder *flatbuffers.Builder, x float32, y float32, z float32) f
 }
 type PlayerT struct {
 	Pos *Vec2T
-	Sid SID
+	Sid float64
 	Col Color
 }
 
@@ -297,16 +276,16 @@ func (rcv *Player) Pos(obj *Vec2) *Vec2 {
 	return nil
 }
 
-func (rcv *Player) Sid() SID {
+func (rcv *Player) Sid() float64 {
 	o := flatbuffers.UOffsetT(rcv._tab.Offset(6))
 	if o != 0 {
-		return SID(rcv._tab.GetUint64(o + rcv._tab.Pos))
+		return rcv._tab.GetFloat64(o + rcv._tab.Pos)
 	}
-	return 0
+	return 0.0
 }
 
-func (rcv *Player) MutateSid(n SID) bool {
-	return rcv._tab.MutateUint64Slot(6, uint64(n))
+func (rcv *Player) MutateSid(n float64) bool {
+	return rcv._tab.MutateFloat64Slot(6, n)
 }
 
 func (rcv *Player) Col() Color {
@@ -327,8 +306,8 @@ func PlayerStart(builder *flatbuffers.Builder) {
 func PlayerAddPos(builder *flatbuffers.Builder, pos flatbuffers.UOffsetT) {
 	builder.PrependStructSlot(0, flatbuffers.UOffsetT(pos), 0)
 }
-func PlayerAddSid(builder *flatbuffers.Builder, sid SID) {
-	builder.PrependUint64Slot(1, uint64(sid), 0)
+func PlayerAddSid(builder *flatbuffers.Builder, sid float64) {
+	builder.PrependFloat64Slot(1, sid, 0.0)
 }
 func PlayerAddCol(builder *flatbuffers.Builder, col Color) {
 	builder.PrependInt8Slot(2, int8(col), 0)
@@ -422,7 +401,7 @@ func MessageEnd(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
 type MapUpdateT struct {
 	Seq uint32
 	Logins []*PlayerT
-	Logouts []SID
+	Logouts []float64
 	Psyncs []*PlayerT
 }
 
@@ -446,7 +425,7 @@ func (t *MapUpdateT) Pack(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
 		logoutsLength := len(t.Logouts)
 		MapUpdateStartLogoutsVector(builder, logoutsLength)
 		for j := logoutsLength - 1; j >= 0; j-- {
-			builder.PrependUint64(uint64(t.Logouts[j]))
+			builder.PrependFloat64(t.Logouts[j])
 		}
 		logoutsOffset = builder.EndVector(logoutsLength)
 	}
@@ -481,7 +460,7 @@ func (rcv *MapUpdate) UnPackTo(t *MapUpdateT) {
 		t.Logins[j] = x.UnPack()
 	}
 	logoutsLength := rcv.LogoutsLength()
-	t.Logouts = make([]SID, logoutsLength)
+	t.Logouts = make([]float64, logoutsLength)
 	for j := 0; j < logoutsLength; j++ {
 		t.Logouts[j] = rcv.Logouts(j)
 	}
@@ -553,11 +532,11 @@ func (rcv *MapUpdate) LoginsLength() int {
 	return 0
 }
 
-func (rcv *MapUpdate) Logouts(j int) SID {
+func (rcv *MapUpdate) Logouts(j int) float64 {
 	o := flatbuffers.UOffsetT(rcv._tab.Offset(8))
 	if o != 0 {
 		a := rcv._tab.Vector(o)
-		return SID(rcv._tab.GetUint64(a + flatbuffers.UOffsetT(j*8)))
+		return rcv._tab.GetFloat64(a + flatbuffers.UOffsetT(j*8))
 	}
 	return 0
 }
@@ -570,11 +549,11 @@ func (rcv *MapUpdate) LogoutsLength() int {
 	return 0
 }
 
-func (rcv *MapUpdate) MutateLogouts(j int, n SID) bool {
+func (rcv *MapUpdate) MutateLogouts(j int, n float64) bool {
 	o := flatbuffers.UOffsetT(rcv._tab.Offset(8))
 	if o != 0 {
 		a := rcv._tab.Vector(o)
-		return rcv._tab.MutateUint64(a+flatbuffers.UOffsetT(j*8), uint64(n))
+		return rcv._tab.MutateFloat64(a+flatbuffers.UOffsetT(j*8), n)
 	}
 	return false
 }

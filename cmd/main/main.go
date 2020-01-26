@@ -2,9 +2,14 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/levpaul/idolscape-backend/internal/cmdflags"
 	"github.com/levpaul/idolscape-backend/internal/debug"
+	"github.com/levpaul/idolscape-backend/internal/flusher"
+	"github.com/levpaul/idolscape-backend/internal/ingest"
 	"github.com/levpaul/idolscape-backend/internal/network"
+	"github.com/levpaul/idolscape-backend/internal/propagation"
+	"github.com/levpaul/idolscape-backend/internal/validation"
 	"github.com/levpaul/scratch/pkg/signal"
 	"github.com/pion/webrtc"
 	"github.com/rs/zerolog"
@@ -21,6 +26,8 @@ func init() {
 	cmdflags.Parse()
 }
 
+var pipelineErrCh = make(chan error)
+
 func main() {
 	if *cmdflags.DevMode == true {
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
@@ -29,7 +36,24 @@ func main() {
 
 	go network.StartNetworkManager()
 	go startWebServer()
-	select {}
+
+	startPipeline("ingest", ingest.Start)
+	startPipeline("validation", validation.Start)
+	startPipeline("flusher", flusher.Start)
+	startPipeline("propagation", propagation.Start)
+
+	select {
+	case err := <-pipelineErrCh:
+		log.Err(err).Send()
+		return
+	}
+}
+
+func startPipeline(plName string, pipeline func(<-chan error)) {
+	go func() {
+		pipeline(pipelineErrCh)
+		pipelineErrCh <- errors.New("pipeline job returned unexpectedly")
+	}()
 }
 
 func startWebServer() {

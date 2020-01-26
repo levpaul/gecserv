@@ -14,7 +14,7 @@ table Message {
 table MapUpdate {
     seq: uint32;
     logins: [Player];
-    logouts: [SID];
+    logouts: [float64];
     psyncs: [Player];
 }
 
