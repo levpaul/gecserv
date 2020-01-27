@@ -1,15 +1,13 @@
 package main
 
 import (
-	"errors"
-	"fmt"
 	"github.com/levpaul/idolscape-backend/internal/cmdflags"
+	"github.com/levpaul/idolscape-backend/internal/config"
 	"github.com/levpaul/idolscape-backend/internal/debug"
-	"github.com/levpaul/idolscape-backend/internal/flusher"
+	"github.com/levpaul/idolscape-backend/internal/events"
 	"github.com/levpaul/idolscape-backend/internal/ingest"
-	"github.com/levpaul/idolscape-backend/internal/network"
-	"github.com/levpaul/idolscape-backend/internal/propagation"
-	"github.com/levpaul/idolscape-backend/internal/validation"
+	"github.com/levpaul/idolscape-backend/internal/propagator"
+	"github.com/levpaul/idolscape-backend/internal/simulator"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
@@ -32,35 +30,23 @@ func main() {
 		go debug.StartDebugServer()
 	}
 
-	viperConfig()
+	config.Init()
 
-	// Legacy - to be replaced by flusher pipeline
-	go network.StartNetworkManager()
-
-	startPipeline("ingest", ingest.Start)
-	startPipeline("validation", validation.Start)
-	startPipeline("flusher", flusher.Start)
-	startPipeline("propagation", propagation.Start)
+	startPipeline("events", events.Start)
+	startPipeline("simulator", simulator.Start)   // Simulate each game tick for each client
+	startPipeline("propagator", propagator.Start) // Send updates to each client
+	startPipeline("ingest", ingest.Start)         // Take client input + handle registration
 
 	select {
 	case err := <-pipelineErrCh:
 		log.Err(err).Send()
-		return
+		os.Exit(1)
 	}
 }
 
-func viperConfig() {
-	viper.SetConfigName("dev")
-	viper.SetConfigType("toml")
-	viper.AddConfigPath("./config")
-	if err := viper.ReadInConfig(); err != nil {
-		panic(fmt.Errorf("Fatal error config file: %s \n", err))
+func startPipeline(plName string, pipeline func(chan<- error) error) {
+	if err := pipeline(pipelineErrCh); err != nil {
+		log.Err(err).Str("pipeline name", plName).Msg("Failed to start pipeline")
+		os.Exit(1)
 	}
-}
-
-func startPipeline(plName string, pipeline func(chan<- error)) {
-	go func() {
-		pipeline(pipelineErrCh)
-		pipelineErrCh <- errors.New("pipeline job returned unexpectedly")
-	}()
 }

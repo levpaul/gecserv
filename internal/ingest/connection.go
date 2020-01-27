@@ -1,4 +1,4 @@
-package network
+package ingest
 
 import (
 	"encoding/json"

@@ -3,7 +3,7 @@ package debug
 import (
 	flatbuffers "github.com/google/flatbuffers/go"
 	"github.com/levpaul/idolscape-backend/internal/fb"
-	"github.com/levpaul/idolscape-backend/internal/network"
+	"github.com/levpaul/idolscape-backend/internal/ingest"
 	"github.com/rs/zerolog/log"
 	"math"
 	"math/rand"
@@ -54,7 +54,7 @@ func (c *client) handle() {
 }
 
 func (c *client) handleInputLine(input string) {
-	conn, err := network.DebugGetLiveConnection()
+	conn, err := ingest.DebugGetLiveConnection()
 	if err != nil {
 		c.conn.Write([]byte("No active connections found\n"))
 		return

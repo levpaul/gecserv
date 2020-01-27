@@ -2,7 +2,6 @@ package ingest
 
 import (
 	"encoding/json"
-	"github.com/levpaul/idolscape-backend/internal/network"
 	"github.com/levpaul/idolscape-backend/pkg/signal"
 	"github.com/pion/webrtc"
 	"github.com/rs/zerolog/log"
@@ -59,7 +58,7 @@ func newRTCSessionHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func initPeerConnection(peerConnection *webrtc.PeerConnection) (*webrtc.DataChannel, error) {
-	var conn *network.Connection
+	var conn *Connection
 	// Create a datachannel with label 'data'
 	dataChannel, err := peerConnection.CreateDataChannel("data", nil)
 	if err != nil {
@@ -76,7 +75,7 @@ func initPeerConnection(peerConnection *webrtc.PeerConnection) (*webrtc.DataChan
 	})
 
 	dataChannel.OnOpen(func() {
-		conn = network.NewConnection(peerConnection, dataChannel)
+		conn = NewConnection(peerConnection, dataChannel)
 		conn.SendInitState()
 	})
 
