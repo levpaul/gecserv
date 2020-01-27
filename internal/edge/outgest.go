@@ -1,4 +1,4 @@
-package outgest
+package edge
 
 var pipeErr chan<- error
 
