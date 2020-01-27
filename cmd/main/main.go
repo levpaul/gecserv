@@ -4,8 +4,9 @@ import (
 	"github.com/levpaul/idolscape-backend/internal/cmdflags"
 	"github.com/levpaul/idolscape-backend/internal/config"
 	"github.com/levpaul/idolscape-backend/internal/debug"
-	"github.com/levpaul/idolscape-backend/internal/events"
+	"github.com/levpaul/idolscape-backend/internal/eventbus"
 	"github.com/levpaul/idolscape-backend/internal/ingest"
+	"github.com/levpaul/idolscape-backend/internal/outgest"
 	"github.com/levpaul/idolscape-backend/internal/propagator"
 	"github.com/levpaul/idolscape-backend/internal/simulator"
 	"github.com/rs/zerolog"
@@ -32,9 +33,10 @@ func main() {
 
 	config.Init()
 
-	startPipeline("events", events.Start)
+	startPipeline("playerbus", eventbus.Start)
 	startPipeline("simulator", simulator.Start)   // Simulate each game tick for each client
 	startPipeline("propagator", propagator.Start) // Send updates to each client
+	startPipeline("ingest", outgest.Start)        // Take propagation events and send to players
 	startPipeline("ingest", ingest.Start)         // Take client input + handle registration
 
 	select {

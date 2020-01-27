@@ -5,6 +5,7 @@ include 'player.fbs';
 
 namespace msg;
 
+// TODO: Rename this as ServerMessage
 union GameMessage { MapUpdate }
 
 table Message {
@@ -16,6 +17,13 @@ table MapUpdate {
     logins: [Player];
     logouts: [float64];
     psyncs: [Player];
+}
+
+enum PlayerAction: uint8 { W_DOWN, W_UP, A_DOWN, A_UP, S_DOWN, S_UP, D_DOWN, D_UP, M1_DOWN, M1_UP, M2_DOWN, M2_UP}
+
+table PlayerInput {
+    seq: uint32;
+    actions: [PlayerAction];
 }
 
 root_type Message;

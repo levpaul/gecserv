@@ -96,6 +96,60 @@ func (rcv GameMessage) UnPack(table flatbuffers.Table) *GameMessageT {
 	return nil
 }
 
+type PlayerAction byte
+
+const (
+	PlayerActionW_DOWN  PlayerAction = 0
+	PlayerActionW_UP    PlayerAction = 1
+	PlayerActionA_DOWN  PlayerAction = 2
+	PlayerActionA_UP    PlayerAction = 3
+	PlayerActionS_DOWN  PlayerAction = 4
+	PlayerActionS_UP    PlayerAction = 5
+	PlayerActionD_DOWN  PlayerAction = 6
+	PlayerActionD_UP    PlayerAction = 7
+	PlayerActionM1_DOWN PlayerAction = 8
+	PlayerActionM1_UP   PlayerAction = 9
+	PlayerActionM2_DOWN PlayerAction = 10
+	PlayerActionM2_UP   PlayerAction = 11
+)
+
+var EnumNamesPlayerAction = map[PlayerAction]string{
+	PlayerActionW_DOWN:  "W_DOWN",
+	PlayerActionW_UP:    "W_UP",
+	PlayerActionA_DOWN:  "A_DOWN",
+	PlayerActionA_UP:    "A_UP",
+	PlayerActionS_DOWN:  "S_DOWN",
+	PlayerActionS_UP:    "S_UP",
+	PlayerActionD_DOWN:  "D_DOWN",
+	PlayerActionD_UP:    "D_UP",
+	PlayerActionM1_DOWN: "M1_DOWN",
+	PlayerActionM1_UP:   "M1_UP",
+	PlayerActionM2_DOWN: "M2_DOWN",
+	PlayerActionM2_UP:   "M2_UP",
+}
+
+var EnumValuesPlayerAction = map[string]PlayerAction{
+	"W_DOWN":  PlayerActionW_DOWN,
+	"W_UP":    PlayerActionW_UP,
+	"A_DOWN":  PlayerActionA_DOWN,
+	"A_UP":    PlayerActionA_UP,
+	"S_DOWN":  PlayerActionS_DOWN,
+	"S_UP":    PlayerActionS_UP,
+	"D_DOWN":  PlayerActionD_DOWN,
+	"D_UP":    PlayerActionD_UP,
+	"M1_DOWN": PlayerActionM1_DOWN,
+	"M1_UP":   PlayerActionM1_UP,
+	"M2_DOWN": PlayerActionM2_DOWN,
+	"M2_UP":   PlayerActionM2_UP,
+}
+
+func (v PlayerAction) String() string {
+	if s, ok := EnumNamesPlayerAction[v]; ok {
+		return s
+	}
+	return "PlayerAction(" + strconv.FormatInt(int64(v), 10) + ")"
+}
+
 type Vec2T struct {
 	X float32
 	Y float32
@@ -603,5 +657,124 @@ func MapUpdateStartPsyncsVector(builder *flatbuffers.Builder, numElems int) flat
 	return builder.StartVector(4, numElems, 4)
 }
 func MapUpdateEnd(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
+	return builder.EndObject()
+}
+type PlayerInputT struct {
+	Seq uint32
+	Actions []PlayerAction
+}
+
+func (t *PlayerInputT) Pack(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
+	if t == nil { return 0 }
+	actionsOffset := flatbuffers.UOffsetT(0)
+	if t.Actions != nil {
+		actionsLength := len(t.Actions)
+		PlayerInputStartActionsVector(builder, actionsLength)
+		for j := actionsLength - 1; j >= 0; j-- {
+			builder.PrependByte(byte(t.Actions[j]))
+		}
+		actionsOffset = builder.EndVector(actionsLength)
+	}
+	PlayerInputStart(builder)
+	PlayerInputAddSeq(builder, t.Seq)
+	PlayerInputAddActions(builder, actionsOffset)
+	return PlayerInputEnd(builder)
+}
+
+func (rcv *PlayerInput) UnPackTo(t *PlayerInputT) {
+	t.Seq = rcv.Seq()
+	actionsLength := rcv.ActionsLength()
+	t.Actions = make([]PlayerAction, actionsLength)
+	for j := 0; j < actionsLength; j++ {
+		t.Actions[j] = rcv.Actions(j)
+	}
+}
+
+func (rcv *PlayerInput) UnPack() *PlayerInputT {
+	if rcv == nil { return nil }
+	t := &PlayerInputT{}
+	rcv.UnPackTo(t)
+	return t
+}
+
+type PlayerInput struct {
+	_tab flatbuffers.Table
+}
+
+func GetRootAsPlayerInput(buf []byte, offset flatbuffers.UOffsetT) *PlayerInput {
+	n := flatbuffers.GetUOffsetT(buf[offset:])
+	x := &PlayerInput{}
+	x.Init(buf, n+offset)
+	return x
+}
+
+func (rcv *PlayerInput) Init(buf []byte, i flatbuffers.UOffsetT) {
+	rcv._tab.Bytes = buf
+	rcv._tab.Pos = i
+}
+
+func (rcv *PlayerInput) Table() flatbuffers.Table {
+	return rcv._tab
+}
+
+func (rcv *PlayerInput) Seq() uint32 {
+	o := flatbuffers.UOffsetT(rcv._tab.Offset(4))
+	if o != 0 {
+		return rcv._tab.GetUint32(o + rcv._tab.Pos)
+	}
+	return 0
+}
+
+func (rcv *PlayerInput) MutateSeq(n uint32) bool {
+	return rcv._tab.MutateUint32Slot(4, n)
+}
+
+func (rcv *PlayerInput) Actions(j int) PlayerAction {
+	o := flatbuffers.UOffsetT(rcv._tab.Offset(6))
+	if o != 0 {
+		a := rcv._tab.Vector(o)
+		return PlayerAction(rcv._tab.GetByte(a + flatbuffers.UOffsetT(j*1)))
+	}
+	return 0
+}
+
+func (rcv *PlayerInput) ActionsLength() int {
+	o := flatbuffers.UOffsetT(rcv._tab.Offset(6))
+	if o != 0 {
+		return rcv._tab.VectorLen(o)
+	}
+	return 0
+}
+
+func (rcv *PlayerInput) ActionsBytes() []byte {
+	o := flatbuffers.UOffsetT(rcv._tab.Offset(6))
+	if o != 0 {
+		return rcv._tab.ByteVector(o + rcv._tab.Pos)
+	}
+	return nil
+}
+
+func (rcv *PlayerInput) MutateActions(j int, n PlayerAction) bool {
+	o := flatbuffers.UOffsetT(rcv._tab.Offset(6))
+	if o != 0 {
+		a := rcv._tab.Vector(o)
+		return rcv._tab.MutateByte(a+flatbuffers.UOffsetT(j*1), byte(n))
+	}
+	return false
+}
+
+func PlayerInputStart(builder *flatbuffers.Builder) {
+	builder.StartObject(2)
+}
+func PlayerInputAddSeq(builder *flatbuffers.Builder, seq uint32) {
+	builder.PrependUint32Slot(0, seq, 0)
+}
+func PlayerInputAddActions(builder *flatbuffers.Builder, actions flatbuffers.UOffsetT) {
+	builder.PrependUOffsetTSlot(1, flatbuffers.UOffsetT(actions), 0)
+}
+func PlayerInputStartActionsVector(builder *flatbuffers.Builder, numElems int) flatbuffers.UOffsetT {
+	return builder.StartVector(1, numElems, 1)
+}
+func PlayerInputEnd(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
 	return builder.EndObject()
 }

@@ -24,6 +24,25 @@ export enum GameMessage{
 }};
 
 /**
+ * @enum {number}
+ */
+export namespace msg{
+export enum PlayerAction{
+  W_DOWN= 0,
+  W_UP= 1,
+  A_DOWN= 2,
+  A_UP= 3,
+  S_DOWN= 4,
+  S_UP= 5,
+  D_DOWN= 6,
+  D_UP= 7,
+  M1_DOWN= 8,
+  M1_UP= 9,
+  M2_DOWN= 10,
+  M2_UP= 11
+}};
+
+/**
  * @constructor
  */
 export namespace msg{
@@ -576,6 +595,138 @@ static create(builder:flatbuffers.Builder, seq:number, loginsOffset:flatbuffers.
   MapUpdate.addLogouts(builder, logoutsOffset);
   MapUpdate.addPsyncs(builder, psyncsOffset);
   return MapUpdate.end(builder);
+}
+}
+}
+/**
+ * @constructor
+ */
+export namespace msg{
+export class PlayerInput {
+  bb: flatbuffers.ByteBuffer|null = null;
+
+  bb_pos:number = 0;
+/**
+ * @param number i
+ * @param flatbuffers.ByteBuffer bb
+ * @returns PlayerInput
+ */
+__init(i:number, bb:flatbuffers.ByteBuffer):PlayerInput {
+  this.bb_pos = i;
+  this.bb = bb;
+  return this;
+};
+
+/**
+ * @param flatbuffers.ByteBuffer bb
+ * @param PlayerInput= obj
+ * @returns PlayerInput
+ */
+static getRoot(bb:flatbuffers.ByteBuffer, obj?:PlayerInput):PlayerInput {
+  return (obj || new PlayerInput()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @param flatbuffers.ByteBuffer bb
+ * @param PlayerInput= obj
+ * @returns PlayerInput
+ */
+static getSizePrefixedRoot(bb:flatbuffers.ByteBuffer, obj?:PlayerInput):PlayerInput {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new PlayerInput()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @returns number
+ */
+seq():number {
+  var offset = this.bb!.__offset(this.bb_pos, 4);
+  return offset ? this.bb!.readUint32(this.bb_pos + offset) : 0;
+};
+
+/**
+ * @param number index
+ * @returns msg.PlayerAction
+ */
+actions(index: number):msg.PlayerAction|null {
+  var offset = this.bb!.__offset(this.bb_pos, 6);
+  return offset ? /**  */ (this.bb!.readUint8(this.bb!.__vector(this.bb_pos + offset) + index)) : /**  */ (0);
+};
+
+/**
+ * @returns number
+ */
+actionsLength():number {
+  var offset = this.bb!.__offset(this.bb_pos, 6);
+  return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
+};
+
+/**
+ * @returns Uint8Array
+ */
+actionsArray():Uint8Array|null {
+  var offset = this.bb!.__offset(this.bb_pos, 6);
+  return offset ? new Uint8Array(this.bb!.bytes().buffer, this.bb!.bytes().byteOffset + this.bb!.__vector(this.bb_pos + offset), this.bb!.__vector_len(this.bb_pos + offset)) : null;
+};
+
+/**
+ * @param flatbuffers.Builder builder
+ */
+static start(builder:flatbuffers.Builder) {
+  builder.startObject(2);
+};
+
+/**
+ * @param flatbuffers.Builder builder
+ * @param number seq
+ */
+static addSeq(builder:flatbuffers.Builder, seq:number) {
+  builder.addFieldInt32(0, seq, 0);
+};
+
+/**
+ * @param flatbuffers.Builder builder
+ * @param flatbuffers.Offset actionsOffset
+ */
+static addActions(builder:flatbuffers.Builder, actionsOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(1, actionsOffset, 0);
+};
+
+/**
+ * @param flatbuffers.Builder builder
+ * @param Array.<msg.PlayerAction> data
+ * @returns flatbuffers.Offset
+ */
+static createActionsVector(builder:flatbuffers.Builder, data:msg.PlayerAction[]):flatbuffers.Offset {
+  builder.startVector(1, data.length, 1);
+  for (var i = data.length - 1; i >= 0; i--) {
+    builder.addInt8(data[i]);
+  }
+  return builder.endVector();
+};
+
+/**
+ * @param flatbuffers.Builder builder
+ * @param number numElems
+ */
+static startActionsVector(builder:flatbuffers.Builder, numElems:number) {
+  builder.startVector(1, numElems, 1);
+};
+
+/**
+ * @param flatbuffers.Builder builder
+ * @returns flatbuffers.Offset
+ */
+static end(builder:flatbuffers.Builder):flatbuffers.Offset {
+  var offset = builder.endObject();
+  return offset;
+};
+
+static create(builder:flatbuffers.Builder, seq:number, actionsOffset:flatbuffers.Offset):flatbuffers.Offset {
+  PlayerInput.start(builder);
+  PlayerInput.addSeq(builder, seq);
+  PlayerInput.addActions(builder, actionsOffset);
+  return PlayerInput.end(builder);
 }
 }
 }

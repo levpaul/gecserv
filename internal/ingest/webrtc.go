@@ -75,6 +75,7 @@ func initPeerConnection(peerConnection *webrtc.PeerConnection) (*webrtc.DataChan
 	})
 
 	dataChannel.OnOpen(func() {
+		newLoginEvent()
 		conn = NewConnection(peerConnection, dataChannel)
 		conn.SendInitState()
 	})

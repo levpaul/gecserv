@@ -41,11 +41,13 @@ func simulate() error {
 
 	log.Info().Msg("Game tick!")
 
-	//GetCurrentGameTickEvents()
-	// loop over chars
-	// if there is an action, simulate
-	// else predict action
-	// when no chars left, end tick simulation
+	// Get current list of chars from GAMESTATE
+
+	// Check event bus for actions from current chars -> simulate/predict
+
+	// Get logins/logoffs from event bus -> update GAMESTATE chars
+
+	// end sim tick
 
 	return nil
 }
