@@ -21,6 +21,7 @@ func Start(pErr chan<- error) error {
 	go startSimulator()
 	return nil
 }
+
 func startSimulator() {
 	// Start timer
 	gt := time.Tick(config.GameTickDuration)
