@@ -2,6 +2,7 @@ package ingest
 
 import (
 	"encoding/json"
+	"github.com/levpaul/idolscape-backend/internal/eventbus"
 	"github.com/levpaul/idolscape-backend/pkg/signal"
 	"github.com/pion/webrtc"
 	"github.com/rs/zerolog/log"
@@ -75,9 +76,10 @@ func initPeerConnection(peerConnection *webrtc.PeerConnection) (*webrtc.DataChan
 	})
 
 	dataChannel.OnOpen(func() {
-		newLoginEvent()
-		conn = NewConnection(peerConnection, dataChannel)
-		conn.SendInitState()
+		nc := eventbus.NetworkConnection{peerConnection, dataChannel}
+		eventbus.SendLoginEvent(nc)
+		//conn = NewConnection(peerConnection, dataChannel)
+		//conn.SendInitState()
 	})
 
 	dataChannel.OnClose(func() {

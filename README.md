@@ -18,4 +18,6 @@ This is a toy project to experience developing a UDP game server for an action M
  - If client action includes hit-tests for attacks, server rolls back target to client's gametick for hit testing
  - If client hits based on what "they saw" then rewrite game state to accept hit
  
+### Add
+ - Add a maximum rollback limit for attackers - they will need to compensate themselves after such a limit
  

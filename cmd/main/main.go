@@ -8,6 +8,7 @@ import (
 	"github.com/levpaul/idolscape-backend/internal/edge"
 	"github.com/levpaul/idolscape-backend/internal/eventbus"
 	"github.com/levpaul/idolscape-backend/internal/ingest"
+	"github.com/levpaul/idolscape-backend/internal/netconn"
 	"github.com/levpaul/idolscape-backend/internal/propagator"
 	"github.com/levpaul/idolscape-backend/internal/simulator"
 	"github.com/rs/zerolog"
@@ -35,6 +36,7 @@ func main() {
 	config.Init()
 
 	startPipeline("eventbus", eventbus.Start)       // Manage message sharing channels
+	startPipeline("netconn", netconn.Start)         // Manage data connections to clients
 	startPipeline("simulator", simulator.Start)     // Simulate each game tick for each client
 	startPipeline("propagator", propagator.Start)   // Send updates to each client
 	startPipeline("connections", connections.Start) // Manage data connections to clients
