@@ -1,4 +1,4 @@
-package eventbus
+package eb
 
 import (
 	"github.com/rs/zerolog/log"
@@ -21,40 +21,45 @@ func Start(pErr chan<- error) error {
 	return nil
 }
 
+type Event struct {
+	Topic EventTopic
+	Data  interface{}
+}
+
 type eventBus struct {
 	subs map[EventTopic]subscribers
 	rw   sync.RWMutex
 }
 
-type subscribers []chan<- interface{}
+type subscribers []chan<- Event
 
-func Publish(t EventTopic, data interface{}) {
-	eb.publish(t, data)
+func Publish(ev Event) {
+	eb.publish(ev)
 }
 
-func (e *eventBus) publish(t EventTopic, data interface{}) {
+func (e *eventBus) publish(ev Event) {
 	e.rw.RLock()
 	defer eb.rw.RUnlock()
-	subCp := append(subscribers{}, e.subs[t]...)
-	go func(data interface{}, subs subscribers) {
+	subCp := append(subscribers{}, e.subs[ev.Topic]...)
+	go func(ev Event, subs subscribers) {
 		timeout := time.After(publishTimeout)
 		for _, ch := range subs {
 			select {
-			case ch <- data:
+			case ch <- ev:
 			case <-timeout:
-				log.Error().Interface("Data", data).Int("Topic", int(t)).Msg("Failed to publish event")
+				log.Error().Interface("Event", ev).Msg("Failed to publish event")
 				return
 			}
 
 		}
-	}(data, subCp)
+	}(ev, subCp)
 }
 
-func Subscribe(t EventTopic, subCh chan<- interface{}) {
+func Subscribe(t EventTopic, subCh chan<- Event) {
 	eb.subscribe(t, subCh)
 }
 
-func (e *eventBus) subscribe(t EventTopic, subCh chan<- interface{}) {
+func (e *eventBus) subscribe(t EventTopic, subCh chan<- Event) {
 	e.rw.Lock()
 	defer e.rw.Unlock()
 

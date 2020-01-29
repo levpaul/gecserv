@@ -1,4 +1,4 @@
-package eventbus
+package eb
 
 import "github.com/pion/webrtc"
 

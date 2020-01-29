@@ -1,9 +1,8 @@
 package netconn
 
 import (
-	uuid2 "github.com/google/uuid"
-	"github.com/levpaul/idolscape-backend/internal/state"
-	"github.com/pion/webrtc"
+	"fmt"
+	"github.com/levpaul/idolscape-backend/internal/eb"
 )
 
 var pipeErr chan<- error
@@ -15,29 +14,33 @@ func Start(pErr chan<- error) error {
 }
 
 func start() {
+	nc := make(chan eb.Event, 20)
+	eb.Subscribe(eb.NCONNECT, nc)
+
 	for {
-		select {}
+		select {
+		case conn := <-nc:
+			x := conn.Data.(eb.NetworkConnection)
+			fmt.Printf("Got network conn: %#v\n", x)
+		}
 	}
 }
 
-type NetworkConnectEvent {
-
-}
-
-
-func NewConnection(pc *webrtc.PeerConnection, dc *webrtc.DataChannel) *Connection {
-	connsLock.Lock()
-	defer connsLock.Unlock()
-	conns = append(conns, Connection{
-		Uuid: uuid2.New(),
-		pc:   pc,
-		dc:   dc,
-		GS:   state.NewGameState(),
-	})
-
-	newConnLock.Lock()
-	defer newConnLock.Unlock()
-	newConns = append(newConns, &conns[len(conns)-1])
-
-	return &conns[len(conns)-1]
-}
+//
+//func NewConnection(pc *webrtc.PeerConnection, dc *webrtc.DataChannel) {
+//	event.Publish(event.NCONNECT, event.NetworkConnection{pc, dc})
+//}
+//connsLock.Lock()
+//defer connsLock.Unlock()
+//conns = append(conns, Connection{
+//Uuid: uuid2.New(),
+//pc:   pc,
+//dc:   dc,
+//GS:   state.NewGameState(),
+//})
+//
+//newConnLock.Lock()
+//defer newConnLock.Unlock()
+//newConns = append(newConns, &conns[len(conns)-1])
+//
+//return &conns[len(conns)-1]

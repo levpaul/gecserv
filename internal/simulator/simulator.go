@@ -2,7 +2,6 @@ package simulator
 
 import (
 	"github.com/levpaul/idolscape-backend/internal/config"
-	"github.com/rs/zerolog/log"
 	"sync"
 	"time"
 )
@@ -40,7 +39,7 @@ func startSimulator() {
 
 func simulate() error {
 
-	log.Info().Msg("Game tick!")
+	//log.Info().Msg("Game tick!")
 
 	// Get current list of chars from GAMESTATE
 

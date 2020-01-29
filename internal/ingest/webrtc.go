@@ -2,7 +2,8 @@ package ingest
 
 import (
 	"encoding/json"
-	"github.com/levpaul/idolscape-backend/internal/eventbus"
+	"fmt"
+	"github.com/levpaul/idolscape-backend/internal/eb"
 	"github.com/levpaul/idolscape-backend/pkg/signal"
 	"github.com/pion/webrtc"
 	"github.com/rs/zerolog/log"
@@ -59,7 +60,6 @@ func newRTCSessionHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func initPeerConnection(peerConnection *webrtc.PeerConnection) (*webrtc.DataChannel, error) {
-	var conn *Connection
 	// Create a datachannel with label 'data'
 	dataChannel, err := peerConnection.CreateDataChannel("data", nil)
 	if err != nil {
@@ -70,20 +70,22 @@ func initPeerConnection(peerConnection *webrtc.PeerConnection) (*webrtc.DataChan
 	// This will notify you when the peer has connected/disconnected
 	peerConnection.OnICEConnectionStateChange(func(connectionState webrtc.ICEConnectionState) {
 		if connectionState == webrtc.ICEConnectionStateDisconnected {
+			log.Info().Msg("Closing connection")
 			dataChannel.Close()
 			peerConnection.Close()
 		}
 	})
 
 	dataChannel.OnOpen(func() {
-		nc := eventbus.NetworkConnection{peerConnection, dataChannel}
-		eventbus.SendLoginEvent(nc)
+		fmt.Println("Haaaaaellow")
+		eb.Publish(eb.Event{eb.NCONNECT, eb.NetworkConnection{peerConnection, dataChannel}})
 		//conn = NewConnection(peerConnection, dataChannel)
 		//conn.SendInitState()
 	})
 
 	dataChannel.OnClose(func() {
-		conn.Disconnect()
+		log.Info().Msg("Disconnecting dc")
+		//conn.Disconnect()
 	})
 
 	// Register text message handling -TODO: Make this publish to validation topic
@@ -96,7 +98,8 @@ func initPeerConnection(peerConnection *webrtc.PeerConnection) (*webrtc.DataChan
 		}
 
 		if messageType.Type == "getchars" {
-			conn.SendOtherCharsState()
+			log.Info().Msg("Sending other chars state")
+			//conn.SendOtherCharsState()
 		}
 	})
 	return dataChannel, nil

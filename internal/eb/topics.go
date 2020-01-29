@@ -1,4 +1,4 @@
-package eventbus
+package eb
 
 const (
 	PLOGINS = iota
