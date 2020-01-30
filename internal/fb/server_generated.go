@@ -268,6 +268,99 @@ func CreateVec3(builder *flatbuffers.Builder, x float32, y float32, z float32) f
 	builder.PrependFloat32(x)
 	return builder.Offset()
 }
+type MapT struct {
+	Players []*PlayerT
+}
+
+func (t *MapT) Pack(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
+	if t == nil { return 0 }
+	playersOffset := flatbuffers.UOffsetT(0)
+	if t.Players != nil {
+		playersLength := len(t.Players)
+		playersOffsets := make([]flatbuffers.UOffsetT, playersLength)
+		for j := 0; j < playersLength; j++ {
+			playersOffsets[j] = t.Players[j].Pack(builder)
+		}
+		MapStartPlayersVector(builder, playersLength)
+		for j := playersLength - 1; j >= 0; j-- {
+			builder.PrependUOffsetT(playersOffsets[j])
+		}
+		playersOffset = builder.EndVector(playersLength)
+	}
+	MapStart(builder)
+	MapAddPlayers(builder, playersOffset)
+	return MapEnd(builder)
+}
+
+func (rcv *Map) UnPackTo(t *MapT) {
+	playersLength := rcv.PlayersLength()
+	t.Players = make([]*PlayerT, playersLength)
+	for j := 0; j < playersLength; j++ {
+		x := Player{}
+		rcv.Players(&x, j)
+		t.Players[j] = x.UnPack()
+	}
+}
+
+func (rcv *Map) UnPack() *MapT {
+	if rcv == nil { return nil }
+	t := &MapT{}
+	rcv.UnPackTo(t)
+	return t
+}
+
+type Map struct {
+	_tab flatbuffers.Table
+}
+
+func GetRootAsMap(buf []byte, offset flatbuffers.UOffsetT) *Map {
+	n := flatbuffers.GetUOffsetT(buf[offset:])
+	x := &Map{}
+	x.Init(buf, n+offset)
+	return x
+}
+
+func (rcv *Map) Init(buf []byte, i flatbuffers.UOffsetT) {
+	rcv._tab.Bytes = buf
+	rcv._tab.Pos = i
+}
+
+func (rcv *Map) Table() flatbuffers.Table {
+	return rcv._tab
+}
+
+func (rcv *Map) Players(obj *Player, j int) bool {
+	o := flatbuffers.UOffsetT(rcv._tab.Offset(4))
+	if o != 0 {
+		x := rcv._tab.Vector(o)
+		x += flatbuffers.UOffsetT(j) * 4
+		x = rcv._tab.Indirect(x)
+		obj.Init(rcv._tab.Bytes, x)
+		return true
+	}
+	return false
+}
+
+func (rcv *Map) PlayersLength() int {
+	o := flatbuffers.UOffsetT(rcv._tab.Offset(4))
+	if o != 0 {
+		return rcv._tab.VectorLen(o)
+	}
+	return 0
+}
+
+func MapStart(builder *flatbuffers.Builder) {
+	builder.StartObject(1)
+}
+func MapAddPlayers(builder *flatbuffers.Builder, players flatbuffers.UOffsetT) {
+	builder.PrependUOffsetTSlot(0, flatbuffers.UOffsetT(players), 0)
+}
+func MapStartPlayersVector(builder *flatbuffers.Builder, numElems int) flatbuffers.UOffsetT {
+	return builder.StartVector(4, numElems, 4)
+}
+func MapEnd(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
+	return builder.EndObject()
+}
 type PlayerT struct {
 	Pos *Vec2T
 	Sid float64

@@ -346,22 +346,6 @@ static end(builder:flatbuffers.Builder):flatbuffers.Offset {
   return offset;
 };
 
-/**
- * @param flatbuffers.Builder builder
- * @param flatbuffers.Offset offset
- */
-static finishBuffer(builder:flatbuffers.Builder, offset:flatbuffers.Offset) {
-  builder.finish(offset);
-};
-
-/**
- * @param flatbuffers.Builder builder
- * @param flatbuffers.Offset offset
- */
-static finishSizePrefixedBuffer(builder:flatbuffers.Builder, offset:flatbuffers.Offset) {
-  builder.finish(offset, undefined, true);
-};
-
 static create(builder:flatbuffers.Builder, dataType:msg.GameMessage, dataOffset:flatbuffers.Offset):flatbuffers.Offset {
   Message.start(builder);
   Message.addDataType(builder, dataType);

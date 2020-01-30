@@ -1,5 +1,4 @@
-include 'core.fbs';
-
+include "core.fbs";
 namespace msg;
 
 table Player {

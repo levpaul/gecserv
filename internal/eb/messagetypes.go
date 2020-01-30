@@ -1,9 +1,13 @@
 package eb
 
-import "github.com/pion/webrtc"
+import (
+	uuid2 "github.com/google/uuid"
+	"github.com/pion/webrtc"
+)
 
 type NetworkConnection struct {
-	PC *webrtc.PeerConnection
-	DC *webrtc.DataChannel
+	AID uuid2.UUID // Avatar ID
+	PC  *webrtc.PeerConnection
+	DC  *webrtc.DataChannel
 	// Add login token here
 }

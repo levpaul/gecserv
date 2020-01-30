@@ -10,6 +10,7 @@ import (
 	"github.com/levpaul/idolscape-backend/internal/netconn"
 	"github.com/levpaul/idolscape-backend/internal/propagator"
 	"github.com/levpaul/idolscape-backend/internal/simulator"
+	"github.com/levpaul/idolscape-backend/internal/state"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
@@ -34,6 +35,7 @@ func main() {
 
 	config.Init()
 
+	startPipeline("statemgr", state.Start)        // Manage game state
 	startPipeline("eventbus", eb.Start)           // Manage message sharing channels
 	startPipeline("netconn", netconn.Start)       // Manage data connections to clients
 	startPipeline("simulator", simulator.Start)   // Simulate each game tick for each client

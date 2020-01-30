@@ -1,0 +1,6 @@
+include 'core.fbs';
+include 'map.fbs';
+include 'msg.fbs';
+include 'player.fbs';
+
+namespace msg;

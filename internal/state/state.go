@@ -1,17 +1,26 @@
 package state
 
-import "math/rand"
+import (
+	"github.com/levpaul/idolscape-backend/internal/fb"
+)
 
-type CharState struct {
-	Color int32
-	XPos  float32
-	YPos  float32
+var pipeErr chan<- error
+
+var mapState fb.MapT
+
+func Start(pErr chan<- error) error {
+	pipeErr = pErr
+	initialize()
+	go start()
+	return nil
 }
 
-func NewGameState() *CharState {
-	return &CharState{
-		Color: rand.Int31() % 0xffffff,
-		XPos:  rand.Float32() * 20,
-		YPos:  rand.Float32() * 20,
+func initialize() {
+	mapState = fb.MapT{}
+}
+
+func start() {
+	for {
+		select {}
 	}
 }

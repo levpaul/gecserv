@@ -1,0 +1,5 @@
+namespace msg;
+
+table Map {
+    players: [Player];
+}

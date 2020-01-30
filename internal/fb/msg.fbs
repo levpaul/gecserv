@@ -1,9 +1,8 @@
-// flatc -g --gen-object-api  --gen-onefile --gen-all --go-namespace fb  msg.fbs
-// flatc -T --no-fb-import --gen-all --short-names msg.fbs
-include 'core.fbs';
-include 'player.fbs';
+include "player.fbs";
+include "core.fbs";
 
 namespace msg;
+
 
 // TODO: Rename this as ServerMessage
 union GameMessage { MapUpdate }
@@ -26,4 +25,3 @@ table PlayerInput {
     actions: [PlayerAction];
 }
 
-root_type Message;
