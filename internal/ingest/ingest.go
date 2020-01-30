@@ -5,9 +5,10 @@ import (
 	"net/http"
 )
 
-var pipeErr chan error
+var pipeErr chan<- error
 
 func Start(pErr chan<- error) error {
+	pipeErr = pErr
 	go startWebServer()
 	return nil
 }

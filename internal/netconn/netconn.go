@@ -5,6 +5,7 @@ import (
 	"github.com/levpaul/idolscape-backend/internal/eb"
 	"github.com/levpaul/idolscape-backend/internal/fb"
 	"github.com/pion/webrtc"
+	"github.com/rs/zerolog/log"
 	"math/rand"
 )
 
@@ -33,22 +34,35 @@ func initialize() {
 func start() {
 	nc := make(chan eb.Event, 20)
 	eb.Subscribe(eb.N_CONNECT, nc)
+	eb.Subscribe(eb.N_DISCONN, nc)
 
 	for {
 		select {
 		case conn := <-nc:
-			tConn := conn.Data.(eb.NetworkConnection)
-			p := generateNewCharacter() // TODO: Replace with persistence fetching
-			pConnMap[tConn.AID] = playerConn{
-				dc: tConn.DC,
-				pc: tConn.PC,
-				p:  p,
+			switch conn.Topic {
+			case eb.N_CONNECT:
+
+				tConn := conn.Data.(eb.NetworkConnection)
+				p := generateNewCharacter() // TODO: Replace with persistence fetching
+				pConnMap[tConn.AID] = playerConn{
+					dc: tConn.DC,
+					p:  p,
+				}
+				// We have established WebRTC + PlayerLogin (AID) + PlayerObject now, publish to Simulator
+				log.Info().Msg("Sending the thing")
+				eb.Publish(eb.Event{
+					Topic: eb.S_LOGIN,
+					Data:  p,
+				})
+
+			case eb.N_DISCONN:
+				eb.Publish(eb.Event{
+					Topic: eb.S_LOGOUT,
+					Data:  conn.Data,
+				})
+			default:
+				log.Error().Msg("Unsupported message type ")
 			}
-			// We have established WebRTC + PlayerLogin (AID) + PlayerObject now, publish to Simulator
-			eb.Publish(eb.Event{
-				Topic: eb.S_LOGIN,
-				Data:  p,
-			})
 		}
 	}
 }
@@ -56,8 +70,10 @@ func start() {
 func generateNewCharacter() *fb.PlayerT {
 	p := new(fb.PlayerT)
 	p.Col = fb.ColorBlue
-	p.Pos.X = (rand.Float32() - 0.5) * 40
-	p.Pos.Y = (rand.Float32() - 0.5) * 40
+	p.Pos = &fb.Vec2T{
+		X: (rand.Float32() - 0.5) * 40,
+		Y: (rand.Float32() - 0.5) * 40,
+	}
 
 	return p
 }

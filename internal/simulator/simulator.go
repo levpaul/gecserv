@@ -1,24 +1,33 @@
 package simulator
 
 import (
+	"context"
 	"github.com/levpaul/idolscape-backend/internal/config"
-	"sync"
+	"github.com/levpaul/idolscape-backend/internal/eb"
+	"github.com/rs/zerolog/log"
 	"time"
 )
 
 var (
-	tickDoneListeners []chan struct{}
-	tickDone          = make(chan struct{})
-	tickDoneLock      sync.Mutex
-
 	pipeErr chan<- error
+
+	loginCh  chan eb.Event
+	logoutCh chan eb.Event
 )
 
 func Start(pErr chan<- error) error {
 	pipeErr = pErr
-	go startTickDoneNotifier()
+	initialize()
 	go startSimulator()
 	return nil
+}
+
+func initialize() {
+	loginCh = make(chan eb.Event, 128)
+	logoutCh = make(chan eb.Event, 128)
+
+	eb.Subscribe(eb.S_LOGIN, loginCh)
+	eb.Subscribe(eb.S_LOGOUT, logoutCh)
 }
 
 func startSimulator() {
@@ -32,40 +41,48 @@ func startSimulator() {
 				pipeErr <- err
 				return
 			}
-			tickDone <- struct{}{}
+			// TODO: Publish an EB message like "S_COMPLETE"
 		}
 	}
 }
 
 func simulate() error {
+	ctx, cancel := context.WithTimeout(context.Background(), config.GameTickDuration)
+	defer cancel()
 
-	//log.Info().Msg("Game tick!")
+	go handleLogins(ctx)
+	go handleLogouts(ctx)
 
-	// Get current list of chars from GAMESTATE
-
-	// Check event bus for actions from current chars -> simulate/predict
-
-	// Get logins/logoffs from event bus -> update GAMESTATE chars
-
-	// end sim tick
+	select {
+	case <-ctx.Done():
+		log.Ctx(ctx).Info().Send()
+	}
 
 	return nil
 }
 
-func GetTickDoneCh() <-chan struct{} {
-	tickDoneLock.Lock()
-	defer tickDoneLock.Unlock()
-	tl := make(chan struct{})
-	tickDoneListeners = append(tickDoneListeners, tl)
-	return nil
-}
-
-// TODO: Revist this and make non-blocking
-func startTickDoneNotifier() {
+func handleLogins(ctx context.Context) {
 	for {
-		<-tickDone
-		for _, lch := range tickDoneListeners {
-			lch <- struct{}{}
+		select {
+		case <-loginCh:
+			log.Info().Msg("SOMEONE LOGIN")
+		case <-ctx.Done():
+			return
+		default:
+			return
+		}
+	}
+}
+
+func handleLogouts(ctx context.Context) {
+	for {
+		select {
+		case <-logoutCh:
+			log.Info().Msg("SOMEONE LOGOUT")
+		case <-ctx.Done():
+			return
+		default:
+			return
 		}
 	}
 }

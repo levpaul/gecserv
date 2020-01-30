@@ -2,11 +2,11 @@ package eb
 
 const (
 	// Simulation messages
-	S_LOGIN = iota
+	S_LOGIN = 0 + iota
 	S_LOGOUT
 	S_INPUT
 	// Network messages
-	N_CONNECT = 128
+	N_CONNECT = 128 + iota
 	N_DISCONN
 	// Used as marker for event topics - insert new topics ABOVE this one
 	NUMTOPICS = 255

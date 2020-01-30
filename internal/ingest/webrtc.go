@@ -60,6 +60,7 @@ func newRTCSessionHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func initPeerConnection(peerConnection *webrtc.PeerConnection) (*webrtc.DataChannel, error) {
+	var aid uuid2.UUID
 	// Create a datachannel with label 'data'
 	dataChannel, err := peerConnection.CreateDataChannel("data", nil)
 	if err != nil {
@@ -77,16 +78,19 @@ func initPeerConnection(peerConnection *webrtc.PeerConnection) (*webrtc.DataChan
 	})
 
 	dataChannel.OnOpen(func() {
+		aid = uuid2.New() // TODO: Replace with login / persistance
 		eb.Publish(eb.Event{eb.N_CONNECT, eb.NetworkConnection{
-			AID: uuid2.New(), // TODO: Replace with login / persistance
-			PC:  peerConnection,
+			AID: aid,
 			DC:  dataChannel,
 		}})
 	})
 
 	dataChannel.OnClose(func() {
 		log.Info().Msg("Disconnecting dc")
-		//conn.Disconnect()
+		eb.Publish(eb.Event{
+			Topic: eb.N_DISCONN,
+			Data:  aid,
+		})
 	})
 
 	// Register text message handling -TODO: Make this publish to validation topic

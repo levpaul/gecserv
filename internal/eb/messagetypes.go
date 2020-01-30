@@ -7,7 +7,6 @@ import (
 
 type NetworkConnection struct {
 	AID uuid2.UUID // Avatar ID
-	PC  *webrtc.PeerConnection
 	DC  *webrtc.DataChannel
 	// Add login token here
 }

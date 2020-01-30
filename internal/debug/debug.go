@@ -3,7 +3,6 @@ package debug
 import (
 	flatbuffers "github.com/google/flatbuffers/go"
 	"github.com/levpaul/idolscape-backend/internal/fb"
-	"github.com/levpaul/idolscape-backend/internal/ingest"
 	"github.com/rs/zerolog/log"
 	"math"
 	"math/rand"
@@ -54,13 +53,14 @@ func (c *client) handle() {
 }
 
 func (c *client) handleInputLine(input string) {
-	conn, err := ingest.DebugGetLiveConnection()
-	if err != nil {
-		c.conn.Write([]byte("No active connections found\n"))
-		return
-	}
-	c.conn.Write([]byte("Adding new player\n"))
-	conn.SendNewPlayerState(genRandomPlayer())
+	//conn, err := ingest.DebugGetLiveConnection()
+	//if err != nil {
+	//	c.conn.Write([]byte("No active connections found\n"))
+	//	return
+	//}
+	//c.conn.Write([]byte("Adding new player\n"))
+	//conn.SendNewPlayerState(genRandomPlayer())
+	log.Print("Echo: ", input)
 }
 
 func genRandomPlayer() []byte {
