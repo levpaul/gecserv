@@ -6,13 +6,16 @@ import (
 	"github.com/levpaul/idolscape-backend/internal/fb"
 	"github.com/pion/webrtc"
 	"github.com/rs/zerolog/log"
+	"math"
 	"math/rand"
+	"sync/atomic"
 )
 
 var (
 	pipeErr chan<- error
 
-	pConnMap map[uuid2.UUID]playerConn
+	pConnMap       map[uuid2.UUID]playerConn
+	sessionCounter uint64
 )
 
 type playerConn struct {
@@ -27,8 +30,10 @@ func Start(pErr chan<- error) error {
 	go start()
 	return nil
 }
+
 func initialize() {
 	pConnMap = make(map[uuid2.UUID]playerConn)
+	sessionCounter = rand.Uint64()
 }
 
 func start() {
@@ -41,7 +46,6 @@ func start() {
 		case conn := <-nc:
 			switch conn.Topic {
 			case eb.N_CONNECT:
-
 				tConn := conn.Data.(eb.NetworkConnection)
 				p := generateNewCharacter() // TODO: Replace with persistence fetching
 				pConnMap[tConn.AID] = playerConn{
@@ -52,14 +56,18 @@ func start() {
 				log.Info().Msg("Sending the thing")
 				eb.Publish(eb.Event{
 					Topic: eb.S_LOGIN,
-					Data:  p,
+					Data:  eb.S_LOGIN_T(p),
 				})
 
 			case eb.N_DISCONN:
+				aid := conn.Data.(eb.N_DISCONN_T)
+				pid := pConnMap[*aid].p.Sid
+				delete(pConnMap, *aid)
 				eb.Publish(eb.Event{
 					Topic: eb.S_LOGOUT,
-					Data:  conn.Data,
+					Data:  eb.S_LOGOUT_T(pid),
 				})
+
 			default:
 				log.Error().Msg("Unsupported message type ")
 			}
@@ -74,25 +82,7 @@ func generateNewCharacter() *fb.PlayerT {
 		X: (rand.Float32() - 0.5) * 40,
 		Y: (rand.Float32() - 0.5) * 40,
 	}
+	p.Sid = math.Float64frombits(atomic.AddUint64(&sessionCounter, 1))
 
 	return p
 }
-
-//
-//func NewConnection(pc *webrtc.PeerConnection, dc *webrtc.DataChannel) {
-//	event.Publish(event.N_CONNECT, event.NetworkConnection{pc, dc})
-//}
-//connsLock.Lock()
-//defer connsLock.Unlock()
-//conns = append(conns, Connection{
-//Uuid: uuid2.New(),
-//pc:   pc,
-//dc:   dc,
-//GS:   state.NewGameState(),
-//})
-//
-//newConnLock.Lock()
-//defer newConnLock.Unlock()
-//newConns = append(newConns, &conns[len(conns)-1])
-//
-//return &conns[len(conns)-1]

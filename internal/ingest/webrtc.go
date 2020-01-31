@@ -89,7 +89,7 @@ func initPeerConnection(peerConnection *webrtc.PeerConnection) (*webrtc.DataChan
 		log.Info().Msg("Disconnecting dc")
 		eb.Publish(eb.Event{
 			Topic: eb.N_DISCONN,
-			Data:  aid,
+			Data:  eb.N_DISCONN_T(&aid),
 		})
 	})
 

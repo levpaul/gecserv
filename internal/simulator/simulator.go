@@ -5,14 +5,14 @@ import (
 	"github.com/levpaul/idolscape-backend/internal/config"
 	"github.com/levpaul/idolscape-backend/internal/eb"
 	"github.com/rs/zerolog/log"
+	"reflect"
 	"time"
 )
 
 var (
 	pipeErr chan<- error
 
-	loginCh  chan eb.Event
-	logoutCh chan eb.Event
+	busCh chan eb.Event
 )
 
 func Start(pErr chan<- error) error {
@@ -23,11 +23,10 @@ func Start(pErr chan<- error) error {
 }
 
 func initialize() {
-	loginCh = make(chan eb.Event, 128)
-	logoutCh = make(chan eb.Event, 128)
+	busCh = make(chan eb.Event, 128)
 
-	eb.Subscribe(eb.S_LOGIN, loginCh)
-	eb.Subscribe(eb.S_LOGOUT, logoutCh)
+	eb.Subscribe(eb.S_LOGIN, busCh)
+	eb.Subscribe(eb.S_LOGOUT, busCh)
 }
 
 func startSimulator() {
@@ -42,6 +41,7 @@ func startSimulator() {
 				return
 			}
 			// TODO: Publish an EB message like "S_COMPLETE"
+			//   - Then make propagator listen for that to cut diffs and send
 		}
 	}
 }
@@ -50,39 +50,41 @@ func simulate() error {
 	ctx, cancel := context.WithTimeout(context.Background(), config.GameTickDuration)
 	defer cancel()
 
-	go handleLogins(ctx)
-	go handleLogouts(ctx)
+	for {
+		select {
+		case e := <-busCh:
+			switch e.Topic {
+			case eb.S_LOGIN:
+				//fpt := e.Data.(*fb.PlayerT)
+				data, ok := e.Data.(eb.S_LOGIN_T)
+				if !ok {
+					log.Error().Interface("data", e.Data).Msg("Failed to type assert S_LOGIN message")
+					log.Error().Interface("type", reflect.TypeOf(e.Data)).Send()
+					continue
+				}
+				handleLogin(ctx, eb.S_LOGIN_T(data))
+			case eb.S_LOGOUT:
+				data, ok := e.Data.(eb.S_LOGOUT_T)
+				if !ok {
+					log.Error().Interface("data", e.Data).Msg("Failed to type assert S_LOGOUT message")
+					continue
+				}
+				handleLogout(ctx, data)
+			}
 
-	select {
-	case <-ctx.Done():
-		log.Ctx(ctx).Info().Send()
+		case <-ctx.Done():
+			log.Ctx(ctx).Info().Send()
+		}
 	}
 
 	return nil
 }
 
-func handleLogins(ctx context.Context) {
-	for {
-		select {
-		case <-loginCh:
-			log.Info().Msg("SOMEONE LOGIN")
-		case <-ctx.Done():
-			return
-		default:
-			return
-		}
-	}
+func handleLogin(ctx context.Context, e eb.S_LOGIN_T) {
+	log.Info().Float64("SID", e.Sid).Msg("SOMEONE LOGIN")
+	// TODO: Add player to map
 }
 
-func handleLogouts(ctx context.Context) {
-	for {
-		select {
-		case <-logoutCh:
-			log.Info().Msg("SOMEONE LOGOUT")
-		case <-ctx.Done():
-			return
-		default:
-			return
-		}
-	}
+func handleLogout(ctx context.Context, e eb.S_LOGOUT_T) {
+	log.Info().Float64("SID", float64(e)).Msg("SOMEONE LOGout")
 }
