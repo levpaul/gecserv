@@ -1,10 +1,10 @@
-package netconn
+package netpub
 
 import (
 	uuid2 "github.com/google/uuid"
+	"github.com/levpaul/idolscape-backend/internal/core"
 	"github.com/levpaul/idolscape-backend/internal/eb"
 	"github.com/levpaul/idolscape-backend/internal/fb"
-	"github.com/pion/webrtc"
 	"github.com/rs/zerolog/log"
 	"math"
 	"math/rand"
@@ -20,9 +20,8 @@ var (
 
 // TODO: Make this struct more generic - Sender/Reciever interface
 type playerConn struct {
-	dc *webrtc.DataChannel
-	pc *webrtc.PeerConnection
-	p  *fb.PlayerT
+	conn core.SenderCloser
+	p    *fb.PlayerT
 }
 
 func Start(pErr chan<- error) error {
@@ -48,14 +47,13 @@ func startListening() {
 			switch conn.Topic {
 
 			case eb.N_CONNECT:
-				tConn := conn.Data.(eb.NetworkConnection)
+				aPConn := conn.Data.(eb.N_CONNECT_T)
 				p := generateNewCharacter() // TODO: Replace with persistence fetching
-				pConnMap[tConn.AID] = playerConn{
-					dc: tConn.DC,
-					p:  p,
+				pConnMap[aPConn.AID] = playerConn{
+					conn: aPConn.Conn,
+					p:    p,
 				}
 				// We have established WebRTC + PlayerLogin (AID) + PlayerObject now, publish to Simulator
-				log.Info().Msg("Sending the thing")
 				eb.Publish(eb.Event{
 					Topic: eb.S_LOGIN,
 					Data:  eb.S_LOGIN_T(p),

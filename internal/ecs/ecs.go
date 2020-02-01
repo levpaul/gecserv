@@ -22,7 +22,7 @@ func initialize() {
 	// Load default systems for all sectors
 	for _, s := range sectors {
 		s.AddSystem(new(systems.LoginSystem))
-		//s.AddSystem(new(systems.LogoutSystem))
+		s.AddSystem(new(systems.LogoutSystem))
 	}
 }
 

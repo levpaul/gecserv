@@ -3,6 +3,7 @@ package ingest
 import (
 	"encoding/json"
 	uuid2 "github.com/google/uuid"
+	"github.com/levpaul/idolscape-backend/internal/core"
 	"github.com/levpaul/idolscape-backend/internal/eb"
 	"github.com/levpaul/idolscape-backend/pkg/signal"
 	"github.com/pion/webrtc"
@@ -79,10 +80,10 @@ func initPeerConnection(peerConnection *webrtc.PeerConnection) (*webrtc.DataChan
 
 	dataChannel.OnOpen(func() {
 		aid = uuid2.New() // TODO: Replace with login / persistance
-		eb.Publish(eb.Event{eb.N_CONNECT, eb.NetworkConnection{
-			AID: aid,
-			DC:  dataChannel,
-		}})
+		eb.Publish(eb.Event{eb.N_CONNECT, eb.N_CONNECT_T(&core.AvatarPubConn{
+			AID:  aid,
+			Conn: dataChannel,
+		})})
 	})
 
 	dataChannel.OnClose(func() {

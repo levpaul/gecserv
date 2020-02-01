@@ -2,6 +2,7 @@ package eb
 
 import (
 	uuid2 "github.com/google/uuid"
+	"github.com/levpaul/idolscape-backend/internal/core"
 	"github.com/levpaul/idolscape-backend/internal/fb"
 )
 
@@ -23,7 +24,7 @@ type (
 	S_LOGOUT_T float64
 	S_INPUT_T  int
 	// Network messages
-	N_CONNECT_T *NetworkConnection
+	N_CONNECT_T *core.AvatarPubConn
 	N_DISCONN_T *uuid2.UUID
 )
 
