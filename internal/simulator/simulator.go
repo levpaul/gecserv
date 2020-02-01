@@ -54,8 +54,8 @@ func simulate() error {
 		select {
 		case e := <-busCh:
 			switch e.Topic {
+
 			case eb.S_LOGIN:
-				//fpt := e.Data.(*fb.PlayerT)
 				data, ok := e.Data.(eb.S_LOGIN_T)
 				if !ok {
 					log.Error().Interface("data", e.Data).Msg("Failed to type assert S_LOGIN message")
@@ -63,6 +63,7 @@ func simulate() error {
 					continue
 				}
 				handleLogin(ctx, eb.S_LOGIN_T(data))
+
 			case eb.S_LOGOUT:
 				data, ok := e.Data.(eb.S_LOGOUT_T)
 				if !ok {
@@ -71,6 +72,11 @@ func simulate() error {
 				}
 				handleLogout(ctx, data)
 			}
+
+			//handle movement
+			// handle attacks
+			// handle items
+			// handle
 
 		case <-ctx.Done():
 			log.Ctx(ctx).Info().Send()

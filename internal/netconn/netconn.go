@@ -27,7 +27,7 @@ type playerConn struct {
 func Start(pErr chan<- error) error {
 	pipeErr = pErr
 	initialize()
-	go start()
+	go startListening()
 	return nil
 }
 
@@ -36,7 +36,7 @@ func initialize() {
 	sessionCounter = rand.Uint64()
 }
 
-func start() {
+func startListening() {
 	nc := make(chan eb.Event, 20)
 	eb.Subscribe(eb.N_CONNECT, nc)
 	eb.Subscribe(eb.N_DISCONN, nc)
@@ -45,6 +45,7 @@ func start() {
 		select {
 		case conn := <-nc:
 			switch conn.Topic {
+
 			case eb.N_CONNECT:
 				tConn := conn.Data.(eb.NetworkConnection)
 				p := generateNewCharacter() // TODO: Replace with persistence fetching

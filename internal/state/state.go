@@ -24,3 +24,5 @@ func start() {
 		select {}
 	}
 }
+
+func AddPlayer() {}
