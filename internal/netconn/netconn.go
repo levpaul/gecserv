@@ -18,6 +18,7 @@ var (
 	sessionCounter uint64
 )
 
+// TODO: Make this struct more generic - Sender/Reciever interface
 type playerConn struct {
 	dc *webrtc.DataChannel
 	pc *webrtc.PeerConnection

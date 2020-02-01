@@ -5,12 +5,11 @@ import (
 	"github.com/levpaul/idolscape-backend/internal/config"
 	"github.com/levpaul/idolscape-backend/internal/debug"
 	"github.com/levpaul/idolscape-backend/internal/eb"
-	"github.com/levpaul/idolscape-backend/internal/edge"
+	"github.com/levpaul/idolscape-backend/internal/ecs"
 	"github.com/levpaul/idolscape-backend/internal/ingest"
 	"github.com/levpaul/idolscape-backend/internal/netconn"
 	"github.com/levpaul/idolscape-backend/internal/propagator"
 	"github.com/levpaul/idolscape-backend/internal/simulator"
-	"github.com/levpaul/idolscape-backend/internal/state"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
@@ -35,12 +34,11 @@ func main() {
 
 	config.Init()
 
-	startPipeline("statemgr", state.Start)        // Manage game state
 	startPipeline("eventbus", eb.Start)           // Manage message sharing channels
+	startPipeline("ecs", ecs.Start)               // Manage game state
 	startPipeline("netconn", netconn.Start)       // Manage data connections to clients
 	startPipeline("simulator", simulator.Start)   // Simulate each game tick for each client
 	startPipeline("propagator", propagator.Start) // Send updates to each client
-	startPipeline("edge", edge.Start)             // Take propagation events and send to players
 	startPipeline("ingest", ingest.Start)         // Take client input + handle registration
 
 	select {

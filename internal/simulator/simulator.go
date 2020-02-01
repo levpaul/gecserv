@@ -3,9 +3,10 @@ package simulator
 import (
 	"context"
 	"github.com/levpaul/idolscape-backend/internal/config"
+	"github.com/levpaul/idolscape-backend/internal/core"
 	"github.com/levpaul/idolscape-backend/internal/eb"
+	"github.com/levpaul/idolscape-backend/internal/ecs"
 	"github.com/rs/zerolog/log"
-	"reflect"
 	"time"
 )
 
@@ -25,7 +26,6 @@ func Start(pErr chan<- error) error {
 func initialize() {
 	busCh = make(chan eb.Event, 128)
 
-	eb.Subscribe(eb.S_LOGIN, busCh)
 	eb.Subscribe(eb.S_LOGOUT, busCh)
 }
 
@@ -64,46 +64,39 @@ func simulate() error {
 
 	// Each system can read/push from the message bus to during their update calls
 
-	for {
+updateLoop:
+	for _, s := range ecs.GetSectors() {
 		select {
-		case e := <-busCh:
-			switch e.Topic {
-
-			case eb.S_LOGIN:
-				data, ok := e.Data.(eb.S_LOGIN_T)
-				if !ok {
-					log.Error().Interface("data", e.Data).Msg("Failed to type assert S_LOGIN message")
-					log.Error().Interface("type", reflect.TypeOf(e.Data)).Send()
-					continue
-				}
-				handleLogin(ctx, eb.S_LOGIN_T(data))
-
-			case eb.S_LOGOUT:
-				data, ok := e.Data.(eb.S_LOGOUT_T)
-				if !ok {
-					log.Error().Interface("data", e.Data).Msg("Failed to type assert S_LOGOUT message")
-					continue
-				}
-				handleLogout(ctx, data)
-			}
-
-			//handle movement
-			// handle attacks
-			// handle items
-			// handle
-
 		case <-ctx.Done():
-			log.Ctx(ctx).Info().Send()
+			break updateLoop
+		default:
 		}
+		s.Update(ctx, core.GameTick(1))
 	}
 
 	return nil
 }
 
-func handleLogin(ctx context.Context, e eb.S_LOGIN_T) {
-	log.Info().Float64("SID", e.Sid).Msg("SOMEONE LOGIN")
-	// TODO: Add player to map
-}
+//	case e := <-busCh:
+//		switch e.Topic {
+//		case eb.S_LOGOUT:
+//			data, ok := e.Data.(eb.S_LOGOUT_T)
+//			if !ok {
+//				log.Error().Interface("data", e.Data).Msg("Failed to type assert S_LOGOUT message")
+//				continue
+//			}
+//			handleLogout(ctx, data)
+//		}
+//
+//		//handle movement
+//		// handle attacks
+//		// handle items
+//		// handle
+//
+//	case <-ctx.Done():
+//		log.Ctx(ctx).Info().Send()
+//	}
+//}
 
 func handleLogout(ctx context.Context, e eb.S_LOGOUT_T) {
 	log.Info().Float64("SID", float64(e)).Msg("SOMEONE LOGout")
