@@ -50,6 +50,20 @@ func simulate() error {
 	ctx, cancel := context.WithTimeout(context.Background(), config.GameTickDuration)
 	defer cancel()
 
+	// This function should actually run through all the systems on a mapSegment, calling the updates
+	// Segments should use priority such that an ordering like this occurs:
+
+	// LoginSystem (adds player entities to map)
+	// LogoutSystem (removes player entities from map)
+	// PlayerMovementSystem
+	// NPCMovementSystem
+	// ...
+	// Then?
+	// ENDGAMETICK -> Publish Prop msg -> Begin propagation system update
+	// So maybe have two main "Worlds" Sim/Prop?
+
+	// Each system can read/push from the message bus to during their update calls
+
 	for {
 		select {
 		case e := <-busCh:
