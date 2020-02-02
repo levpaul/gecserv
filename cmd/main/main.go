@@ -9,6 +9,7 @@ import (
 	"github.com/levpaul/idolscape-backend/internal/ingest"
 	"github.com/levpaul/idolscape-backend/internal/netpub"
 	"github.com/levpaul/idolscape-backend/internal/propagator"
+	"github.com/levpaul/idolscape-backend/internal/sectormgr"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
@@ -33,8 +34,9 @@ func main() {
 
 	config.Init()
 
-	startPipeline("eventbus", eb.Start)           // Manage message sharing channels
-	startPipeline("ecs", ecs.Start)               // Manage game state + loop
+	startPipeline("eventbus", eb.Start) // Manage message sharing channels
+	startPipeline("ecs", ecs.Start)     // Manage game state + loop
+	startPipeline("sector-manager", sectormgr.Start)
 	startPipeline("netconn", netpub.Start)        // Manage data connections to clients
 	startPipeline("propagator", propagator.Start) // Send updates to each client
 	startPipeline("ingest", ingest.Start)         // Take client input + handle registration

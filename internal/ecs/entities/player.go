@@ -6,6 +6,6 @@ import (
 )
 
 type PlayerE struct {
-	ecs.BaseEntity
+	*ecs.BaseEntity
 	*fb.PlayerT
 }

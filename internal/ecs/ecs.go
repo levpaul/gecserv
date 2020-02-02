@@ -3,7 +3,6 @@ package ecs
 import (
 	"errors"
 	"github.com/levpaul/idolscape-backend/internal/core"
-	"github.com/levpaul/idolscape-backend/internal/ecs/systems"
 )
 
 var (
@@ -20,21 +19,13 @@ func Start(pErr chan<- error) error {
 }
 
 func initialize() {
-	sectors = map[core.SectorID]*sectorAdmin{
-		1: newSectorAdmin(1),
-	}
+	sectors = make(map[core.SectorID]*sectorAdmin)
 
-	// Load default systems for all sectors
-	for _, s := range sectors {
-		// TODO: Split these out to some sort of loader and make AddSystem/AddSector public
-		s.addSystem(new(systems.LoginSystem))
-		s.addSystem(new(systems.LogoutSystem))
-	}
 }
 
 // TODO: This may be a bit loose - we could instead have a reverse lookup
 //   of Systems -> Sectors
-func AddEntityToSector(sectorID core.SectorID, en Entity) error {
+func AddEntityToSector(en Entity, sectorID core.SectorID) error {
 	sa, ok := sectors[sectorID]
 	if !ok {
 		return errors.New("invalid sector ID")
@@ -42,4 +33,47 @@ func AddEntityToSector(sectorID core.SectorID, en Entity) error {
 
 	sa.addEntity(en)
 	return nil
+}
+
+func AddSystemToSector(sys System, sectorID core.SectorID) error {
+	sa, ok := sectors[sectorID]
+	if !ok {
+		return errors.New("invalid sector ID")
+	}
+
+	sa.addSystem(sys)
+	return nil
+}
+
+func AddEntitySystemToSector(sys EntitySystem, ifce interface{}, sectorID core.SectorID) error {
+	sa, ok := sectors[sectorID]
+	if !ok {
+		return errors.New("invalid sector ID")
+	}
+
+	sa.addEntitySystem(sys, ifce)
+	return nil
+}
+
+func AddNewSector() core.SectorID {
+	sa := newSectorAdmin()
+	sectors[sa.id] = sa
+	return sa.id
+}
+
+func RemoveEntityFromSector(en core.EntityID, sectorID core.SectorID) {
+	sectors[sectorID].removeEntity(en)
+}
+
+func GetEntityFromSector(entityID core.EntityID, sectorID core.SectorID) (Entity, error) {
+	sa, ok := sectors[sectorID]
+	if !ok {
+		return nil, errors.New("invalid sector ID")
+	}
+
+	ent := sa.getEntity(entityID)
+	if ent == nil {
+		return nil, errors.New("entity not found in sector")
+	}
+	return ent, nil
 }

@@ -28,11 +28,10 @@ func newRTCSessionHandler(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	dataChannel, err := initPeerConnection(peerConnection)
+	_, err = initPeerConnection(peerConnection)
 	if err != nil {
 		panic(err)
 	}
-	log.Info().Interface("DataChannel", dataChannel).Send()
 
 	offer := webrtc.SessionDescription{}
 	signal.Decode(string(clientSD), &offer)
@@ -72,7 +71,6 @@ func initPeerConnection(peerConnection *webrtc.PeerConnection) (*webrtc.DataChan
 	// This will notify you when the peer has connected/disconnected
 	peerConnection.OnICEConnectionStateChange(func(connectionState webrtc.ICEConnectionState) {
 		if connectionState == webrtc.ICEConnectionStateDisconnected {
-			log.Info().Msg("Closing connection")
 			dataChannel.Close()
 			peerConnection.Close()
 		}
@@ -87,7 +85,6 @@ func initPeerConnection(peerConnection *webrtc.PeerConnection) (*webrtc.DataChan
 	})
 
 	dataChannel.OnClose(func() {
-		log.Info().Msg("Disconnecting dc")
 		eb.Publish(eb.Event{
 			Topic: eb.N_DISCONN,
 			Data:  eb.N_DISCONN_T(&aid),

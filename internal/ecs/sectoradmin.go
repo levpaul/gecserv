@@ -2,10 +2,15 @@ package ecs
 
 import (
 	"context"
-	"fmt"
 	"github.com/levpaul/idolscape-backend/internal/core"
+	"github.com/rs/zerolog/log"
 	"reflect"
 	"sync"
+)
+
+var (
+	sectorIDCounter   core.SectorID
+	sectorIDCounterMu sync.Mutex
 )
 
 type sectorAdmin struct {
@@ -14,16 +19,19 @@ type sectorAdmin struct {
 	entities map[core.EntityID]Entity
 
 	// used to automatically adding new entities to relevant systems
-	entitySystemInterfaces map[reflect.Type]reflect.Type
+	entitySystemTypes map[reflect.Type]reflect.Type
 
 	mu sync.Mutex
 }
 
-func newSectorAdmin(SID core.SectorID) *sectorAdmin {
+func newSectorAdmin() *sectorAdmin {
+	sectorIDCounterMu.Lock()
+	defer sectorIDCounterMu.Unlock()
+	sectorIDCounter += 1
 	sa := new(sectorAdmin)
-	sa.id = SID
+	sa.id = sectorIDCounter
 	sa.entities = make(map[core.EntityID]Entity)
-	sa.entitySystemInterfaces = make(map[reflect.Type]reflect.Type)
+	sa.entitySystemTypes = make(map[reflect.Type]reflect.Type)
 	return sa
 }
 
@@ -43,30 +51,56 @@ func (sa *sectorAdmin) addEntitySystem(s EntitySystem, ifce interface{}) {
 
 	// Create entry for system for given interface - many systems could
 	// be used for a single entity type
-	sa.entitySystemInterfaces[reflect.TypeOf(s)] = reflect.TypeOf(ifce)
+	sa.entitySystemTypes[reflect.TypeOf(s)] = reflect.TypeOf(ifce)
 }
 
 func (sa *sectorAdmin) addEntity(en Entity) {
-	fmt.Println("ONE NEW ENT")
+	sa.mu.Lock()
+	defer sa.mu.Unlock()
+
+	sa.entities[en.ID()] = en
+
 	for _, s := range sa.systems {
-		fmt.Println(s)
+		es, ok := s.(EntitySystem)
+		if !ok {
+			continue
+		}
+
+		if reflect.TypeOf(en) == sa.entitySystemTypes[reflect.TypeOf(es)] {
+			es.Add(en.ID())
+		}
 	}
 }
 
 func (sa *sectorAdmin) removeEntity(en core.EntityID) {
 	sa.mu.Lock()
 	defer sa.mu.Unlock()
+
 	for _, s := range sa.systems {
 		if es, ok := s.(EntitySystem); ok {
 			es.Remove(en)
 		}
 	}
+
+	delete(sa.entities, en)
 }
 
 func (sa *sectorAdmin) update(ctx context.Context, dt core.GameTick) {
-	sa.mu.Lock()
-	defer sa.mu.Unlock()
 	for _, s := range sa.systems {
-		s.Update(ctx, dt)
+		select {
+		case <-ctx.Done():
+			log.Warn().Uint32("SectorID", uint32(sa.id)).Msg("Context timout in sectoradmin update")
+			return
+		default:
+			s.Update(ctx, dt)
+		}
 	}
+}
+
+func (sa *sectorAdmin) getEntity(entityID core.EntityID) Entity {
+	en, ok := sa.entities[entityID]
+	if !ok {
+		return nil
+	}
+	return en
 }
