@@ -34,12 +34,12 @@ func main() {
 
 	config.Init()
 
-	startPipeline("eventbus", eb.Start) // Manage message sharing channels
-	startPipeline("ecs", ecs.Start)     // Manage game state + loop
-	startPipeline("sector-manager", sectormgr.Start)
-	startPipeline("netconn", netpub.Start)        // Manage data connections to clients
-	startPipeline("propagator", propagator.Start) // Send updates to each client
-	startPipeline("ingest", ingest.Start)         // Take client input + handle registration
+	startPipeline("eventbus", eb.Start)              // Manage message sharing channels
+	startPipeline("ecs", ecs.Start)                  // Manage game state + loop
+	startPipeline("sector-manager", sectormgr.Start) // Manage loading sectors and adding required systems
+	startPipeline("netconn", netpub.Start)           // Manage data connections to clients
+	startPipeline("propagator", propagator.Start)    // Send updates to each client
+	startPipeline("ingest", ingest.Start)            // Take client input + handle registration
 
 	select {
 	case err := <-pipelineErrCh:

@@ -10,7 +10,7 @@ const (
 	// Simulation messages
 	S_LOGIN = 0 + iota
 	S_LOGOUT
-	S_INPUT
+	S_GAMETICK_DONE
 	// Network messages
 	N_CONNECT = 128 + iota
 	N_DISCONN
@@ -20,9 +20,10 @@ const (
 
 // Bindings of message topics to types
 type (
-	S_LOGIN_T  *fb.PlayerT
-	S_LOGOUT_T float64
-	S_INPUT_T  int
+	S_LOGIN_T         *fb.PlayerT
+	S_LOGOUT_T        float64
+	S_GAMETICK_DONE_T struct{}
+	S_INPUT_T         int
 	// Network messages
 	N_CONNECT_T *core.AvatarPubConn
 	N_DISCONN_T *uuid2.UUID
