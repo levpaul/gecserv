@@ -11,7 +11,7 @@ import (
 type sectorAdmin struct {
 	id       core.SectorID
 	systems  []System
-	entities map[EntityID]Entity
+	entities map[core.EntityID]Entity
 
 	// used to automatically adding new entities to relevant systems
 	entitySystemInterfaces map[reflect.Type]reflect.Type
@@ -22,7 +22,7 @@ type sectorAdmin struct {
 func newSectorAdmin(SID core.SectorID) *sectorAdmin {
 	sa := new(sectorAdmin)
 	sa.id = SID
-	sa.entities = make(map[EntityID]Entity)
+	sa.entities = make(map[core.EntityID]Entity)
 	sa.entitySystemInterfaces = make(map[reflect.Type]reflect.Type)
 	return sa
 }
@@ -32,6 +32,9 @@ func (sa *sectorAdmin) addSystem(s System) {
 	if sysInit, ok := s.(Initializer); ok {
 		sysInit.Init()
 	}
+
+	s.SetSectorID(sa.id)
+
 	sa.systems = append(sa.systems, s)
 }
 
@@ -44,12 +47,13 @@ func (sa *sectorAdmin) addEntitySystem(s EntitySystem, ifce interface{}) {
 }
 
 func (sa *sectorAdmin) addEntity(en Entity) {
+	fmt.Println("ONE NEW ENT")
 	for _, s := range sa.systems {
 		fmt.Println(s)
 	}
 }
 
-func (sa *sectorAdmin) removeEntity(en EntityID) {
+func (sa *sectorAdmin) removeEntity(en core.EntityID) {
 	sa.mu.Lock()
 	defer sa.mu.Unlock()
 	for _, s := range sa.systems {
@@ -59,7 +63,7 @@ func (sa *sectorAdmin) removeEntity(en EntityID) {
 	}
 }
 
-func (sa *sectorAdmin) Update(ctx context.Context, dt core.GameTick) {
+func (sa *sectorAdmin) update(ctx context.Context, dt core.GameTick) {
 	sa.mu.Lock()
 	defer sa.mu.Unlock()
 	for _, s := range sa.systems {

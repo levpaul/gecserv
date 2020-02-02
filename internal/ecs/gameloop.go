@@ -48,7 +48,7 @@ updateLoop:
 			break updateLoop
 		default:
 		}
-		s.Update(ctx, core.GameTick(1))
+		s.update(ctx, core.GameTick(1))
 	}
 	return nil
 }

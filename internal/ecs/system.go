@@ -18,8 +18,8 @@ type System interface {
 // interface must be specified for the types of entities a given EntitySystem operates on.
 type EntitySystem interface {
 	System
-	Add(en EntityID)
-	Remove(en EntityID)
+	Add(en core.EntityID)
+	Remove(en core.EntityID)
 }
 
 // Initializer is an interface that sectorAdmin checks for on any System passed to it and
