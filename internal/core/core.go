@@ -3,6 +3,7 @@ package core
 import uuid2 "github.com/google/uuid"
 
 type GameTick uint32
+type SectorID uint16
 
 type SenderCloser interface {
 	Send([]byte) error

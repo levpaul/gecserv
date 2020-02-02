@@ -1,31 +1,35 @@
 package ecs
 
-import "github.com/levpaul/idolscape-backend/internal/ecs/systems"
+import (
+	"github.com/levpaul/idolscape-backend/internal/core"
+	"github.com/levpaul/idolscape-backend/internal/ecs/systems"
+)
 
 var (
 	pipeErr chan<- error
 
-	sectors []*SectorAdmin
+	sectors map[core.SectorID]*sectorAdmin
 )
 
 func Start(pErr chan<- error) error {
 	pipeErr = pErr
 	initialize()
+	go updateLoop()
 	return nil
 }
 
 func initialize() {
-	sectors = []*SectorAdmin{
-		{id: 1}, // Main and only sector for now
+	sectors = map[core.SectorID]*sectorAdmin{
+		1: newSectorAdmin(1),
 	}
 
 	// Load default systems for all sectors
 	for _, s := range sectors {
-		s.AddSystem(new(systems.LoginSystem))
-		s.AddSystem(new(systems.LogoutSystem))
+		s.addSystem(new(systems.LoginSystem))
+		s.addSystem(new(systems.LogoutSystem))
 	}
 }
 
-func GetSectors() []*SectorAdmin {
-	return sectors
+func AddEntityToSector(sectorID core.SectorID) {
+
 }

@@ -11,6 +11,7 @@ import (
 // LoginSystem handles when a player has logged into a character for a
 // given sector
 type LoginSystem struct {
+	BaseSystem
 	logins chan eb.Event
 }
 
@@ -40,4 +41,16 @@ func (ls *LoginSystem) Update(ctx context.Context, dt core.GameTick) {
 
 func (ls *LoginSystem) handleLogin(ctx context.Context, player *fb.PlayerT) {
 	log.Info().Float64("SID", player.Sid).Msg("New player login!")
+	// Steps:
+	// 1 - Add player to map
+	//     -> Create 'player' entity & push through sectorAdmin?
+	//     -> Some sort of mapping store
+	//     ->
+	//     ->
+	//     ->
+	// 2 - Propagate to other players
+	//     -> Post gametick propagation + interest system
+	//     ->
+	//     ->
+
 }

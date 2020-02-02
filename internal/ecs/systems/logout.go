@@ -10,6 +10,7 @@ import (
 // LogoutSystem handles when a player has logged off a character for a
 // given sector
 type LogoutSystem struct {
+	BaseSystem
 	logouts chan eb.Event
 }
 

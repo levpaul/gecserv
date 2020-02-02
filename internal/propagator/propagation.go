@@ -10,6 +10,8 @@ func Start(pErr chan<- error) error {
 
 func start() {
 	for {
-		select {}
+		select {
+		// Listen to propagate event and go through all players, sending updates
+		}
 	}
 }

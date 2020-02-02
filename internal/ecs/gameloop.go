@@ -1,36 +1,13 @@
-package simulator
+package ecs
 
 import (
 	"context"
 	"github.com/levpaul/idolscape-backend/internal/config"
 	"github.com/levpaul/idolscape-backend/internal/core"
-	"github.com/levpaul/idolscape-backend/internal/eb"
-	"github.com/levpaul/idolscape-backend/internal/ecs"
-	"github.com/rs/zerolog/log"
 	"time"
 )
 
-var (
-	pipeErr chan<- error
-
-	busCh chan eb.Event
-)
-
-func Start(pErr chan<- error) error {
-	pipeErr = pErr
-	initialize()
-	go startSimulator()
-	return nil
-}
-
-func initialize() {
-	busCh = make(chan eb.Event, 128)
-
-	eb.Subscribe(eb.S_LOGOUT, busCh)
-}
-
-func startSimulator() {
-	// Start timer
+func updateLoop() {
 	gt := time.Tick(config.GameTickDuration)
 
 	for {
@@ -65,7 +42,7 @@ func simulate() error {
 	// Each system can read/push from the message bus to during their update calls
 
 updateLoop:
-	for _, s := range ecs.GetSectors() {
+	for _, s := range sectors {
 		select {
 		case <-ctx.Done():
 			break updateLoop
@@ -73,31 +50,5 @@ updateLoop:
 		}
 		s.Update(ctx, core.GameTick(1))
 	}
-
 	return nil
-}
-
-//	case e := <-busCh:
-//		switch e.Topic {
-//		case eb.S_LOGOUT:
-//			data, ok := e.Data.(eb.S_LOGOUT_T)
-//			if !ok {
-//				log.Error().Interface("data", e.Data).Msg("Failed to type assert S_LOGOUT message")
-//				continue
-//			}
-//			handleLogout(ctx, data)
-//		}
-//
-//		//handle movement
-//		// handle attacks
-//		// handle items
-//		// handle
-//
-//	case <-ctx.Done():
-//		log.Ctx(ctx).Info().Send()
-//	}
-//}
-
-func handleLogout(ctx context.Context, e eb.S_LOGOUT_T) {
-	log.Info().Float64("SID", float64(e)).Msg("SOMEONE LOGout")
 }
