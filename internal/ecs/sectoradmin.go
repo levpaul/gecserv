@@ -2,7 +2,6 @@ package ecs
 
 import (
 	"context"
-	"fmt"
 	"github.com/levpaul/idolscape-backend/internal/core"
 	"github.com/levpaul/idolscape-backend/internal/ecs/entities"
 	"github.com/rs/zerolog/log"
@@ -24,7 +23,9 @@ type SectorAdmin struct {
 	entitySystemTypes map[reflect.Type]reflect.Type
 
 	// Singletons
-	playerList map[float64]*entities.PlayerE
+	sectorMap   *entities.MapE
+	playerList  map[float64]*entities.PlayerE
+	interestMap [][]Entity
 
 	mu sync.Mutex
 }
@@ -32,11 +33,16 @@ type SectorAdmin struct {
 func newSectorAdmin() *SectorAdmin {
 	sectorIDCounterMu.Lock()
 	defer sectorIDCounterMu.Unlock()
-	sectorIDCounter += 1
+
 	sa := new(SectorAdmin)
+	sectorIDCounter += 1
 	sa.id = sectorIDCounter
 	sa.entities = make(map[core.EntityID]Entity)
 	sa.entitySystemTypes = make(map[reflect.Type]reflect.Type)
+
+	sa.sectorMap = entities.NewDefaultMap()
+	sa.AddEntity(sa.sectorMap)
+
 	return sa
 }
 
@@ -71,7 +77,7 @@ func (sa *SectorAdmin) AddEntity(en Entity) {
 		}
 
 		if reflect.TypeOf(en) == sa.entitySystemTypes[reflect.TypeOf(es)] {
-			es.Add(en.ID())
+			es.Add(en)
 		}
 	}
 }
@@ -113,15 +119,11 @@ func (sa *SectorAdmin) GetEntity(entityID core.EntityID) Entity {
 
 // This file contains all global getters for singleton entities
 func (sa *SectorAdmin) SetPlayerList(pl map[float64]*entities.PlayerE) {
-	fmt.Println("ASDFASDF")
-	fmt.Printf("%#v\n", sa)
 	if sa.playerList != nil {
 		log.Error().Msg("tried to set playerlist singleton which has already been set")
 		return
 	}
-	fmt.Println("ASDFASDF")
 	sa.playerList = pl
-	fmt.Println("ASDFASDF")
 }
 
 // GetPlayerList returns a current map of session IDs to player entities -

@@ -269,37 +269,31 @@ func CreateVec3(builder *flatbuffers.Builder, x float32, y float32, z float32) f
 	return builder.Offset()
 }
 type MapT struct {
-	Players []*PlayerT
+	Name string
+	GlobalX int32
+	GlobalY int32
+	MaxX float64
+	MaxY float64
 }
 
 func (t *MapT) Pack(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
 	if t == nil { return 0 }
-	playersOffset := flatbuffers.UOffsetT(0)
-	if t.Players != nil {
-		playersLength := len(t.Players)
-		playersOffsets := make([]flatbuffers.UOffsetT, playersLength)
-		for j := 0; j < playersLength; j++ {
-			playersOffsets[j] = t.Players[j].Pack(builder)
-		}
-		MapStartPlayersVector(builder, playersLength)
-		for j := playersLength - 1; j >= 0; j-- {
-			builder.PrependUOffsetT(playersOffsets[j])
-		}
-		playersOffset = builder.EndVector(playersLength)
-	}
+	nameOffset := builder.CreateString(t.Name)
 	MapStart(builder)
-	MapAddPlayers(builder, playersOffset)
+	MapAddName(builder, nameOffset)
+	MapAddGlobalX(builder, t.GlobalX)
+	MapAddGlobalY(builder, t.GlobalY)
+	MapAddMaxX(builder, t.MaxX)
+	MapAddMaxY(builder, t.MaxY)
 	return MapEnd(builder)
 }
 
 func (rcv *Map) UnPackTo(t *MapT) {
-	playersLength := rcv.PlayersLength()
-	t.Players = make([]*PlayerT, playersLength)
-	for j := 0; j < playersLength; j++ {
-		x := Player{}
-		rcv.Players(&x, j)
-		t.Players[j] = x.UnPack()
-	}
+	t.Name = string(rcv.Name())
+	t.GlobalX = rcv.GlobalX()
+	t.GlobalY = rcv.GlobalY()
+	t.MaxX = rcv.MaxX()
+	t.MaxY = rcv.MaxY()
 }
 
 func (rcv *Map) UnPack() *MapT {
@@ -329,34 +323,79 @@ func (rcv *Map) Table() flatbuffers.Table {
 	return rcv._tab
 }
 
-func (rcv *Map) Players(obj *Player, j int) bool {
+func (rcv *Map) Name() []byte {
 	o := flatbuffers.UOffsetT(rcv._tab.Offset(4))
 	if o != 0 {
-		x := rcv._tab.Vector(o)
-		x += flatbuffers.UOffsetT(j) * 4
-		x = rcv._tab.Indirect(x)
-		obj.Init(rcv._tab.Bytes, x)
-		return true
+		return rcv._tab.ByteVector(o + rcv._tab.Pos)
 	}
-	return false
+	return nil
 }
 
-func (rcv *Map) PlayersLength() int {
-	o := flatbuffers.UOffsetT(rcv._tab.Offset(4))
+func (rcv *Map) GlobalX() int32 {
+	o := flatbuffers.UOffsetT(rcv._tab.Offset(6))
 	if o != 0 {
-		return rcv._tab.VectorLen(o)
+		return rcv._tab.GetInt32(o + rcv._tab.Pos)
 	}
 	return 0
 }
 
+func (rcv *Map) MutateGlobalX(n int32) bool {
+	return rcv._tab.MutateInt32Slot(6, n)
+}
+
+func (rcv *Map) GlobalY() int32 {
+	o := flatbuffers.UOffsetT(rcv._tab.Offset(8))
+	if o != 0 {
+		return rcv._tab.GetInt32(o + rcv._tab.Pos)
+	}
+	return 0
+}
+
+func (rcv *Map) MutateGlobalY(n int32) bool {
+	return rcv._tab.MutateInt32Slot(8, n)
+}
+
+func (rcv *Map) MaxX() float64 {
+	o := flatbuffers.UOffsetT(rcv._tab.Offset(10))
+	if o != 0 {
+		return rcv._tab.GetFloat64(o + rcv._tab.Pos)
+	}
+	return 0.0
+}
+
+func (rcv *Map) MutateMaxX(n float64) bool {
+	return rcv._tab.MutateFloat64Slot(10, n)
+}
+
+func (rcv *Map) MaxY() float64 {
+	o := flatbuffers.UOffsetT(rcv._tab.Offset(12))
+	if o != 0 {
+		return rcv._tab.GetFloat64(o + rcv._tab.Pos)
+	}
+	return 0.0
+}
+
+func (rcv *Map) MutateMaxY(n float64) bool {
+	return rcv._tab.MutateFloat64Slot(12, n)
+}
+
 func MapStart(builder *flatbuffers.Builder) {
-	builder.StartObject(1)
+	builder.StartObject(5)
 }
-func MapAddPlayers(builder *flatbuffers.Builder, players flatbuffers.UOffsetT) {
-	builder.PrependUOffsetTSlot(0, flatbuffers.UOffsetT(players), 0)
+func MapAddName(builder *flatbuffers.Builder, name flatbuffers.UOffsetT) {
+	builder.PrependUOffsetTSlot(0, flatbuffers.UOffsetT(name), 0)
 }
-func MapStartPlayersVector(builder *flatbuffers.Builder, numElems int) flatbuffers.UOffsetT {
-	return builder.StartVector(4, numElems, 4)
+func MapAddGlobalX(builder *flatbuffers.Builder, globalX int32) {
+	builder.PrependInt32Slot(1, globalX, 0)
+}
+func MapAddGlobalY(builder *flatbuffers.Builder, globalY int32) {
+	builder.PrependInt32Slot(2, globalY, 0)
+}
+func MapAddMaxX(builder *flatbuffers.Builder, maxX float64) {
+	builder.PrependFloat64Slot(3, maxX, 0.0)
+}
+func MapAddMaxY(builder *flatbuffers.Builder, maxY float64) {
+	builder.PrependFloat64Slot(4, maxY, 0.0)
 }
 func MapEnd(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
 	return builder.EndObject()
