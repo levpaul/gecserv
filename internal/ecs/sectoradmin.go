@@ -2,7 +2,9 @@ package ecs
 
 import (
 	"context"
+	"fmt"
 	"github.com/levpaul/idolscape-backend/internal/core"
+	"github.com/levpaul/idolscape-backend/internal/ecs/entities"
 	"github.com/rs/zerolog/log"
 	"reflect"
 	"sync"
@@ -13,7 +15,7 @@ var (
 	sectorIDCounterMu sync.Mutex
 )
 
-type sectorAdmin struct {
+type SectorAdmin struct {
 	id       core.SectorID
 	systems  []System
 	entities map[core.EntityID]Entity
@@ -21,14 +23,17 @@ type sectorAdmin struct {
 	// used to automatically adding new entities to relevant systems
 	entitySystemTypes map[reflect.Type]reflect.Type
 
+	// Singletons
+	playerList map[float64]*entities.PlayerE
+
 	mu sync.Mutex
 }
 
-func newSectorAdmin() *sectorAdmin {
+func newSectorAdmin() *SectorAdmin {
 	sectorIDCounterMu.Lock()
 	defer sectorIDCounterMu.Unlock()
 	sectorIDCounter += 1
-	sa := new(sectorAdmin)
+	sa := new(SectorAdmin)
 	sa.id = sectorIDCounter
 	sa.entities = make(map[core.EntityID]Entity)
 	sa.entitySystemTypes = make(map[reflect.Type]reflect.Type)
@@ -36,25 +41,24 @@ func newSectorAdmin() *sectorAdmin {
 }
 
 // Expects a pointer to a system, initializing if possible
-func (sa *sectorAdmin) addSystem(s System) {
+func (sa *SectorAdmin) AddSystem(s System) {
+	s.SetSectorAdmin(sa)
 	if sysInit, ok := s.(Initializer); ok {
 		sysInit.Init()
 	}
 
-	s.SetSectorID(sa.id)
-
 	sa.systems = append(sa.systems, s)
 }
 
-func (sa *sectorAdmin) addEntitySystem(s EntitySystem, ifce interface{}) {
-	sa.addSystem(s)
+func (sa *SectorAdmin) AddEntitySystem(s EntitySystem, ifce interface{}) {
+	sa.AddSystem(s)
 
 	// Create entry for system for given interface - many systems could
 	// be used for a single entity type
 	sa.entitySystemTypes[reflect.TypeOf(s)] = reflect.TypeOf(ifce)
 }
 
-func (sa *sectorAdmin) addEntity(en Entity) {
+func (sa *SectorAdmin) AddEntity(en Entity) {
 	sa.mu.Lock()
 	defer sa.mu.Unlock()
 
@@ -72,7 +76,7 @@ func (sa *sectorAdmin) addEntity(en Entity) {
 	}
 }
 
-func (sa *sectorAdmin) removeEntity(en core.EntityID) {
+func (sa *SectorAdmin) RemoveEntity(en core.EntityID) {
 	sa.mu.Lock()
 	defer sa.mu.Unlock()
 
@@ -85,7 +89,7 @@ func (sa *sectorAdmin) removeEntity(en core.EntityID) {
 	delete(sa.entities, en)
 }
 
-func (sa *sectorAdmin) update(ctx context.Context, dt core.GameTick) {
+func (sa *SectorAdmin) update(ctx context.Context, dt core.GameTick) {
 	for _, s := range sa.systems {
 		select {
 		case <-ctx.Done():
@@ -97,10 +101,32 @@ func (sa *sectorAdmin) update(ctx context.Context, dt core.GameTick) {
 	}
 }
 
-func (sa *sectorAdmin) getEntity(entityID core.EntityID) Entity {
+func (sa *SectorAdmin) GetEntity(entityID core.EntityID) Entity {
 	en, ok := sa.entities[entityID]
 	if !ok {
 		return nil
 	}
 	return en
+}
+
+// ============ SINGLETONS =============
+
+// This file contains all global getters for singleton entities
+func (sa *SectorAdmin) SetPlayerList(pl map[float64]*entities.PlayerE) {
+	fmt.Println("ASDFASDF")
+	fmt.Printf("%#v\n", sa)
+	if sa.playerList != nil {
+		log.Error().Msg("tried to set playerlist singleton which has already been set")
+		return
+	}
+	fmt.Println("ASDFASDF")
+	sa.playerList = pl
+	fmt.Println("ASDFASDF")
+}
+
+// GetPlayerList returns a current map of session IDs to player entities -
+// this should not be written to by any callers except for whatever called
+// SetPlayerList
+func (sa *SectorAdmin) GetPlayerList() map[float64]*entities.PlayerE {
+	return sa.playerList
 }

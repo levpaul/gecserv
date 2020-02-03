@@ -1,6 +1,8 @@
 package propagator
 
-import "github.com/levpaul/idolscape-backend/internal/eb"
+import (
+	"github.com/levpaul/idolscape-backend/internal/eb"
+)
 
 var (
 	pipeErr          chan<- error

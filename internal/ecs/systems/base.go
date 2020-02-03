@@ -1,17 +1,17 @@
 package systems
 
 import (
-	"github.com/levpaul/idolscape-backend/internal/core"
+	"github.com/levpaul/idolscape-backend/internal/ecs"
 )
 
 type BaseSystem struct {
-	sectorID core.SectorID
+	sa *ecs.SectorAdmin
 }
 
-func (bs *BaseSystem) SetSectorID(sectorID core.SectorID) {
-	bs.sectorID = sectorID
+func (bs *BaseSystem) SetSectorAdmin(sa *ecs.SectorAdmin) {
+	bs.sa = sa
 }
 
-func (bs *BaseSystem) GetSectorID() core.SectorID {
-	return bs.sectorID
+func (bs *BaseSystem) GetSectorAdmin() *ecs.SectorAdmin {
+	return bs.sa
 }
