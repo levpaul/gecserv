@@ -17,7 +17,7 @@ var (
 type SectorAdmin struct {
 	id       core.SectorID
 	systems  []System
-	entities map[core.EntityID]Entity
+	entities map[core.EntityID]core.Entity
 
 	// used to automatically adding new entities to relevant systems
 	entitySystemTypes map[reflect.Type]reflect.Type
@@ -25,7 +25,11 @@ type SectorAdmin struct {
 	// Singletons
 	sectorMap   *entities.MapE
 	playerList  map[float64]*entities.PlayerE
-	interestMap [][]Entity
+	interestMap *[][]core.Entity
+
+	// Entity DLL state
+	eHead core.Entity
+	eTail core.Entity
 
 	mu sync.Mutex
 }
@@ -37,7 +41,7 @@ func newSectorAdmin() *SectorAdmin {
 	sa := new(SectorAdmin)
 	sectorIDCounter += 1
 	sa.id = sectorIDCounter
-	sa.entities = make(map[core.EntityID]Entity)
+	sa.entities = make(map[core.EntityID]core.Entity)
 	sa.entitySystemTypes = make(map[reflect.Type]reflect.Type)
 
 	sa.sectorMap = entities.NewDefaultMap()
@@ -56,27 +60,41 @@ func (sa *SectorAdmin) AddSystem(s System) {
 	sa.systems = append(sa.systems, s)
 }
 
+// AddEntitySystem takes an EntitySystem and a _pointer_ to an interface type
+// which the SectorAdmin will use to dynamically add and remove all future
+// entities which map the passed type.
 func (sa *SectorAdmin) AddEntitySystem(s EntitySystem, ifce interface{}) {
 	sa.AddSystem(s)
 
 	// Create entry for system for given interface - many systems could
 	// be used for a single entity type
-	sa.entitySystemTypes[reflect.TypeOf(s)] = reflect.TypeOf(ifce)
+	sa.entitySystemTypes[reflect.TypeOf(s)] = reflect.TypeOf(ifce).Elem()
 }
 
-func (sa *SectorAdmin) AddEntity(en Entity) {
+func (sa *SectorAdmin) AddEntity(en core.Entity) {
 	sa.mu.Lock()
 	defer sa.mu.Unlock()
 
+	// Update DLL
+	if sa.eHead == nil {
+		sa.eHead = en
+		sa.eTail = en
+	} else {
+		en.SetPrev(sa.eTail)
+		sa.eTail.SetNext(en)
+		sa.eTail = en
+	}
+
 	sa.entities[en.ID()] = en
 
+	// Add to relevant EntitySystems where entity matches specified component interface
 	for _, s := range sa.systems {
 		es, ok := s.(EntitySystem)
 		if !ok {
 			continue
 		}
 
-		if reflect.TypeOf(en) == sa.entitySystemTypes[reflect.TypeOf(es)] {
+		if reflect.TypeOf(en).Implements(sa.entitySystemTypes[reflect.TypeOf(es)]) {
 			es.Add(en)
 		}
 	}
@@ -92,7 +110,34 @@ func (sa *SectorAdmin) RemoveEntity(en core.EntityID) {
 		}
 	}
 
+	// Remove from entity DLL and Map
+	switch {
+	case len(sa.entities) == 1:
+		sa.eHead = nil
+		sa.eTail = nil
+	case sa.eHead.ID() == en:
+		sa.eHead = sa.entities[en].Next()
+		sa.eHead.SetPrev(nil)
+	case sa.eTail.ID() == en:
+		sa.eTail = sa.entities[en].Prev()
+		sa.eTail.SetNext(nil)
+	default:
+		sa.entities[en].Prev().SetNext(sa.entities[en].Next())
+		sa.entities[en].Next().SetPrev(sa.entities[en].Prev())
+	}
 	delete(sa.entities, en)
+}
+
+func (sa *SectorAdmin) GetEntity(entityID core.EntityID) core.Entity {
+	en, ok := sa.entities[entityID]
+	if !ok {
+		return nil
+	}
+	return en
+}
+
+func (sa *SectorAdmin) GetEntitiesHead() core.Entity {
+	return sa.eHead
 }
 
 func (sa *SectorAdmin) update(ctx context.Context, dt core.GameTick) {
@@ -107,18 +152,9 @@ func (sa *SectorAdmin) update(ctx context.Context, dt core.GameTick) {
 	}
 }
 
-func (sa *SectorAdmin) GetEntity(entityID core.EntityID) Entity {
-	en, ok := sa.entities[entityID]
-	if !ok {
-		return nil
-	}
-	return en
-}
-
 // ============ SINGLETONS =============
 
-// This file contains all global getters for singleton entities
-func (sa *SectorAdmin) SetPlayerList(pl map[float64]*entities.PlayerE) {
+func (sa *SectorAdmin) SetPlayerListSingleton(pl map[float64]*entities.PlayerE) {
 	if sa.playerList != nil {
 		log.Error().Msg("tried to set playerlist singleton which has already been set")
 		return
@@ -126,9 +162,24 @@ func (sa *SectorAdmin) SetPlayerList(pl map[float64]*entities.PlayerE) {
 	sa.playerList = pl
 }
 
-// GetPlayerList returns a current map of session IDs to player entities -
+// GetPlayerListSingleton returns a current map of session IDs to player entities -
 // this should not be written to by any callers except for whatever called
-// SetPlayerList
-func (sa *SectorAdmin) GetPlayerList() map[float64]*entities.PlayerE {
+// SetPlayerListSingleton
+func (sa *SectorAdmin) GetPlayerListSingleton() map[float64]*entities.PlayerE {
 	return sa.playerList
+}
+
+func (sa *SectorAdmin) SetInterestMapSingleton(im *[][]core.Entity) {
+	if sa.interestMap != nil {
+		log.Error().Msg("tried to set interest map singleton which has already been set")
+		return
+	}
+	sa.interestMap = im
+}
+
+// GetPlayerListSingleton returns a current map of session IDs to player entities -
+// this should not be written to by any callers except for whatever called
+// SetPlayerListSingleton
+func (sa *SectorAdmin) GetInterestMapSingleton() [][]core.Entity {
+	return *sa.interestMap
 }

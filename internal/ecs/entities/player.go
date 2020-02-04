@@ -1,10 +1,13 @@
 package entities
 
 import (
-	"github.com/levpaul/idolscape-backend/internal/fb"
+	"github.com/levpaul/idolscape-backend/internal/ecs/components"
 )
 
 type PlayerE struct {
 	*BaseEntity
-	*fb.PlayerT
+	components.Position
+	components.Changeable
+	components.NetworkSession
+	components.Color
 }

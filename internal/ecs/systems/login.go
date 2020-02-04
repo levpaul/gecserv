@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/levpaul/idolscape-backend/internal/core"
 	"github.com/levpaul/idolscape-backend/internal/eb"
+	"github.com/levpaul/idolscape-backend/internal/ecs/components"
 	"github.com/levpaul/idolscape-backend/internal/ecs/entities"
 	"github.com/levpaul/idolscape-backend/internal/fb"
 	"github.com/rs/zerolog/log"
@@ -26,7 +27,7 @@ func (ls *LoginSystem) Init() {
 
 	// Set up for player list singleton management
 	ls.sidsToEnts = make(map[float64]*entities.PlayerE)
-	ls.sa.SetPlayerList(ls.sidsToEnts)
+	ls.sa.SetPlayerListSingleton(ls.sidsToEnts)
 }
 
 func (ls *LoginSystem) Update(ctx context.Context, dt core.GameTick) {
@@ -64,8 +65,10 @@ func (ls *LoginSystem) handleLogin(ctx context.Context, player *fb.PlayerT) {
 	log.Info().Str("SID", core.SIDStr(player.Sid)).Msg("New player login!")
 
 	pEntity := &entities.PlayerE{
-		BaseEntity: entities.NewBaseEntity(),
-		PlayerT:    player,
+		BaseEntity:     entities.NewBaseEntity(),
+		Position:       components.Position{player.Pos},
+		NetworkSession: components.NetworkSession{player.Sid},
+		Color:          components.Color{player.Col},
 	}
 
 	ls.sa.AddEntity(pEntity)

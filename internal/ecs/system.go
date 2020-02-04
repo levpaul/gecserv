@@ -18,7 +18,7 @@ type System interface {
 // interface must be specified for the types of entities a given EntitySystem operates on.
 type EntitySystem interface {
 	System
-	Add(en Entity)
+	Add(en core.Entity)
 	Remove(en core.EntityID)
 }
 

@@ -2,7 +2,7 @@ package sectormgr
 
 import (
 	"github.com/levpaul/idolscape-backend/internal/ecs"
-	"github.com/levpaul/idolscape-backend/internal/ecs/entities"
+	"github.com/levpaul/idolscape-backend/internal/ecs/components"
 	"github.com/levpaul/idolscape-backend/internal/ecs/systems"
 )
 
@@ -23,5 +23,5 @@ func start() {
 func addDefaultSector() {
 	sa := ecs.AddNewSector()
 	sa.AddSystem(new(systems.LoginSystem))
-	sa.AddEntitySystem(new(systems.InterestSystem), new(entities.PlayerE))
+	sa.AddEntitySystem(new(systems.InterestSystem), new(components.PositionComponent))
 }

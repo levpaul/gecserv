@@ -3,7 +3,6 @@ package systems
 import (
 	"context"
 	"github.com/levpaul/idolscape-backend/internal/core"
-	"github.com/levpaul/idolscape-backend/internal/ecs"
 )
 
 // PlayerMovementSystem is repsonsible for reading current inputs and moving player
@@ -14,5 +13,5 @@ type PlayerMovementSystem struct {
 
 func (pm *PlayerMovementSystem) Init()                                        {}
 func (pm *PlayerMovementSystem) Update(ctx context.Context, dt core.GameTick) {}
-func (pm *PlayerMovementSystem) Add(en ecs.Entity)                            {}
+func (pm *PlayerMovementSystem) Add(en core.Entity)                           {}
 func (pm *PlayerMovementSystem) Remove(en core.EntityID)                      {}
