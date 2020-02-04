@@ -23,14 +23,16 @@ func (is *InterestSystem) Init() {
 	is.sa.SetInterestMapSingleton(&is.interestMap)
 }
 func (is *InterestSystem) Update(ctx context.Context, dt core.GameTick) {
+	// TODO: Might be a better idea to store changeable components in a system
+	//  list and iterate over that?
 	for en := is.sa.GetEntitiesHead(); en != nil; en = en.Next() {
-		chEn := en.(components.ChangeableComponent).GetChangeable()
-		if !chEn.Changed {
+		chEn, ok := en.(components.ChangeableComponent)
+		if !ok || !chEn.GetChangeable().Changed {
 			continue
 		}
 
 		log.Info().Msg("I'm supposed to update the ent interest map here")
-		chEn.Changed = false
+		chEn.GetChangeable().Changed = false
 	}
 }
 
