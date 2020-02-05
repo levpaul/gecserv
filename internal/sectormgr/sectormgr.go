@@ -25,11 +25,11 @@ func addDefaultSector() {
 
 	sa.AddSystem(new(systems.LoginSystem))
 	sa.AddEntitySystem(new(systems.InterestSystem), []interface{}{
-		new(components.Changeable),
+		new(components.ChangeableComponent),
 		new(components.PositionComponent),
 	})
 	sa.AddEntitySystem(new(systems.PropagatorSystem), []interface{}{
-		new(components.StateHistory),
-		new(components.NetworkSession),
+		new(components.StateHistoryComponent),
+		new(components.NetworkSessionComponent),
 	})
 }

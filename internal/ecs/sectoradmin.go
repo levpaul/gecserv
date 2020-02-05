@@ -2,7 +2,6 @@ package ecs
 
 import (
 	"context"
-	"fmt"
 	"github.com/levpaul/idolscape-backend/internal/core"
 	"github.com/levpaul/idolscape-backend/internal/ecs/entities"
 	"github.com/rs/zerolog/log"
@@ -66,6 +65,22 @@ func (sa *SectorAdmin) AddSystem(s System) {
 // which the SectorAdmin will use to dynamically add and remove all future
 // entities which implement _ALL_ of the given interfaces
 func (sa *SectorAdmin) AddEntitySystem(s EntitySystem, ifces []interface{}) {
+	// Type check the interfaces
+	for _, i := range ifces {
+		if rawType := reflect.TypeOf(i).Kind(); rawType != reflect.Ptr {
+			log.Fatal().
+				Str("basic-type", rawType.String()).
+				Str("actual-type", reflect.TypeOf(i).String()).
+				Msg("Entity system passed an interface which was not a pointer")
+		}
+		if iType := reflect.TypeOf(i).Elem().Kind(); iType != reflect.Interface {
+			log.Fatal().
+				Str("basic-type", iType.String()).
+				Str("actual-type", reflect.TypeOf(i).Elem().String()).
+				Msg("Entity system passed an interface which was not actually an interface!")
+		}
+	}
+
 	sa.AddSystem(s)
 
 	// Create entry for system for given interface - many systems could
@@ -74,8 +89,6 @@ func (sa *SectorAdmin) AddEntitySystem(s EntitySystem, ifces []interface{}) {
 	for _, i := range ifces {
 		ifceDefs = append(ifceDefs, reflect.TypeOf(i).Elem())
 	}
-	log.Info().Interface("IFCS:", ifceDefs).Send()
-	fmt.Printf("%#v\n", ifceDefs)
 	sa.entitySystemTypes[reflect.TypeOf(s)] = ifceDefs
 }
 
