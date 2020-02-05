@@ -22,6 +22,14 @@ func start() {
 
 func addDefaultSector() {
 	sa := ecs.AddNewSector()
+
 	sa.AddSystem(new(systems.LoginSystem))
-	sa.AddEntitySystem(new(systems.InterestSystem), new(components.PositionComponent))
+	sa.AddEntitySystem(new(systems.InterestSystem), []interface{}{
+		new(components.Changeable),
+		new(components.PositionComponent),
+	})
+	sa.AddEntitySystem(new(systems.PropagatorSystem), []interface{}{
+		new(components.StateHistory),
+		new(components.NetworkSession),
+	})
 }

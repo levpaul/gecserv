@@ -2,6 +2,7 @@ package ecs
 
 import (
 	"context"
+	"fmt"
 	"github.com/levpaul/idolscape-backend/internal/core"
 	"github.com/levpaul/idolscape-backend/internal/ecs/entities"
 	"github.com/rs/zerolog/log"
@@ -15,17 +16,18 @@ var (
 )
 
 type SectorAdmin struct {
-	id       core.SectorID
-	systems  []System
-	entities map[core.EntityID]core.Entity
+	id         core.SectorID
+	sectorTick core.GameTick
+	systems    []System
+	entities   map[core.EntityID]core.Entity
 
 	// used to automatically adding new entities to relevant systems
-	entitySystemTypes map[reflect.Type]reflect.Type
+	entitySystemTypes map[reflect.Type][]reflect.Type
 
 	// Singletons
 	sectorMap   *entities.MapE
 	playerList  map[float64]*entities.PlayerE
-	interestMap *[][]core.Entity
+	interestMap *[][]entities.InterestZone
 
 	// Entity DLL state
 	eHead core.Entity
@@ -42,7 +44,7 @@ func newSectorAdmin() *SectorAdmin {
 	sectorIDCounter += 1
 	sa.id = sectorIDCounter
 	sa.entities = make(map[core.EntityID]core.Entity)
-	sa.entitySystemTypes = make(map[reflect.Type]reflect.Type)
+	sa.entitySystemTypes = make(map[reflect.Type][]reflect.Type)
 
 	sa.sectorMap = entities.NewDefaultMap()
 	sa.AddEntity(sa.sectorMap)
@@ -60,15 +62,21 @@ func (sa *SectorAdmin) AddSystem(s System) {
 	sa.systems = append(sa.systems, s)
 }
 
-// AddEntitySystem takes an EntitySystem and a _pointer_ to an interface type
+// AddEntitySystem takes an EntitySystem and a slice of _pointers_ to interface types
 // which the SectorAdmin will use to dynamically add and remove all future
-// entities which map the passed type.
-func (sa *SectorAdmin) AddEntitySystem(s EntitySystem, ifce interface{}) {
+// entities which implement _ALL_ of the given interfaces
+func (sa *SectorAdmin) AddEntitySystem(s EntitySystem, ifces []interface{}) {
 	sa.AddSystem(s)
 
 	// Create entry for system for given interface - many systems could
 	// be used for a single entity type
-	sa.entitySystemTypes[reflect.TypeOf(s)] = reflect.TypeOf(ifce).Elem()
+	ifceDefs := []reflect.Type{}
+	for _, i := range ifces {
+		ifceDefs = append(ifceDefs, reflect.TypeOf(i).Elem())
+	}
+	log.Info().Interface("IFCS:", ifceDefs).Send()
+	fmt.Printf("%#v\n", ifceDefs)
+	sa.entitySystemTypes[reflect.TypeOf(s)] = ifceDefs
 }
 
 func (sa *SectorAdmin) AddEntity(en core.Entity) {
@@ -94,19 +102,27 @@ func (sa *SectorAdmin) AddEntity(en core.Entity) {
 			continue
 		}
 
-		if reflect.TypeOf(en).Implements(sa.entitySystemTypes[reflect.TypeOf(es)]) {
+		if sa.checkEntityMatchSystem(en, es) {
 			es.Add(en)
 		}
 	}
 }
 
 func (sa *SectorAdmin) RemoveEntity(en core.EntityID) {
+	e, ok := sa.entities[en]
+	if !ok {
+		log.Warn().Uint32("EID", uint32(en)).Msg("Attempted to remove unknown entity")
+		return
+	}
+
 	sa.mu.Lock()
 	defer sa.mu.Unlock()
 
 	for _, s := range sa.systems {
 		if es, ok := s.(EntitySystem); ok {
-			es.Remove(en)
+			if sa.checkEntityMatchSystem(e, es) {
+				es.Remove(en)
+			}
 		}
 	}
 
@@ -128,6 +144,16 @@ func (sa *SectorAdmin) RemoveEntity(en core.EntityID) {
 	delete(sa.entities, en)
 }
 
+func (sa *SectorAdmin) checkEntityMatchSystem(en core.Entity, sys EntitySystem) bool {
+	match := true
+	for _, t := range sa.entitySystemTypes[reflect.TypeOf(sys)] {
+		if !reflect.TypeOf(en).Implements(t) {
+			match = false
+		}
+	}
+	return match
+}
+
 func (sa *SectorAdmin) GetEntity(entityID core.EntityID) core.Entity {
 	en, ok := sa.entities[entityID]
 	if !ok {
@@ -141,6 +167,7 @@ func (sa *SectorAdmin) GetEntitiesHead() core.Entity {
 }
 
 func (sa *SectorAdmin) update(ctx context.Context, dt core.GameTick) {
+	sa.sectorTick += 1
 	for _, s := range sa.systems {
 		select {
 		case <-ctx.Done():
@@ -169,7 +196,7 @@ func (sa *SectorAdmin) GetPlayerListSingleton() map[float64]*entities.PlayerE {
 	return sa.playerList
 }
 
-func (sa *SectorAdmin) SetInterestMapSingleton(im *[][]core.Entity) {
+func (sa *SectorAdmin) SetInterestMapSingleton(im *[][]entities.InterestZone) {
 	if sa.interestMap != nil {
 		log.Error().Msg("tried to set interest map singleton which has already been set")
 		return
@@ -180,6 +207,10 @@ func (sa *SectorAdmin) SetInterestMapSingleton(im *[][]core.Entity) {
 // GetPlayerListSingleton returns a current map of session IDs to player entities -
 // this should not be written to by any callers except for whatever called
 // SetPlayerListSingleton
-func (sa *SectorAdmin) GetInterestMapSingleton() [][]core.Entity {
+func (sa *SectorAdmin) GetInterestMapSingleton() [][]entities.InterestZone {
 	return *sa.interestMap
+}
+
+func (sa *SectorAdmin) GetSectorTick() core.GameTick {
+	return sa.sectorTick
 }

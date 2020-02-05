@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/levpaul/idolscape-backend/internal/core"
 	"github.com/levpaul/idolscape-backend/internal/ecs/components"
+	"github.com/levpaul/idolscape-backend/internal/ecs/entities"
 	"github.com/rs/zerolog/log"
 )
 
@@ -15,11 +16,11 @@ import (
 // full update in too
 type InterestSystem struct {
 	BaseSystem
-	interestMap [][]core.Entity
+	interestMap [][]entities.InterestZone
 }
 
 func (is *InterestSystem) Init() {
-	is.interestMap = [][]core.Entity{}
+	is.interestMap = [][]entities.InterestZone{}
 	is.sa.SetInterestMapSingleton(&is.interestMap)
 }
 func (is *InterestSystem) Update(ctx context.Context, dt core.GameTick) {
@@ -32,6 +33,7 @@ func (is *InterestSystem) Update(ctx context.Context, dt core.GameTick) {
 		}
 
 		log.Info().Msg("I'm supposed to update the ent interest map here")
+		// Magically updates interestMap
 		chEn.GetChangeable().Changed = false
 	}
 }

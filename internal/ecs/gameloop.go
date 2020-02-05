@@ -22,8 +22,6 @@ func updateLoop() {
 				Topic: eb.S_GAMETICK_DONE,
 				Data:  eb.S_GAMETICK_DONE_T{},
 			})
-			// TODO: Publish an EB message like "S_COMPLETE"
-			//   - Then make propagator listen for that to cut diffs and send
 		}
 	}
 }

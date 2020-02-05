@@ -1,14 +1,12 @@
 package entities
 
 import (
+	"github.com/levpaul/idolscape-backend/internal/core"
 	"github.com/levpaul/idolscape-backend/internal/ecs/components"
 )
 
-type PlayerE struct {
+type InterestZone struct {
 	*BaseEntity
-	components.Position
+	Entities []core.Entity
 	components.Changeable
-	components.NetworkSession
-	components.StateHistory
-	components.Color
 }

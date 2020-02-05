@@ -1,6 +1,7 @@
 package components
 
 import (
+	"github.com/levpaul/idolscape-backend/internal/core"
 	"github.com/levpaul/idolscape-backend/internal/fb"
 )
 
@@ -49,5 +50,16 @@ type ChangeableComponent interface {
 }
 
 func (c *Changeable) GetChangeable() *Changeable { return c }
+
+// ==================================================================
+type StateHistory struct {
+	LastAck core.GameTick
+}
+
+type StateHistoryComponent interface {
+	GetStateHistory() *StateHistory
+}
+
+func (s *StateHistory) GetStateHistory() *StateHistory { return s }
 
 // ==================================================================
