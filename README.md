@@ -4,8 +4,11 @@ This is a toy project to experience developing a UDP game server for an action M
 
 # TODO: 
  5 Feb
- - Set up event bus entity->system piping from sector admin (+buf chans)
+ - solidify entity storage; should use slice + locMap per entity type
+ - SA will manage entity type slices and pass them to relevant systems for fast iteration
  - Impl interest system
+ - Impl propagation system
+ - Write benchmarking software
 
 
 ## BIG ARCH CONCRETE
