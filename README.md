@@ -2,6 +2,12 @@
 
 This is a toy project to experience developing a UDP game server for an action MMO style game. The idea is to have MMO type mechanics mixed with a fast paced "real-time" action PVP mechanics. Basically mix FPS netcode with runescape.
 
+# TODO: 
+ 5 Feb
+ - Set up event bus entity->system piping from sector admin (+buf chans)
+ - Impl interest system
+
+
 ## BIG ARCH CONCRETE
 
  - Input/output with players is handled via event bus
