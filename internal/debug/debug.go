@@ -70,9 +70,10 @@ func genRandomPlayer() []byte {
 		Value: &fb.MapUpdateT{
 			Seq: 12342345,
 			Logins: []*fb.PlayerT{{
-				Pos: &fb.Vec2T{rand.Float32() * 10, rand.Float32() * 10},
-				Sid: count,
-				Col: fb.ColorBlue,
+				Posx: rand.Float32() * 10,
+				Posy: rand.Float32() * 10,
+				Sid:  count,
+				Col:  fb.ColorBlue,
 			}},
 			Logouts: nil,
 			Psyncs:  nil,

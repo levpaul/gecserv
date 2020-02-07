@@ -2,7 +2,9 @@ include "core.fbs";
 namespace msg;
 
 table Player {
-    pos: Vec2;
+    posx: float;
+    posy: float;
     sid: float64;
     col: Color;
+    lastAck: uint32;
 }

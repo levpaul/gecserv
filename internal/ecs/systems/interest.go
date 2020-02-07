@@ -17,21 +17,26 @@ import (
 type InterestSystem struct {
 	BaseSystem
 	interestMap [][]entities.InterestZone
+	cc          core.ComponentCollection
 }
 
 func (is *InterestSystem) Init() {
 	is.interestMap = [][]entities.InterestZone{}
 	is.sa.SetInterestMapSingleton(&is.interestMap)
+	is.cc = core.NewComponentCollection([]interface{}{
+		new(components.ChangeableComponent),
+		new(components.PositionComponent),
+	})
 }
 func (is *InterestSystem) Update(ctx context.Context, dt core.GameTick) {
-	// TODO: Might be a better idea to store changeable components in a system
-	//  list and iterate over that?
-	for en := is.sa.GetEntitiesHead(); en != nil; en = en.Next() {
+	// Loop through all changeable entities w/ position
+	// If changed, update interest map w/ new coordinates
+
+	for _, en := range is.sa.FilterEntitiesByCC(is.cc) {
 		chEn, ok := en.(components.ChangeableComponent)
 		if !ok || !chEn.GetChangeable().Changed {
 			continue
 		}
-
 		log.Info().Msg("I'm supposed to update the ent interest map here")
 		// Magically updates interestMap
 		chEn.GetChangeable().Changed = false

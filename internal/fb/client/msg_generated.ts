@@ -186,19 +186,26 @@ static getSizePrefixedRoot(bb:flatbuffers.ByteBuffer, obj?:Player):Player {
 };
 
 /**
- * @param msg.Vec2= obj
- * @returns msg.Vec2|null
+ * @returns number
  */
-pos(obj?:msg.Vec2):msg.Vec2|null {
+posx():number {
   var offset = this.bb!.__offset(this.bb_pos, 4);
-  return offset ? (obj || new msg.Vec2()).__init(this.bb_pos + offset, this.bb!) : null;
+  return offset ? this.bb!.readFloat32(this.bb_pos + offset) : 0.0;
+};
+
+/**
+ * @returns number
+ */
+posy():number {
+  var offset = this.bb!.__offset(this.bb_pos, 6);
+  return offset ? this.bb!.readFloat32(this.bb_pos + offset) : 0.0;
 };
 
 /**
  * @returns number
  */
 sid():number {
-  var offset = this.bb!.__offset(this.bb_pos, 6);
+  var offset = this.bb!.__offset(this.bb_pos, 8);
   return offset ? this.bb!.readFloat64(this.bb_pos + offset) : 0.0;
 };
 
@@ -206,23 +213,39 @@ sid():number {
  * @returns msg.Color
  */
 col():msg.Color {
-  var offset = this.bb!.__offset(this.bb_pos, 8);
+  var offset = this.bb!.__offset(this.bb_pos, 10);
   return offset ? /**  */ (this.bb!.readInt8(this.bb_pos + offset)) : msg.Color.Red;
+};
+
+/**
+ * @returns number
+ */
+lastAck():number {
+  var offset = this.bb!.__offset(this.bb_pos, 12);
+  return offset ? this.bb!.readUint32(this.bb_pos + offset) : 0;
 };
 
 /**
  * @param flatbuffers.Builder builder
  */
 static start(builder:flatbuffers.Builder) {
-  builder.startObject(3);
+  builder.startObject(5);
 };
 
 /**
  * @param flatbuffers.Builder builder
- * @param flatbuffers.Offset posOffset
+ * @param number posx
  */
-static addPos(builder:flatbuffers.Builder, posOffset:flatbuffers.Offset) {
-  builder.addFieldStruct(0, posOffset, 0);
+static addPosx(builder:flatbuffers.Builder, posx:number) {
+  builder.addFieldFloat32(0, posx, 0.0);
+};
+
+/**
+ * @param flatbuffers.Builder builder
+ * @param number posy
+ */
+static addPosy(builder:flatbuffers.Builder, posy:number) {
+  builder.addFieldFloat32(1, posy, 0.0);
 };
 
 /**
@@ -230,7 +253,7 @@ static addPos(builder:flatbuffers.Builder, posOffset:flatbuffers.Offset) {
  * @param number sid
  */
 static addSid(builder:flatbuffers.Builder, sid:number) {
-  builder.addFieldFloat64(1, sid, 0.0);
+  builder.addFieldFloat64(2, sid, 0.0);
 };
 
 /**
@@ -238,7 +261,15 @@ static addSid(builder:flatbuffers.Builder, sid:number) {
  * @param msg.Color col
  */
 static addCol(builder:flatbuffers.Builder, col:msg.Color) {
-  builder.addFieldInt8(2, col, msg.Color.Red);
+  builder.addFieldInt8(3, col, msg.Color.Red);
+};
+
+/**
+ * @param flatbuffers.Builder builder
+ * @param number lastAck
+ */
+static addLastAck(builder:flatbuffers.Builder, lastAck:number) {
+  builder.addFieldInt32(4, lastAck, 0);
 };
 
 /**
@@ -250,11 +281,13 @@ static end(builder:flatbuffers.Builder):flatbuffers.Offset {
   return offset;
 };
 
-static create(builder:flatbuffers.Builder, posOffset:flatbuffers.Offset, sid:number, col:msg.Color):flatbuffers.Offset {
+static create(builder:flatbuffers.Builder, posx:number, posy:number, sid:number, col:msg.Color, lastAck:number):flatbuffers.Offset {
   Player.start(builder);
-  Player.addPos(builder, posOffset);
+  Player.addPosx(builder, posx);
+  Player.addPosy(builder, posy);
   Player.addSid(builder, sid);
   Player.addCol(builder, col);
+  Player.addLastAck(builder, lastAck);
   return Player.end(builder);
 }
 }

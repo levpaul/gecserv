@@ -78,10 +78,8 @@ func startListening() {
 func generateNewCharacter() *fb.PlayerT {
 	p := new(fb.PlayerT)
 	p.Col = fb.ColorBlue
-	p.Pos = &fb.Vec2T{
-		X: (rand.Float32() - 0.5) * 40,
-		Y: (rand.Float32() - 0.5) * 40,
-	}
+	p.Posx = (rand.Float32() - 0.5) * 40
+	p.Posy = (rand.Float32() - 0.5) * 40
 	p.Sid = math.Float64frombits(atomic.AddUint64(&sessionCounter, 1))
 
 	return p

@@ -6,9 +6,7 @@ import (
 )
 
 // ==================================================================
-type Position struct {
-	Pos *fb.Vec2T
-}
+type Position fb.Vec2T
 
 func (p *Position) GetPosition() *Position { return p }
 

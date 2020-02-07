@@ -93,6 +93,10 @@ func initPeerConnection(peerConnection *webrtc.PeerConnection) (*webrtc.DataChan
 
 	// Register text message handling -TODO: Make this publish to validation topic
 	dataChannel.OnMessage(func(msg webrtc.DataChannelMessage) {
+		// figure out type of message
+		// for input type:
+		//   -> send as event on eb which will be processed by inputsystem
+
 		messageType := struct{ Type string }{}
 		err := json.Unmarshal(msg.Data, &messageType)
 		if err != nil {

@@ -8,7 +8,6 @@ import (
 	"github.com/levpaul/idolscape-backend/internal/ecs"
 	"github.com/levpaul/idolscape-backend/internal/ingest"
 	"github.com/levpaul/idolscape-backend/internal/netpub"
-	"github.com/levpaul/idolscape-backend/internal/propagator"
 	"github.com/levpaul/idolscape-backend/internal/sectormgr"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -38,7 +37,6 @@ func main() {
 	startPipeline("ecs", ecs.Start)                  // Manage game state + loop
 	startPipeline("sector-manager", sectormgr.Start) // Manage loading sectors and adding required systems
 	startPipeline("netconn", netpub.Start)           // Manage data connections to clients
-	startPipeline("propagator", propagator.Start)    // Send updates to each client
 	startPipeline("ingest", ingest.Start)            // Take client input + handle registration
 
 	select {

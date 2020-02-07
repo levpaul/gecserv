@@ -1,0 +1,15 @@
+include "core.fbs";
+namespace msg;
+
+table InputMsg {
+    inputDown: Input;
+    inputDown: Input;
+}
+
+enum Input:byte {
+    FORWARD = 0,
+    BACK,
+    LEFT,
+    RIGHT,
+}
+
