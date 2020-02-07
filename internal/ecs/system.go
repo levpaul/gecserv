@@ -13,15 +13,6 @@ type System interface {
 	GetSectorAdmin() *SectorAdmin
 }
 
-// EntitySystem runs updates on a set of entities. Entities are added to systems in a sector
-// automatically by the SectorAdmin. When a EntitySystem is first added to a SectorAdmin, an
-// interface must be specified for the types of entities a given EntitySystem operates on.
-type EntitySystem interface {
-	System
-	Add(en core.Entity)
-	Remove(en core.EntityID)
-}
-
 // Initializer is an interface that SectorAdmin checks for on any System passed to it and
 // if implemented, the SectorAdmin with initialize via the Init() func.
 type Initializer interface {

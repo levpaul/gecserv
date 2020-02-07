@@ -1,9 +1,8 @@
 package core
 
+type EntityID uint32
+type EntityIDs []EntityID
+
 type Entity interface {
 	ID() EntityID
-	Next() Entity
-	Prev() Entity
-	SetNext(Entity)
-	SetPrev(Entity)
 }

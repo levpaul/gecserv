@@ -5,9 +5,18 @@ import (
 	"fmt"
 	"github.com/levpaul/idolscape-backend/internal/core"
 	"github.com/levpaul/idolscape-backend/internal/ecs/components"
-	"github.com/levpaul/idolscape-backend/internal/ecs/entities"
 	"github.com/rs/zerolog/log"
 )
+
+const (
+	segmentsX = 50
+	segmentsY = 50
+)
+
+type imCoord struct {
+	x uint8
+	y uint8
+}
 
 // InterestSystem is responsible for updating a singleton map of interest buckets
 // containing all entities in subdivisions of the sectors map, used by the propagator
@@ -16,12 +25,18 @@ import (
 // full update in too
 type InterestSystem struct {
 	BaseSystem
-	interestMap [][]entities.InterestZone
+	interestMap [][]core.EntityIDs
+	imLookup    map[core.EntityID]imCoord
 	cc          core.ComponentCollection
 }
 
 func (is *InterestSystem) Init() {
-	is.interestMap = [][]entities.InterestZone{}
+	is.interestMap = make([][]core.EntityIDs, segmentsX)
+	for i := range is.interestMap {
+		is.interestMap[i] = make([]core.EntityIDs, segmentsY)
+	}
+	is.imLookup = make(map[core.EntityID]imCoord)
+
 	is.sa.SetInterestMapSingleton(&is.interestMap)
 	is.cc = core.NewComponentCollection([]interface{}{
 		new(components.ChangeableComponent),
@@ -37,8 +52,38 @@ func (is *InterestSystem) Update(ctx context.Context, dt core.GameTick) {
 		if !ok || !chEn.GetChangeable().Changed {
 			continue
 		}
-		log.Info().Msg("I'm supposed to update the ent interest map here")
-		// Magically updates interestMap
+
+		eid := en.ID()
+		posEn, ok := en.(components.PositionComponent)
+		if !ok {
+			log.Error().Uint32("entity", uint32(eid)).Msg("Failed to turn entity into position component at interest system")
+			continue
+		}
+		imPosX := uint8(posEn.GetPosition().X / segmentsX)
+		imPosY := uint8(posEn.GetPosition().Y / segmentsY)
+
+		// Check for new entity in sector
+		old, isInLookup := is.imLookup[eid]
+		if !isInLookup {
+			is.interestMap[imPosX][imPosY] = append(is.interestMap[imPosX][imPosY], en.ID())
+			is.imLookup[eid] = imCoord{imPosX, imPosY}
+			continue
+		}
+
+		// No sector position update, skip
+		if old.x == imPosX && old.y == imPosY {
+			continue
+		}
+
+		// Update sector in IM by deleting old entry and adding new
+		for i, v := range is.interestMap[old.x][old.y] {
+			if v == eid {
+				is.interestMap[old.x][old.y][i] = is.interestMap[old.x][old.y][len(is.interestMap[old.x][old.y])-1]
+				is.interestMap[old.x][old.y] = is.interestMap[old.x][old.y][:len(is.interestMap[old.x][old.y])-1]
+				is.interestMap[imPosX][imPosY] = append(is.interestMap[imPosX][imPosY], eid)
+				break
+			}
+		}
 		chEn.GetChangeable().Changed = false
 	}
 }

@@ -23,7 +23,7 @@ type SectorAdmin struct {
 	// Singletons
 	sectorMap   *entities.MapE
 	playerList  map[float64]*entities.PlayerE
-	interestMap *[][]entities.InterestZone
+	interestMap *[][]core.EntityIDs
 }
 
 func newSectorAdmin() *SectorAdmin {
@@ -125,7 +125,7 @@ func (sa *SectorAdmin) GetPlayerListSingleton() map[float64]*entities.PlayerE {
 	return sa.playerList
 }
 
-func (sa *SectorAdmin) SetInterestMapSingleton(im *[][]entities.InterestZone) {
+func (sa *SectorAdmin) SetInterestMapSingleton(im *[][]core.EntityIDs) {
 	if sa.interestMap != nil {
 		log.Error().Msg("tried to set interest map singleton which has already been set")
 		return
@@ -136,7 +136,7 @@ func (sa *SectorAdmin) SetInterestMapSingleton(im *[][]entities.InterestZone) {
 // GetPlayerListSingleton returns a current map of session IDs to player entities -
 // this should not be written to by any callers except for whatever called
 // SetPlayerListSingleton
-func (sa *SectorAdmin) GetInterestMapSingleton() [][]entities.InterestZone {
+func (sa *SectorAdmin) GetInterestMapSingleton() [][]core.EntityIDs {
 	return *sa.interestMap
 }
 
