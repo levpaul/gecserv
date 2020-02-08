@@ -59,6 +59,19 @@ func (sa *SectorAdmin) RemoveEntity(en core.EntityID) {
 	delete(sa.entities, en)
 }
 
+type entityIterator struct {
+	ents []core.Entity
+	idx  int
+}
+
+func (ei *entityIterator) Next() core.Entity {
+	if ei.idx >= len(ei.ents) {
+		return nil
+	}
+	ei.idx += 1
+	return ei.ents[ei.idx-1]
+}
+
 // TODO: This is a major area for optimisation!!!!!
 // One idea might be to follow the rust/hecs pattern where entities are stored in arrays
 // based on their entity type. Then you can check the first element of one of those arrays
@@ -70,7 +83,7 @@ func (sa *SectorAdmin) RemoveEntity(en core.EntityID) {
 // slices, which I'm not sure how feasible that is for Go - my worry is that an interface
 // slice will just hold pointers to the underlying entity structs, which defeats the point
 // of an attempted optimization.
-func (sa *SectorAdmin) FilterEntitiesByCC(cc core.ComponentCollection) []core.Entity {
+func (sa *SectorAdmin) FilterEntitiesByCC(cc core.ComponentCollection) core.EntityIterator {
 	reEn := []core.Entity{}
 	for _, e := range sa.entities {
 		satisfiesCC := true
@@ -84,7 +97,10 @@ func (sa *SectorAdmin) FilterEntitiesByCC(cc core.ComponentCollection) []core.En
 			reEn = append(reEn, e)
 		}
 	}
-	return reEn
+	return &entityIterator{
+		ents: reEn,
+		idx:  0,
+	}
 }
 
 func (sa *SectorAdmin) GetEntity(entityID core.EntityID) core.Entity {

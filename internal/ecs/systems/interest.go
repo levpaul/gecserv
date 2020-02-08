@@ -47,20 +47,21 @@ func (is *InterestSystem) Update(ctx context.Context, dt core.GameTick) {
 	// Loop through all changeable entities w/ position
 	// If changed, update interest map w/ new coordinates
 
-	for _, en := range is.sa.FilterEntitiesByCC(is.cc) {
-		chEn, ok := en.(components.ChangeableComponent)
-		if !ok || !chEn.GetChangeable().Changed {
+	ents := is.sa.FilterEntitiesByCC(is.cc)
+	for en := ents.Next(); en != nil; en = ents.Next() {
+		chCp, ok := en.(components.ChangeableComponent)
+		if !ok || !chCp.GetChangeable().Changed {
 			continue
 		}
 
 		eid := en.ID()
-		posEn, ok := en.(components.PositionComponent)
+		posCp, ok := en.(components.PositionComponent)
 		if !ok {
 			log.Error().Uint32("entity", uint32(eid)).Msg("Failed to turn entity into position component at interest system")
 			continue
 		}
-		imPosX := uint8(posEn.GetPosition().X / segmentsX)
-		imPosY := uint8(posEn.GetPosition().Y / segmentsY)
+		imPosX := uint8(posCp.GetPosition().X / segmentsX)
+		imPosY := uint8(posCp.GetPosition().Y / segmentsY)
 
 		// Check for new entity in sector
 		old, isInLookup := is.imLookup[eid]
@@ -84,7 +85,7 @@ func (is *InterestSystem) Update(ctx context.Context, dt core.GameTick) {
 				break
 			}
 		}
-		chEn.GetChangeable().Changed = false
+		chCp.GetChangeable().Changed = false
 	}
 }
 

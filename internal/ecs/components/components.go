@@ -20,7 +20,7 @@ type NetworkSession struct {
 }
 
 type NetworkSessionComponent interface {
-	GetNetorkSession() *NetworkSession
+	GetNetworkSession() *NetworkSession
 }
 
 func (n *NetworkSession) GetNetworkSession() *NetworkSession { return n }

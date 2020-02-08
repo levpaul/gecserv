@@ -25,8 +25,6 @@ This is a toy project to experience developing a UDP game server for an action M
 
  - Persistence layer (probably dynamo + redis caches?)
  - Are _all_ C in ECS flatbuffer managed?
- - 
-
 
 # Network
 
