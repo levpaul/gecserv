@@ -3,11 +3,9 @@
 This is a toy project to experience developing a UDP game server for an action MMO style game. The idea is to have MMO type mechanics mixed with a fast paced "real-time" action PVP mechanics. Basically mix FPS netcode with runescape.
 
 # TODO: 
- 5 Feb
- - solidify entity storage; should use slice + locMap per entity type
- - SA will manage entity type slices and pass them to relevant systems for fast iteration
- - Impl interest system
+ 7 Feb
  - Impl propagation system
+ - Impl player movement system
  - Write benchmarking software
 
 
