@@ -22,3 +22,8 @@ type AvatarPubConn struct {
 func SIDStr(sid float64) string {
 	return fmt.Sprintf("%x", math.Float64bits(sid))
 }
+
+type Vec2Uint8 struct {
+	X uint8
+	Y uint8
+}

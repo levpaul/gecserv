@@ -18,5 +18,3 @@ func (pm *PlayerMovementSystem) Update(ctx context.Context, dt core.GameTick) {
 	// Else if multi input replay all buffered movements
 	// Else if empty input, replay last input
 }
-func (pm *PlayerMovementSystem) Add(en core.Entity)      {}
-func (pm *PlayerMovementSystem) Remove(en core.EntityID) {}

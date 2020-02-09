@@ -4,6 +4,6 @@ table Map {
     name: string;
     globalX: int;
     globalY: int;
-    maxX: float64;
-    maxY: float64;
+    maxX: int;
+    maxY: int;
 }

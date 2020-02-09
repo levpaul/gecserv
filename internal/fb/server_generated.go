@@ -272,8 +272,8 @@ type MapT struct {
 	Name string
 	GlobalX int32
 	GlobalY int32
-	MaxX float64
-	MaxY float64
+	MaxX int32
+	MaxY int32
 }
 
 func (t *MapT) Pack(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
@@ -355,28 +355,28 @@ func (rcv *Map) MutateGlobalY(n int32) bool {
 	return rcv._tab.MutateInt32Slot(8, n)
 }
 
-func (rcv *Map) MaxX() float64 {
+func (rcv *Map) MaxX() int32 {
 	o := flatbuffers.UOffsetT(rcv._tab.Offset(10))
 	if o != 0 {
-		return rcv._tab.GetFloat64(o + rcv._tab.Pos)
+		return rcv._tab.GetInt32(o + rcv._tab.Pos)
 	}
-	return 0.0
+	return 0
 }
 
-func (rcv *Map) MutateMaxX(n float64) bool {
-	return rcv._tab.MutateFloat64Slot(10, n)
+func (rcv *Map) MutateMaxX(n int32) bool {
+	return rcv._tab.MutateInt32Slot(10, n)
 }
 
-func (rcv *Map) MaxY() float64 {
+func (rcv *Map) MaxY() int32 {
 	o := flatbuffers.UOffsetT(rcv._tab.Offset(12))
 	if o != 0 {
-		return rcv._tab.GetFloat64(o + rcv._tab.Pos)
+		return rcv._tab.GetInt32(o + rcv._tab.Pos)
 	}
-	return 0.0
+	return 0
 }
 
-func (rcv *Map) MutateMaxY(n float64) bool {
-	return rcv._tab.MutateFloat64Slot(12, n)
+func (rcv *Map) MutateMaxY(n int32) bool {
+	return rcv._tab.MutateInt32Slot(12, n)
 }
 
 func MapStart(builder *flatbuffers.Builder) {
@@ -391,11 +391,11 @@ func MapAddGlobalX(builder *flatbuffers.Builder, globalX int32) {
 func MapAddGlobalY(builder *flatbuffers.Builder, globalY int32) {
 	builder.PrependInt32Slot(2, globalY, 0)
 }
-func MapAddMaxX(builder *flatbuffers.Builder, maxX float64) {
-	builder.PrependFloat64Slot(3, maxX, 0.0)
+func MapAddMaxX(builder *flatbuffers.Builder, maxX int32) {
+	builder.PrependInt32Slot(3, maxX, 0)
 }
-func MapAddMaxY(builder *flatbuffers.Builder, maxY float64) {
-	builder.PrependFloat64Slot(4, maxY, 0.0)
+func MapAddMaxY(builder *flatbuffers.Builder, maxY int32) {
+	builder.PrependInt32Slot(4, maxY, 0)
 }
 func MapEnd(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
 	return builder.EndObject()

@@ -16,5 +16,3 @@ func (pm *PlayerInputSystem) Update(ctx context.Context, dt core.GameTick) {
 	// Loop through player input messages
 	// add to player input buffers
 }
-func (pm *PlayerInputSystem) Add(en core.Entity)      {}
-func (pm *PlayerInputSystem) Remove(en core.EntityID) {}

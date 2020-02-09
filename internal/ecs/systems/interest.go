@@ -2,21 +2,11 @@ package systems
 
 import (
 	"context"
-	"fmt"
 	"github.com/levpaul/idolscape-backend/internal/core"
 	"github.com/levpaul/idolscape-backend/internal/ecs/components"
+	"github.com/levpaul/idolscape-backend/internal/ecs/entities"
 	"github.com/rs/zerolog/log"
 )
-
-const (
-	segmentsX = 50
-	segmentsY = 50
-)
-
-type imCoord struct {
-	x uint8
-	y uint8
-}
 
 // InterestSystem is responsible for updating a singleton map of interest buckets
 // containing all entities in subdivisions of the sectors map, used by the propagator
@@ -25,27 +15,44 @@ type imCoord struct {
 // full update in too
 type InterestSystem struct {
 	BaseSystem
-	interestMap [][]core.EntityIDs
-	imLookup    map[core.EntityID]imCoord
-	cc          core.ComponentCollection
+	cc core.ComponentCollection
 }
 
 func (is *InterestSystem) Init() {
-	is.interestMap = make([][]core.EntityIDs, segmentsX)
-	for i := range is.interestMap {
-		is.interestMap[i] = make([]core.EntityIDs, segmentsY)
+	// Create and initialize the interestMap as an entity
+	iMEnt := entities.InterestMapE{
+		BaseEntity: entities.NewBaseEntity(),
+		InterestMap: components.InterestMap{
+			Imap: make([][]core.EntityIDs, core.InterestSegmentsX),
+		},
 	}
-	is.imLookup = make(map[core.EntityID]imCoord)
+	for i := range iMEnt.InterestMap.Imap {
+		iMEnt.InterestMap.Imap[i] = make([]core.EntityIDs, core.InterestSegmentsY)
+	}
+	iMEnt.Lookup = make(map[core.EntityID]core.Vec2Uint8)
 
-	is.sa.SetInterestMapSingleton(&is.interestMap)
+	sm := is.sa.GetSectorMap()
+	iMEnt.SegSizeX = float32(sm.MaxX) / core.InterestSegmentsX
+	iMEnt.SegSizeY = float32(sm.MaxY) / core.InterestSegmentsY
+
+	is.sa.AddEntity(iMEnt)
 	is.cc = core.NewComponentCollection([]interface{}{
 		new(components.ChangeableComponent),
 		new(components.PositionComponent),
 	})
 }
+
 func (is *InterestSystem) Update(ctx context.Context, dt core.GameTick) {
 	// Loop through all changeable entities w/ position
 	// If changed, update interest map w/ new coordinates
+	interestMapEnts := is.sa.FilterEntitiesByCC(core.NewComponentCollection([]interface{}{
+		new(components.InterestMapComponent),
+	}))
+	ime := interestMapEnts.Next()
+	if ime == nil || interestMapEnts.Next() != nil {
+		log.Fatal().Msg("Unexpected interestmap exception, either interest map not found or more than 1 was!")
+	}
+	im := ime.(components.InterestMapComponent).GetInterestMap()
 
 	ents := is.sa.FilterEntitiesByCC(is.cc)
 	for en := ents.Next(); en != nil; en = ents.Next() {
@@ -60,44 +67,31 @@ func (is *InterestSystem) Update(ctx context.Context, dt core.GameTick) {
 			log.Error().Uint32("entity", uint32(eid)).Msg("Failed to turn entity into position component at interest system")
 			continue
 		}
-		imPosX := uint8(posCp.GetPosition().X / segmentsX)
-		imPosY := uint8(posCp.GetPosition().Y / segmentsY)
+		imPosX := uint8(posCp.GetPosition().X / im.SegSizeX)
+		imPosY := uint8(posCp.GetPosition().Y / im.SegSizeY)
 
 		// Check for new entity in sector
-		old, isInLookup := is.imLookup[eid]
+		old, isInLookup := im.Lookup[eid]
 		if !isInLookup {
-			is.interestMap[imPosX][imPosY] = append(is.interestMap[imPosX][imPosY], en.ID())
-			is.imLookup[eid] = imCoord{imPosX, imPosY}
+			im.Imap[imPosX][imPosY] = append(im.Imap[imPosX][imPosY], en.ID())
+			im.Lookup[eid] = core.Vec2Uint8{imPosX, imPosY}
 			continue
 		}
 
 		// No sector position update, skip
-		if old.x == imPosX && old.y == imPosY {
+		if old.X == imPosX && old.Y == imPosY {
 			continue
 		}
 
 		// Update sector in IM by deleting old entry and adding new
-		for i, v := range is.interestMap[old.x][old.y] {
+		for i, v := range im.Imap[old.X][old.Y] {
 			if v == eid {
-				is.interestMap[old.x][old.y][i] = is.interestMap[old.x][old.y][len(is.interestMap[old.x][old.y])-1]
-				is.interestMap[old.x][old.y] = is.interestMap[old.x][old.y][:len(is.interestMap[old.x][old.y])-1]
-				is.interestMap[imPosX][imPosY] = append(is.interestMap[imPosX][imPosY], eid)
+				im.Imap[old.X][old.Y][i] = im.Imap[old.X][old.Y][len(im.Imap[old.X][old.Y])-1]
+				im.Imap[old.X][old.Y] = im.Imap[old.X][old.Y][:len(im.Imap[old.X][old.Y])-1]
+				im.Imap[imPosX][imPosY] = append(im.Imap[imPosX][imPosY], eid)
 				break
 			}
 		}
 		chCp.GetChangeable().Changed = false
 	}
-}
-
-func (is *InterestSystem) Add(en core.Entity) {
-	chEn := en.(components.ChangeableComponent).GetChangeable()
-	fmt.Println(chEn.Changed)
-	chEn.Changed = true
-}
-
-func (is *InterestSystem) Remove(en core.EntityID) {
-	e := is.sa.GetEntity(en)
-	chEn := e.(components.ChangeableComponent).GetChangeable()
-	fmt.Println(chEn.Changed)
-	chEn.Changed = true
 }

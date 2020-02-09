@@ -1,23 +1,23 @@
 package entities
 
 import (
-	"github.com/levpaul/idolscape-backend/internal/fb"
+	"github.com/levpaul/idolscape-backend/internal/ecs/components"
 )
 
 type MapE struct {
 	*BaseEntity
-	*fb.MapT
+	components.MapComponent
 }
 
 func NewDefaultMap() *MapE {
 	me := &MapE{
 		BaseEntity: NewBaseEntity(),
-		MapT: &fb.MapT{
+		MapComponent: &components.Map{
 			Name:    "default map",
 			GlobalX: 0,
 			GlobalY: 0,
-			MaxX:    100,
-			MaxY:    100,
+			MaxX:    1000,
+			MaxY:    1000,
 		},
 	}
 	return me

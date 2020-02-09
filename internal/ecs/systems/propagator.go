@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/levpaul/idolscape-backend/internal/core"
 	"github.com/levpaul/idolscape-backend/internal/ecs/components"
+	"github.com/levpaul/idolscape-backend/internal/fb"
 	"github.com/rs/zerolog/log"
 )
 
@@ -25,12 +26,21 @@ func (pm *PropagatorSystem) Init() {
 	})
 }
 func (pm *PropagatorSystem) Update(ctx context.Context, dt core.GameTick) {
+	interestMapEnts := pm.sa.FilterEntitiesByCC(core.NewComponentCollection([]interface{}{
+		new(components.InterestMapComponent),
+	}))
+	ime := interestMapEnts.Next()
+	if ime == nil || interestMapEnts.Next() != nil {
+		log.Fatal().Msg("Unexpected interestmap exception, either interest map not found or more than 1 was!")
+	}
+	im := ime.(components.InterestMapComponent).GetInterestMap()
+
 	ents := pm.sa.FilterEntitiesByCC(pm.cc)
 	for en := ents.Next(); en != nil; en = ents.Next() {
 		shCp := en.(components.StateHistoryComponent).GetStateHistory()
 		// read their last state ack
 		if pm.sa.GetSectorTick()-shCp.LastAck > MaxTickDiff || shCp.LastAck == 0 {
-			pm.sendFullState(en)
+			pm.sendFullState(en, im)
 			continue
 		}
 
@@ -45,6 +55,11 @@ func (pm *PropagatorSystem) Update(ctx context.Context, dt core.GameTick) {
 	}
 }
 
-func (pm *PropagatorSystem) sendFullState(en core.Entity) {
+func (pm *PropagatorSystem) sendFullState(en core.Entity, im components.InterestMap) {
 	log.Info().Msg("Sending full state")
+	lPos := im.Lookup[en.ID()]
+	curPos := en.(components.PositionComponent).GetPosition()
+	imp := im.GetPosIMCoords(fb.Vec2T(*curPos))
+	log.Info().Uint8("x", imp.X).Uint8("y", imp.Y).Msg("Position")
+	log.Info().Uint8("x", lPos.X).Uint8("y", lPos.Y).Msg("LOOKUPPosition")
 }

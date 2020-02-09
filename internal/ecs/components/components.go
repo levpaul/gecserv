@@ -61,3 +61,33 @@ type StateHistoryComponent interface {
 func (s *StateHistory) GetStateHistory() *StateHistory { return s }
 
 // ==================================================================
+type InterestMap struct {
+	Imap     [][]core.EntityIDs
+	Lookup   map[core.EntityID]core.Vec2Uint8
+	SegSizeX float32
+	SegSizeY float32
+}
+
+type InterestMapComponent interface {
+	GetInterestMap() InterestMap
+}
+
+func (im InterestMap) GetInterestMap() InterestMap { return im }
+
+func (im InterestMap) GetPosIMCoords(p fb.Vec2T) core.Vec2Uint8 {
+	return core.Vec2Uint8{
+		X: uint8(p.X / im.SegSizeX),
+		Y: uint8(p.Y / im.SegSizeY),
+	}
+}
+
+// ==================================================================
+type Map fb.MapT
+
+type MapComponent interface {
+	GetMap() *Map
+}
+
+func (m *Map) GetMap() *Map { return m }
+
+// ==================================================================

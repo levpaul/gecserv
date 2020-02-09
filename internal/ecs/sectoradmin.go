@@ -3,6 +3,7 @@ package ecs
 import (
 	"context"
 	"github.com/levpaul/idolscape-backend/internal/core"
+	"github.com/levpaul/idolscape-backend/internal/ecs/components"
 	"github.com/levpaul/idolscape-backend/internal/ecs/entities"
 	"github.com/rs/zerolog/log"
 	"reflect"
@@ -21,7 +22,6 @@ type SectorAdmin struct {
 	entities   map[core.EntityID]core.Entity
 
 	// Singletons
-	sectorMap   *entities.MapE
 	playerList  map[float64]*entities.PlayerE
 	interestMap *[][]core.EntityIDs
 }
@@ -35,8 +35,7 @@ func newSectorAdmin() *SectorAdmin {
 	sa.id = sectorIDCounter
 	sa.entities = make(map[core.EntityID]core.Entity)
 
-	sa.sectorMap = entities.NewDefaultMap()
-	sa.AddEntity(sa.sectorMap)
+	sa.AddEntity(entities.NewDefaultMap())
 
 	return sa
 }
@@ -158,4 +157,15 @@ func (sa *SectorAdmin) GetInterestMapSingleton() [][]core.EntityIDs {
 
 func (sa *SectorAdmin) GetSectorTick() core.GameTick {
 	return sa.sectorTick
+}
+
+func (sa *SectorAdmin) GetSectorMap() *components.Map {
+	sectorMapEnt := sa.FilterEntitiesByCC(core.NewComponentCollection([]interface{}{
+		new(components.MapComponent),
+	}))
+	sm := sectorMapEnt.Next()
+	if sm == nil || sectorMapEnt.Next() != nil {
+		log.Fatal().Msg("Unexpected sector map exception, either interest map not found or more than 1 was!")
+	}
+	return sm.(components.MapComponent).GetMap()
 }
