@@ -1,8 +1,8 @@
 package sectormgr
 
 import (
-	"github.com/levpaul/idolscape-backend/internal/ecs"
-	"github.com/levpaul/idolscape-backend/internal/ecs/systems"
+	"github.com/levpaul/gecserv/internal/ecs"
+	"github.com/levpaul/gecserv/internal/ecs/systems"
 )
 
 var pipeErr chan<- error

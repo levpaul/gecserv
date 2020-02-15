@@ -2,9 +2,9 @@ package netpub
 
 import (
 	uuid2 "github.com/google/uuid"
-	"github.com/levpaul/idolscape-backend/internal/core"
-	"github.com/levpaul/idolscape-backend/internal/eb"
-	"github.com/levpaul/idolscape-backend/internal/fb"
+	"github.com/levpaul/gecserv/internal/core"
+	"github.com/levpaul/gecserv/internal/eb"
+	"github.com/levpaul/gecserv/internal/fb"
 	"github.com/rs/zerolog/log"
 	"math"
 	"math/rand"

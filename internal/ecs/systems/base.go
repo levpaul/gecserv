@@ -1,7 +1,7 @@
 package systems
 
 import (
-	"github.com/levpaul/idolscape-backend/internal/ecs"
+	"github.com/levpaul/gecserv/internal/ecs"
 )
 
 type BaseSystem struct {

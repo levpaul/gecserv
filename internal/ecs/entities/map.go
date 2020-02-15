@@ -1,7 +1,7 @@
 package entities
 
 import (
-	"github.com/levpaul/idolscape-backend/internal/ecs/components"
+	"github.com/levpaul/gecserv/internal/ecs/components"
 )
 
 type MapE struct {

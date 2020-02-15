@@ -2,7 +2,7 @@ package debug
 
 import (
 	flatbuffers "github.com/google/flatbuffers/go"
-	"github.com/levpaul/idolscape-backend/internal/fb"
+	"github.com/levpaul/gecserv/internal/fb"
 	"github.com/rs/zerolog/log"
 	"math"
 	"math/rand"

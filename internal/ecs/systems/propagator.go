@@ -2,9 +2,9 @@ package systems
 
 import (
 	"context"
-	"github.com/levpaul/idolscape-backend/internal/core"
-	"github.com/levpaul/idolscape-backend/internal/ecs/components"
-	"github.com/levpaul/idolscape-backend/internal/fb"
+	"github.com/levpaul/gecserv/internal/core"
+	"github.com/levpaul/gecserv/internal/ecs/components"
+	"github.com/levpaul/gecserv/internal/fb"
 	"github.com/rs/zerolog/log"
 )
 

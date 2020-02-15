@@ -2,7 +2,7 @@ package systems
 
 import (
 	"context"
-	"github.com/levpaul/idolscape-backend/internal/core"
+	"github.com/levpaul/gecserv/internal/core"
 )
 
 // PlayerInputSystem is repsonsible for reading current inputs and moving player

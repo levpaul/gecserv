@@ -2,7 +2,7 @@ package ecs
 
 import (
 	"context"
-	"github.com/levpaul/idolscape-backend/internal/core"
+	"github.com/levpaul/gecserv/internal/core"
 )
 
 // System is a base interface for Systems. This type of System will not operate directly

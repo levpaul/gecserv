@@ -2,9 +2,9 @@ package ecs
 
 import (
 	"context"
-	"github.com/levpaul/idolscape-backend/internal/config"
-	"github.com/levpaul/idolscape-backend/internal/core"
-	"github.com/levpaul/idolscape-backend/internal/eb"
+	"github.com/levpaul/gecserv/internal/config"
+	"github.com/levpaul/gecserv/internal/core"
+	"github.com/levpaul/gecserv/internal/eb"
 	"time"
 )
 

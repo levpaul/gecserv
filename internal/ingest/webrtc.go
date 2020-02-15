@@ -3,9 +3,9 @@ package ingest
 import (
 	"encoding/json"
 	uuid2 "github.com/google/uuid"
-	"github.com/levpaul/idolscape-backend/internal/core"
-	"github.com/levpaul/idolscape-backend/internal/eb"
-	"github.com/levpaul/idolscape-backend/pkg/signal"
+	"github.com/levpaul/gecserv/internal/core"
+	"github.com/levpaul/gecserv/internal/eb"
+	"github.com/levpaul/gecserv/pkg/signal"
 	"github.com/pion/webrtc"
 	"github.com/rs/zerolog/log"
 	"io/ioutil"

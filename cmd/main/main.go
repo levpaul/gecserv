@@ -1,14 +1,14 @@
 package main
 
 import (
-	"github.com/levpaul/idolscape-backend/internal/cmdflags"
-	"github.com/levpaul/idolscape-backend/internal/config"
-	"github.com/levpaul/idolscape-backend/internal/debug"
-	"github.com/levpaul/idolscape-backend/internal/eb"
-	"github.com/levpaul/idolscape-backend/internal/ecs"
-	"github.com/levpaul/idolscape-backend/internal/ingest"
-	"github.com/levpaul/idolscape-backend/internal/netpub"
-	"github.com/levpaul/idolscape-backend/internal/sectormgr"
+	"github.com/levpaul/gecserv/internal/cmdflags"
+	"github.com/levpaul/gecserv/internal/config"
+	"github.com/levpaul/gecserv/internal/debug"
+	"github.com/levpaul/gecserv/internal/eb"
+	"github.com/levpaul/gecserv/internal/ecs"
+	"github.com/levpaul/gecserv/internal/ingest"
+	"github.com/levpaul/gecserv/internal/netpub"
+	"github.com/levpaul/gecserv/internal/sectormgr"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"

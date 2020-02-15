@@ -1,7 +1,7 @@
 package entities
 
 import (
-	"github.com/levpaul/idolscape-backend/internal/core"
+	"github.com/levpaul/gecserv/internal/core"
 	"sync"
 )
 
