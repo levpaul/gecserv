@@ -79,6 +79,7 @@ func startListening() {
 }
 
 func handlePlayerSync(conn eb.N_PLAYER_SYNC_T) {
+	// TODO: Add publishing of playsync fbs over wire here
 
 }
 
