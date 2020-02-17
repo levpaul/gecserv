@@ -3,6 +3,7 @@ package eb
 import (
 	uuid2 "github.com/google/uuid"
 	"github.com/levpaul/gecserv/internal/core"
+	"github.com/levpaul/gecserv/internal/ecs/entities"
 	"github.com/levpaul/gecserv/internal/fb"
 )
 
@@ -14,6 +15,7 @@ const (
 	// Network messages
 	N_CONNECT = 128 + iota
 	N_DISCONN
+	N_PLAYER_SYNC
 	// Used as marker for event topics - insert new topics ABOVE this one
 	NUMTOPICS = 255
 )
@@ -25,8 +27,9 @@ type (
 	S_GAMETICK_DONE_T struct{}
 	S_INPUT_T         int
 	// Network messages
-	N_CONNECT_T *core.AvatarPubConn
-	N_DISCONN_T *uuid2.UUID
+	N_CONNECT_T     *core.AvatarPubConn
+	N_DISCONN_T     *uuid2.UUID
+	N_PLAYER_SYNC_T []*entities.PlayerE
 )
 
 type EventTopic int

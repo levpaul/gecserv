@@ -68,11 +68,23 @@ func startListening() {
 					Data:  eb.S_LOGOUT_T(pid),
 				})
 
+			case eb.N_PLAYER_SYNC:
+				pSyncData, ok := conn.Data.(eb.N_PLAYER_SYNC_T)
+				if !ok {
+					log.Error().Msgf("Non playersync data sent to eventbus on player sync channel - %#v", conn.Data)
+					continue
+				}
+				handlePlayerSync(pSyncData)
+
 			default:
 				log.Error().Msg("Unsupported message type ")
 			}
 		}
 	}
+}
+
+func handlePlayerSync(conn eb.N_PLAYER_SYNC_T) {
+
 }
 
 func generateNewCharacter() *fb.PlayerT {
