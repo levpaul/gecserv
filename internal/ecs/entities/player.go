@@ -2,6 +2,7 @@ package entities
 
 import (
 	"github.com/levpaul/gecserv/internal/ecs/components"
+	"github.com/levpaul/gecserv/internal/fb"
 )
 
 type PlayerE struct {
@@ -11,4 +12,13 @@ type PlayerE struct {
 	components.NetworkSession
 	components.StateHistory
 	components.Color
+}
+
+func (p *PlayerE) ToFB() *fb.PlayerT {
+	return &fb.PlayerT{
+		Posx: p.X,
+		Posy: p.Y,
+		Sid:  p.Sid,
+		Col:  p.Col,
+	}
 }

@@ -2,7 +2,6 @@ package core
 
 import (
 	"fmt"
-	uuid2 "github.com/google/uuid"
 	"math"
 )
 
@@ -14,8 +13,8 @@ type SenderCloser interface {
 	Close() error
 }
 
-type AvatarPubConn struct {
-	AID  uuid2.UUID // Avatar ID
+type SessionPubConn struct {
+	SID  float64
 	Conn SenderCloser
 }
 

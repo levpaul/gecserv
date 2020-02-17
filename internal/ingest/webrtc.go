@@ -2,13 +2,13 @@ package ingest
 
 import (
 	"encoding/json"
-	uuid2 "github.com/google/uuid"
 	"github.com/levpaul/gecserv/internal/core"
 	"github.com/levpaul/gecserv/internal/eb"
 	"github.com/levpaul/gecserv/pkg/signal"
 	"github.com/pion/webrtc"
 	"github.com/rs/zerolog/log"
 	"io/ioutil"
+	"math/rand"
 	"net/http"
 )
 
@@ -60,7 +60,7 @@ func newRTCSessionHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func initPeerConnection(peerConnection *webrtc.PeerConnection) (*webrtc.DataChannel, error) {
-	var aid uuid2.UUID
+	var sid float64
 	// Create a datachannel with label 'data'
 	dataChannel, err := peerConnection.CreateDataChannel("data", nil)
 	if err != nil {
@@ -77,9 +77,9 @@ func initPeerConnection(peerConnection *webrtc.PeerConnection) (*webrtc.DataChan
 	})
 
 	dataChannel.OnOpen(func() {
-		aid = uuid2.New() // TODO: Replace with login / persistance
-		eb.Publish(eb.Event{eb.N_CONNECT, eb.N_CONNECT_T(&core.AvatarPubConn{
-			AID:  aid,
+		sid = rand.Float64() // TODO: Replace with login/persistance
+		eb.Publish(eb.Event{eb.N_CONNECT, eb.N_CONNECT_T(&core.SessionPubConn{
+			SID:  sid,
 			Conn: dataChannel,
 		})})
 	})
@@ -87,7 +87,7 @@ func initPeerConnection(peerConnection *webrtc.PeerConnection) (*webrtc.DataChan
 	dataChannel.OnClose(func() {
 		eb.Publish(eb.Event{
 			Topic: eb.N_DISCONN,
-			Data:  eb.N_DISCONN_T(&aid),
+			Data:  eb.N_DISCONN_T(sid),
 		})
 	})
 

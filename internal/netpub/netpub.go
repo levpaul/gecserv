@@ -1,21 +1,17 @@
 package netpub
 
 import (
-	uuid2 "github.com/google/uuid"
 	"github.com/levpaul/gecserv/internal/core"
 	"github.com/levpaul/gecserv/internal/eb"
 	"github.com/levpaul/gecserv/internal/fb"
 	"github.com/rs/zerolog/log"
-	"math"
 	"math/rand"
-	"sync/atomic"
 )
 
 var (
 	pipeErr chan<- error
 
-	pConnMap       map[uuid2.UUID]playerConn
-	sessionCounter uint64
+	pConnMap map[float64]playerConn
 )
 
 // TODO: Make this struct more generic - Sender/Reciever interface
@@ -32,8 +28,7 @@ func Start(pErr chan<- error) error {
 }
 
 func initialize() {
-	pConnMap = make(map[uuid2.UUID]playerConn)
-	sessionCounter = rand.Uint64()
+	pConnMap = make(map[float64]playerConn)
 }
 
 func startListening() {
@@ -48,8 +43,9 @@ func startListening() {
 
 			case eb.N_CONNECT:
 				aPConn := conn.Data.(eb.N_CONNECT_T)
-				p := generateNewCharacter() // TODO: Replace with persistence fetching
-				pConnMap[aPConn.AID] = playerConn{
+				p := generateNewCharacter(aPConn.SID) // TODO: Replace with persistence fetching
+				// use aPConn.AID later on for bookkeeping connections to logins
+				pConnMap[p.Sid] = playerConn{
 					conn: aPConn.Conn,
 					p:    p,
 				}
@@ -60,12 +56,11 @@ func startListening() {
 				})
 
 			case eb.N_DISCONN:
-				aid := conn.Data.(eb.N_DISCONN_T)
-				pid := pConnMap[*aid].p.Sid
-				delete(pConnMap, *aid)
+				sid := float64(conn.Data.(eb.N_DISCONN_T))
+				delete(pConnMap, sid)
 				eb.Publish(eb.Event{
 					Topic: eb.S_LOGOUT,
-					Data:  eb.S_LOGOUT_T(pid),
+					Data:  eb.S_LOGOUT_T(sid),
 				})
 
 			case eb.N_PLAYER_SYNC:
@@ -87,12 +82,12 @@ func handlePlayerSync(conn eb.N_PLAYER_SYNC_T) {
 
 }
 
-func generateNewCharacter() *fb.PlayerT {
+func generateNewCharacter(sid float64) *fb.PlayerT {
 	p := new(fb.PlayerT)
 	p.Col = fb.ColorBlue
 	p.Posx = (rand.Float32()) * 1000
 	p.Posy = (rand.Float32()) * 1000
-	p.Sid = math.Float64frombits(atomic.AddUint64(&sessionCounter, 1))
+	p.Sid = sid
 
 	return p
 }
