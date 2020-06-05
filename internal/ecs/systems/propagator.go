@@ -2,13 +2,10 @@ package systems
 
 import (
 	"context"
-	"fmt"
-	"github.com/google/uuid"
 	"github.com/levpaul/gecserv/internal/core"
 	"github.com/levpaul/gecserv/internal/eb"
 	"github.com/levpaul/gecserv/internal/ecs/components"
 	"github.com/levpaul/gecserv/internal/ecs/entities"
-	"github.com/levpaul/gecserv/internal/fb"
 	"github.com/rs/zerolog/log"
 )
 
@@ -25,8 +22,8 @@ type PropagatorSystem struct {
 func (pm *PropagatorSystem) Init() {
 	pm.cc = core.NewComponentCollection([]interface{}{
 		new(components.StateHistoryComponent),
-		new(components.NetworkSessionComponent),
-		new(components.PositionComponent),
+		new(components.NetworkedSessionComponent),
+		new(components.PositionalComponent),
 	})
 }
 func (pm *PropagatorSystem) Update(ctx context.Context, dt core.GameTick) {
@@ -40,11 +37,14 @@ func (pm *PropagatorSystem) Update(ctx context.Context, dt core.GameTick) {
 	im := ime.(components.InterestMapComponent).GetInterestMap()
 
 	ents := pm.sa.FilterEntitiesByCC(pm.cc)
+	log.Info().Msgf("Ents", ents)
 	for en := ents.Next(); en != nil; en = ents.Next() {
-		shCp := en.(components.StateHistoryComponent).GetStateHistory()
-		// read their last state ack
-		if pm.sa.GetSectorTick()-shCp.LastAck > MaxTickDiff || shCp.LastAck == 0 {
-			pm.sendAllPlayers(en, im)
+		log.Info().Msgf("En", en)
+		entStateHist := en.(components.StateHistoryComponent).GetStateHistory()
+
+		// Send full player list if lastAck is too far off
+		if pm.sa.GetSectorTick()-entStateHist.LastAck > MaxTickDiff || entStateHist.LastAck == 0 {
+			pm.sendFullState(en, im)
 			continue
 		}
 
@@ -60,10 +60,14 @@ func (pm *PropagatorSystem) Update(ctx context.Context, dt core.GameTick) {
 	}
 }
 
-func (pm *PropagatorSystem) sendAllPlayers(en core.Entity, im components.InterestMap) {
-	log.Info().Uint32("Player", uint32(en.ID())).Msg("Sending full state")
-	//players := []*entities.PlayerE{}
-	players := []*fb.PlayerT{}
+func (pm *PropagatorSystem) sendFullState(en core.Entity, im components.InterestMap) {
+	log.Info().Uint32("Player Ent ID", uint32(en.ID())).Msg("Sending full state")
+
+	// send logins
+	// send logouts
+	// send positions
+
+	players := []*entities.PlayerE{}
 	for i := range im.Imap {
 		for j := range im.Imap[i] {
 			for _, e := range im.Imap[i][j] {
@@ -75,16 +79,22 @@ func (pm *PropagatorSystem) sendAllPlayers(en core.Entity, im components.Interes
 				if !ok {
 					continue
 				}
-				players = append(players, plEn.ToFB())
+				players = append(players, plEn)
 			}
 		}
 	}
-	// full player list here
-	fmt.Println("Plkayer list: ", players)
+
+	tp, ok := en.(*entities.PlayerE)
+	if !ok {
+		log.Fatal().Msg("Some strange shit happened")
+	}
+
+	log.Info().Msgf("Player list: %s", players)
 	eb.Publish(eb.Event{
 		Topic: eb.N_PLAYER_SYNC,
 		Data: eb.N_PLAYER_SYNC_T(&eb.PlayerSyncMessage{
-			ToPlayer: uuid.UUID{},
-			Players:  players,
+			ToPlayerSID: tp.Sid,
+			Players:     players,
+			Tick:        pm.sa.GetSectorTick(),
 		})})
 }

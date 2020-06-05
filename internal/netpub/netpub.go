@@ -1,6 +1,7 @@
 package netpub
 
 import (
+	flatbuffers "github.com/google/flatbuffers/go"
 	"github.com/levpaul/gecserv/internal/core"
 	"github.com/levpaul/gecserv/internal/eb"
 	"github.com/levpaul/gecserv/internal/fb"
@@ -12,6 +13,7 @@ var (
 	pipeErr chan<- error
 
 	pConnMap map[float64]playerConn
+	fbB      *flatbuffers.Builder
 )
 
 // TODO: Make this struct more generic - Sender/Reciever interface
@@ -29,12 +31,14 @@ func Start(pErr chan<- error) error {
 
 func initialize() {
 	pConnMap = make(map[float64]playerConn)
+	fbB = flatbuffers.NewBuilder(0)
 }
 
 func startListening() {
 	nc := make(chan eb.Event, 20)
 	eb.Subscribe(eb.N_CONNECT, nc)
 	eb.Subscribe(eb.N_DISCONN, nc)
+	eb.Subscribe(eb.N_PLAYER_SYNC, nc)
 
 	for {
 		select {
@@ -78,9 +82,12 @@ func startListening() {
 	}
 }
 
-func handlePlayerSync(conn eb.N_PLAYER_SYNC_T) {
-	// TODO: Add publishing of playsync fbs over wire here
+func handlePlayerSync(syncData eb.N_PLAYER_SYNC_T) {
+	//conn := pConnMap[syncData.ToPlayer].conn
+	//conn.Send()
 
+	// TODO: Add publishing of playsync fbs over wire here
+	log.Warn().Msg("player sync not implemented")
 }
 
 func generateNewCharacter(sid float64) *fb.PlayerT {

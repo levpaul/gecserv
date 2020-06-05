@@ -38,7 +38,7 @@ func (is *InterestSystem) Init() {
 	is.sa.AddEntity(iMEnt)
 	is.cc = core.NewComponentCollection([]interface{}{
 		new(components.ChangeableComponent),
-		new(components.PositionComponent),
+		new(components.PositionalComponent),
 	})
 }
 
@@ -62,7 +62,7 @@ func (is *InterestSystem) Update(ctx context.Context, dt core.GameTick) {
 		}
 
 		eid := en.ID()
-		posCp, ok := en.(components.PositionComponent)
+		posCp, ok := en.(components.PositionalComponent)
 		if !ok {
 			log.Error().Uint32("entity", uint32(eid)).Msg("Failed to turn entity into position component at interest system")
 			continue

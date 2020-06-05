@@ -1,11 +1,12 @@
 package eb
 
 import (
-	uuid2 "github.com/google/uuid"
-	"github.com/levpaul/gecserv/internal/fb"
+	"github.com/levpaul/gecserv/internal/core"
+	"github.com/levpaul/gecserv/internal/ecs/entities"
 )
 
 type PlayerSyncMessage struct {
-	ToPlayer uuid2.UUID
-	Players  []*fb.PlayerT
+	ToPlayerSID float64
+	Players     []*entities.PlayerE
+	Tick        core.GameTick
 }

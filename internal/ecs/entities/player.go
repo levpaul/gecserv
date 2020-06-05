@@ -7,14 +7,16 @@ import (
 
 type PlayerE struct {
 	*BaseEntity
-	components.Position
+	components.Positional
 	components.Changeable
-	components.NetworkSession
+	components.NetworkedSession
 	components.StateHistory
-	components.Color
+	components.Colored
 }
 
-func (p *PlayerE) ToFB() *fb.PlayerT {
+// ToPublicFB returns a generic representation of a Player
+// suitable for message transfer
+func (p *PlayerE) ToPublicFB() *fb.PlayerT {
 	return &fb.PlayerT{
 		Posx: p.X,
 		Posy: p.Y,

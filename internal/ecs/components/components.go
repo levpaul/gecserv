@@ -6,35 +6,35 @@ import (
 )
 
 // ==================================================================
-type Position fb.Vec2T
+type Positional fb.Vec2T
 
-func (p *Position) GetPosition() *Position { return p }
+func (p *Positional) GetPosition() *Positional { return p }
 
-type PositionComponent interface {
-	GetPosition() *Position
+type PositionalComponent interface {
+	GetPosition() *Positional
 }
 
 // ==================================================================
-type NetworkSession struct {
+type NetworkedSession struct {
 	Sid float64
 }
 
-type NetworkSessionComponent interface {
-	GetNetworkSession() *NetworkSession
+type NetworkedSessionComponent interface {
+	GetNetworkSession() *NetworkedSession
 }
 
-func (n *NetworkSession) GetNetworkSession() *NetworkSession { return n }
+func (n *NetworkedSession) GetNetworkSession() *NetworkedSession { return n }
 
 // ==================================================================
-type Color struct {
+type Colored struct {
 	Col fb.Color
 }
 
-type ColorComponent interface {
-	GetColor() *Color
+type ColoredComponent interface {
+	GetColor() *Colored
 }
 
-func (c *Color) GetColor() *Color {
+func (c *Colored) GetColor() *Colored {
 	return c
 }
 
