@@ -65,12 +65,15 @@ func (ls *LoginSystem) handleLogin(ctx context.Context, player *fb.PlayerT) {
 	log.Info().Str("SID", core.SIDStr(player.Sid)).Msg("New player login!")
 
 	pEntity := &entities.PlayerE{
-		BaseEntity:       entities.NewBaseEntity(),
-		Positional:       components.Positional{player.Posx, player.Posy},
-		Changeable:       components.Changeable{true},
-		NetworkedSession: components.NetworkedSession{player.Sid},
-		StateHistory:     components.StateHistory{},
-		Colored:          components.Colored{player.Col},
+		BaseEntity: entities.NewBaseEntity(),
+		Positional: components.Positional{player.Posx, player.Posy},
+		Changeable: components.Changeable{true},
+		NetworkedSession: components.NetworkedSession{
+			Sid:       player.Sid,
+			LoginTick: ls.sa.GetSectorTick(),
+		},
+		StateHistory: components.StateHistory{},
+		Colored:      components.Colored{player.Col},
 	}
 
 	ls.sa.AddEntity(pEntity)

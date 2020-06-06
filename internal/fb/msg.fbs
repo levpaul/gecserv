@@ -13,7 +13,7 @@ table Message {
 
 table MapUpdate {
     seq: uint32;
-    logins: [Player];
+    logins: [float64];
     logouts: [float64];
     psyncs: [Player];
 }

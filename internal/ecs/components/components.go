@@ -16,7 +16,8 @@ type PositionalComponent interface {
 
 // ==================================================================
 type NetworkedSession struct {
-	Sid float64
+	Sid       float64
+	LoginTick core.GameTick
 }
 
 type NetworkedSessionComponent interface {

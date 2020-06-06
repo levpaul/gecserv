@@ -6,6 +6,7 @@ import (
 	"github.com/levpaul/gecserv/internal/eb"
 	"github.com/levpaul/gecserv/internal/ecs/components"
 	"github.com/levpaul/gecserv/internal/ecs/entities"
+	"github.com/levpaul/gecserv/internal/fb"
 	"github.com/rs/zerolog/log"
 )
 
@@ -37,19 +38,16 @@ func (pm *PropagatorSystem) Update(ctx context.Context, dt core.GameTick) {
 	im := ime.(components.InterestMapComponent).GetInterestMap()
 
 	ents := pm.sa.FilterEntitiesByCC(pm.cc)
-	log.Info().Msgf("Ents", ents)
 	for en := ents.Next(); en != nil; en = ents.Next() {
-		log.Info().Msgf("En", en)
 		entStateHist := en.(components.StateHistoryComponent).GetStateHistory()
 
 		// Send full player list if lastAck is too far off
 		if pm.sa.GetSectorTick()-entStateHist.LastAck > MaxTickDiff || entStateHist.LastAck == 0 {
-			pm.sendFullState(en, im)
+			pm.sendCurrentFullState(en, im)
 			continue
 		}
 
 		log.Warn().Msg("Unsupported partial diffs currently")
-		// impl plan below VVVVV
 		// lookup state from lastAck
 		// get position from oldstate
 		// determine old interestzone
@@ -60,41 +58,45 @@ func (pm *PropagatorSystem) Update(ctx context.Context, dt core.GameTick) {
 	}
 }
 
-func (pm *PropagatorSystem) sendFullState(en core.Entity, im components.InterestMap) {
-	log.Info().Uint32("Player Ent ID", uint32(en.ID())).Msg("Sending full state")
+func (pm *PropagatorSystem) sendCurrentFullState(en core.Entity, im components.InterestMap) {
+	currPlayerEn, ok := en.(*entities.PlayerE)
+	if !ok {
+		log.Fatal().Msg("Some strange shit happened - entity is not a player??")
+	}
 
-	// send logins
-	// send logouts
-	// send positions
+	currTick := pm.sa.GetSectorTick()
 
-	players := []*entities.PlayerE{}
+	logins := []float64{}
+	logouts := []float64{}
+
+	players := []*fb.PlayerT{}
 	for i := range im.Imap {
 		for j := range im.Imap[i] {
 			for _, e := range im.Imap[i][j] {
 				imEn := pm.sa.GetEntity(e)
 				if imEn == nil {
+					log.Warn().Msgf("Failed to get entity %v", e)
 					continue
 				}
 				plEn, ok := imEn.(*entities.PlayerE)
-				if !ok {
+				if !ok { // Entity is not a player
 					continue
 				}
-				players = append(players, plEn)
+				players = append(players, plEn.ToPublicFB())
+				if plEn.LoginTick == currTick {
+					logins = append(logins, plEn.Sid)
+				}
 			}
 		}
 	}
 
-	tp, ok := en.(*entities.PlayerE)
-	if !ok {
-		log.Fatal().Msg("Some strange shit happened")
-	}
-
-	log.Info().Msgf("Player list: %s", players)
 	eb.Publish(eb.Event{
 		Topic: eb.N_PLAYER_SYNC,
 		Data: eb.N_PLAYER_SYNC_T(&eb.PlayerSyncMessage{
-			ToPlayerSID: tp.Sid,
+			ToPlayerSID: currPlayerEn.Sid,
 			Players:     players,
+			Logins:      logins,
+			Logouts:     logouts,
 			Tick:        pm.sa.GetSectorTick(),
 		})})
 }

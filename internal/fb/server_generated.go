@@ -44,7 +44,7 @@ func (v Color) String() string {
 	if s, ok := EnumNamesColor[v]; ok {
 		return s
 	}
-	return "Colored(" + strconv.FormatInt(int64(v), 10) + ")"
+	return "Color(" + strconv.FormatInt(int64(v), 10) + ")"
 }
 
 type GameMessage byte
@@ -72,7 +72,7 @@ func (v GameMessage) String() string {
 }
 
 type GameMessageT struct {
-	Type  GameMessage
+	Type GameMessage
 	Value interface{}
 }
 
@@ -91,7 +91,7 @@ func (rcv GameMessage) UnPack(table flatbuffers.Table) *GameMessageT {
 	switch rcv {
 	case GameMessageMapUpdate:
 		x := MapUpdate{_tab: table}
-		return &GameMessageT{Type: GameMessageMapUpdate, Value: x.UnPack()}
+		return &GameMessageT{ Type: GameMessageMapUpdate, Value: x.UnPack() }
 	}
 	return nil
 }
@@ -156,9 +156,7 @@ type Vec2T struct {
 }
 
 func (t *Vec2T) Pack(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
-	if t == nil {
-		return 0
-	}
+	if t == nil { return 0 }
 	return CreateVec2(builder, t.X, t.Y)
 }
 func (rcv *Vec2) UnPackTo(t *Vec2T) {
@@ -167,9 +165,7 @@ func (rcv *Vec2) UnPackTo(t *Vec2T) {
 }
 
 func (rcv *Vec2) UnPack() *Vec2T {
-	if rcv == nil {
-		return nil
-	}
+	if rcv == nil { return nil }
 	t := &Vec2T{}
 	rcv.UnPackTo(t)
 	return t
@@ -208,7 +204,6 @@ func CreateVec2(builder *flatbuffers.Builder, x float32, y float32) flatbuffers.
 	builder.PrependFloat32(x)
 	return builder.Offset()
 }
-
 type Vec3T struct {
 	X float32
 	Y float32
@@ -216,9 +211,7 @@ type Vec3T struct {
 }
 
 func (t *Vec3T) Pack(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
-	if t == nil {
-		return 0
-	}
+	if t == nil { return 0 }
 	return CreateVec3(builder, t.X, t.Y, t.Z)
 }
 func (rcv *Vec3) UnPackTo(t *Vec3T) {
@@ -228,9 +221,7 @@ func (rcv *Vec3) UnPackTo(t *Vec3T) {
 }
 
 func (rcv *Vec3) UnPack() *Vec3T {
-	if rcv == nil {
-		return nil
-	}
+	if rcv == nil { return nil }
 	t := &Vec3T{}
 	rcv.UnPackTo(t)
 	return t
@@ -277,19 +268,16 @@ func CreateVec3(builder *flatbuffers.Builder, x float32, y float32, z float32) f
 	builder.PrependFloat32(x)
 	return builder.Offset()
 }
-
 type MapT struct {
-	Name    string
+	Name string
 	GlobalX int32
 	GlobalY int32
-	MaxX    int32
-	MaxY    int32
+	MaxX int32
+	MaxY int32
 }
 
 func (t *MapT) Pack(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
-	if t == nil {
-		return 0
-	}
+	if t == nil { return 0 }
 	nameOffset := builder.CreateString(t.Name)
 	MapStart(builder)
 	MapAddName(builder, nameOffset)
@@ -309,9 +297,7 @@ func (rcv *Map) UnPackTo(t *MapT) {
 }
 
 func (rcv *Map) UnPack() *MapT {
-	if rcv == nil {
-		return nil
-	}
+	if rcv == nil { return nil }
 	t := &MapT{}
 	rcv.UnPackTo(t)
 	return t
@@ -414,25 +400,20 @@ func MapAddMaxY(builder *flatbuffers.Builder, maxY int32) {
 func MapEnd(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
 	return builder.EndObject()
 }
-
 type PlayerT struct {
-	Posx    float32
-	Posy    float32
-	Sid     float64
-	Col     Color
-	LastAck uint32
+	Posx float32
+	Posy float32
+	Sid float64
+	Col Color
 }
 
 func (t *PlayerT) Pack(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
-	if t == nil {
-		return 0
-	}
+	if t == nil { return 0 }
 	PlayerStart(builder)
 	PlayerAddPosx(builder, t.Posx)
 	PlayerAddPosy(builder, t.Posy)
 	PlayerAddSid(builder, t.Sid)
 	PlayerAddCol(builder, t.Col)
-	PlayerAddLastAck(builder, t.LastAck)
 	return PlayerEnd(builder)
 }
 
@@ -441,13 +422,10 @@ func (rcv *Player) UnPackTo(t *PlayerT) {
 	t.Posy = rcv.Posy()
 	t.Sid = rcv.Sid()
 	t.Col = rcv.Col()
-	t.LastAck = rcv.LastAck()
 }
 
 func (rcv *Player) UnPack() *PlayerT {
-	if rcv == nil {
-		return nil
-	}
+	if rcv == nil { return nil }
 	t := &PlayerT{}
 	rcv.UnPackTo(t)
 	return t
@@ -521,20 +499,8 @@ func (rcv *Player) MutateCol(n Color) bool {
 	return rcv._tab.MutateInt8Slot(10, int8(n))
 }
 
-func (rcv *Player) LastAck() uint32 {
-	o := flatbuffers.UOffsetT(rcv._tab.Offset(12))
-	if o != 0 {
-		return rcv._tab.GetUint32(o + rcv._tab.Pos)
-	}
-	return 0
-}
-
-func (rcv *Player) MutateLastAck(n uint32) bool {
-	return rcv._tab.MutateUint32Slot(12, n)
-}
-
 func PlayerStart(builder *flatbuffers.Builder) {
-	builder.StartObject(5)
+	builder.StartObject(4)
 }
 func PlayerAddPosx(builder *flatbuffers.Builder, posx float32) {
 	builder.PrependFloat32Slot(0, posx, 0.0)
@@ -548,23 +514,17 @@ func PlayerAddSid(builder *flatbuffers.Builder, sid float64) {
 func PlayerAddCol(builder *flatbuffers.Builder, col Color) {
 	builder.PrependInt8Slot(3, int8(col), 0)
 }
-func PlayerAddLastAck(builder *flatbuffers.Builder, lastAck uint32) {
-	builder.PrependUint32Slot(4, lastAck, 0)
-}
 func PlayerEnd(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
 	return builder.EndObject()
 }
-
 type MessageT struct {
 	Data *GameMessageT
 }
 
 func (t *MessageT) Pack(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
-	if t == nil {
-		return 0
-	}
+	if t == nil { return 0 }
 	dataOffset := t.Data.Pack(builder)
-
+	
 	MessageStart(builder)
 	if t.Data != nil {
 		MessageAddDataType(builder, t.Data.Type)
@@ -581,9 +541,7 @@ func (rcv *Message) UnPackTo(t *MessageT) {
 }
 
 func (rcv *Message) UnPack() *MessageT {
-	if rcv == nil {
-		return nil
-	}
+	if rcv == nil { return nil }
 	t := &MessageT{}
 	rcv.UnPackTo(t)
 	return t
@@ -642,28 +600,21 @@ func MessageAddData(builder *flatbuffers.Builder, data flatbuffers.UOffsetT) {
 func MessageEnd(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
 	return builder.EndObject()
 }
-
 type MapUpdateT struct {
-	Seq     uint32
-	Logins  []*PlayerT
+	Seq uint32
+	Logins []float64
 	Logouts []float64
-	Psyncs  []*PlayerT
+	Psyncs []*PlayerT
 }
 
 func (t *MapUpdateT) Pack(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
-	if t == nil {
-		return 0
-	}
+	if t == nil { return 0 }
 	loginsOffset := flatbuffers.UOffsetT(0)
 	if t.Logins != nil {
 		loginsLength := len(t.Logins)
-		loginsOffsets := make([]flatbuffers.UOffsetT, loginsLength)
-		for j := 0; j < loginsLength; j++ {
-			loginsOffsets[j] = t.Logins[j].Pack(builder)
-		}
 		MapUpdateStartLoginsVector(builder, loginsLength)
 		for j := loginsLength - 1; j >= 0; j-- {
-			builder.PrependUOffsetT(loginsOffsets[j])
+			builder.PrependFloat64(t.Logins[j])
 		}
 		loginsOffset = builder.EndVector(loginsLength)
 	}
@@ -700,11 +651,9 @@ func (t *MapUpdateT) Pack(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
 func (rcv *MapUpdate) UnPackTo(t *MapUpdateT) {
 	t.Seq = rcv.Seq()
 	loginsLength := rcv.LoginsLength()
-	t.Logins = make([]*PlayerT, loginsLength)
+	t.Logins = make([]float64, loginsLength)
 	for j := 0; j < loginsLength; j++ {
-		x := Player{}
-		rcv.Logins(&x, j)
-		t.Logins[j] = x.UnPack()
+		t.Logins[j] = rcv.Logins(j)
 	}
 	logoutsLength := rcv.LogoutsLength()
 	t.Logouts = make([]float64, logoutsLength)
@@ -721,9 +670,7 @@ func (rcv *MapUpdate) UnPackTo(t *MapUpdateT) {
 }
 
 func (rcv *MapUpdate) UnPack() *MapUpdateT {
-	if rcv == nil {
-		return nil
-	}
+	if rcv == nil { return nil }
 	t := &MapUpdateT{}
 	rcv.UnPackTo(t)
 	return t
@@ -761,16 +708,13 @@ func (rcv *MapUpdate) MutateSeq(n uint32) bool {
 	return rcv._tab.MutateUint32Slot(4, n)
 }
 
-func (rcv *MapUpdate) Logins(obj *Player, j int) bool {
+func (rcv *MapUpdate) Logins(j int) float64 {
 	o := flatbuffers.UOffsetT(rcv._tab.Offset(6))
 	if o != 0 {
-		x := rcv._tab.Vector(o)
-		x += flatbuffers.UOffsetT(j) * 4
-		x = rcv._tab.Indirect(x)
-		obj.Init(rcv._tab.Bytes, x)
-		return true
+		a := rcv._tab.Vector(o)
+		return rcv._tab.GetFloat64(a + flatbuffers.UOffsetT(j*8))
 	}
-	return false
+	return 0
 }
 
 func (rcv *MapUpdate) LoginsLength() int {
@@ -779,6 +723,15 @@ func (rcv *MapUpdate) LoginsLength() int {
 		return rcv._tab.VectorLen(o)
 	}
 	return 0
+}
+
+func (rcv *MapUpdate) MutateLogins(j int, n float64) bool {
+	o := flatbuffers.UOffsetT(rcv._tab.Offset(6))
+	if o != 0 {
+		a := rcv._tab.Vector(o)
+		return rcv._tab.MutateFloat64(a+flatbuffers.UOffsetT(j*8), n)
+	}
+	return false
 }
 
 func (rcv *MapUpdate) Logouts(j int) float64 {
@@ -837,7 +790,7 @@ func MapUpdateAddLogins(builder *flatbuffers.Builder, logins flatbuffers.UOffset
 	builder.PrependUOffsetTSlot(1, flatbuffers.UOffsetT(logins), 0)
 }
 func MapUpdateStartLoginsVector(builder *flatbuffers.Builder, numElems int) flatbuffers.UOffsetT {
-	return builder.StartVector(4, numElems, 4)
+	return builder.StartVector(8, numElems, 8)
 }
 func MapUpdateAddLogouts(builder *flatbuffers.Builder, logouts flatbuffers.UOffsetT) {
 	builder.PrependUOffsetTSlot(2, flatbuffers.UOffsetT(logouts), 0)
@@ -854,16 +807,13 @@ func MapUpdateStartPsyncsVector(builder *flatbuffers.Builder, numElems int) flat
 func MapUpdateEnd(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
 	return builder.EndObject()
 }
-
 type PlayerInputT struct {
-	Seq     uint32
+	Seq uint32
 	Actions []PlayerAction
 }
 
 func (t *PlayerInputT) Pack(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
-	if t == nil {
-		return 0
-	}
+	if t == nil { return 0 }
 	actionsOffset := flatbuffers.UOffsetT(0)
 	if t.Actions != nil {
 		actionsLength := len(t.Actions)
@@ -889,9 +839,7 @@ func (rcv *PlayerInput) UnPackTo(t *PlayerInputT) {
 }
 
 func (rcv *PlayerInput) UnPack() *PlayerInputT {
-	if rcv == nil {
-		return nil
-	}
+	if rcv == nil { return nil }
 	t := &PlayerInputT{}
 	rcv.UnPackTo(t)
 	return t

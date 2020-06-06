@@ -12,7 +12,8 @@ export enum Color{
   Pink= 4,
   Gray= 5,
   Orange= 6
-}};
+};
+}
 
 /**
  * @enum {number}
@@ -21,7 +22,31 @@ export namespace msg{
 export enum GameMessage{
   NONE= 0,
   MapUpdate= 1
-}};
+};
+
+export function unionToGameMessage(
+  type: GameMessage,
+  accessor: (obj:msg.MapUpdate) => msg.MapUpdate|null
+): msg.MapUpdate|null {
+  switch(msg.GameMessage[type]) {
+    case 'NONE': return null; 
+    case 'MapUpdate': return accessor(new msg.MapUpdate())! as msg.MapUpdate;
+    default: return null;
+  }
+}
+
+export function unionListToGameMessage(
+  type: GameMessage, 
+  accessor: (index: number, obj:msg.MapUpdate) => msg.MapUpdate|null, 
+  index: number
+): msg.MapUpdate|null {
+  switch(msg.GameMessage[type]) {
+    case 'NONE': return null; 
+    case 'MapUpdate': return accessor(index, new msg.MapUpdate())! as msg.MapUpdate;
+    default: return null;
+  }
+}
+}
 
 /**
  * @enum {number}
@@ -40,7 +65,8 @@ export enum PlayerAction{
   M1_UP= 9,
   M2_DOWN= 10,
   M2_UP= 11
-}};
+};
+}
 
 /**
  * @constructor
@@ -218,18 +244,10 @@ col():msg.Color {
 };
 
 /**
- * @returns number
- */
-lastAck():number {
-  var offset = this.bb!.__offset(this.bb_pos, 12);
-  return offset ? this.bb!.readUint32(this.bb_pos + offset) : 0;
-};
-
-/**
  * @param flatbuffers.Builder builder
  */
 static start(builder:flatbuffers.Builder) {
-  builder.startObject(5);
+  builder.startObject(4);
 };
 
 /**
@@ -266,14 +284,6 @@ static addCol(builder:flatbuffers.Builder, col:msg.Color) {
 
 /**
  * @param flatbuffers.Builder builder
- * @param number lastAck
- */
-static addLastAck(builder:flatbuffers.Builder, lastAck:number) {
-  builder.addFieldInt32(4, lastAck, 0);
-};
-
-/**
- * @param flatbuffers.Builder builder
  * @returns flatbuffers.Offset
  */
 static end(builder:flatbuffers.Builder):flatbuffers.Offset {
@@ -281,13 +291,12 @@ static end(builder:flatbuffers.Builder):flatbuffers.Offset {
   return offset;
 };
 
-static create(builder:flatbuffers.Builder, posx:number, posy:number, sid:number, col:msg.Color, lastAck:number):flatbuffers.Offset {
+static create(builder:flatbuffers.Builder, posx:number, posy:number, sid:number, col:msg.Color):flatbuffers.Offset {
   Player.start(builder);
   Player.addPosx(builder, posx);
   Player.addPosy(builder, posy);
   Player.addSid(builder, sid);
   Player.addCol(builder, col);
-  Player.addLastAck(builder, lastAck);
   return Player.end(builder);
 }
 }
@@ -435,12 +444,11 @@ seq():number {
 
 /**
  * @param number index
- * @param msg.Player= obj
- * @returns msg.Player
+ * @returns number
  */
-logins(index: number, obj?:msg.Player):msg.Player|null {
+logins(index: number):number|null {
   var offset = this.bb!.__offset(this.bb_pos, 6);
-  return offset ? (obj || new msg.Player()).__init(this.bb!.__indirect(this.bb!.__vector(this.bb_pos + offset) + index * 4), this.bb!) : null;
+  return offset ? this.bb!.readFloat64(this.bb!.__vector(this.bb_pos + offset) + index * 8) : 0;
 };
 
 /**
@@ -449,6 +457,14 @@ logins(index: number, obj?:msg.Player):msg.Player|null {
 loginsLength():number {
   var offset = this.bb!.__offset(this.bb_pos, 6);
   return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
+};
+
+/**
+ * @returns Float64Array
+ */
+loginsArray():Float64Array|null {
+  var offset = this.bb!.__offset(this.bb_pos, 6);
+  return offset ? new Float64Array(this.bb!.bytes().buffer, this.bb!.bytes().byteOffset + this.bb!.__vector(this.bb_pos + offset), this.bb!.__vector_len(this.bb_pos + offset)) : null;
 };
 
 /**
@@ -519,13 +535,13 @@ static addLogins(builder:flatbuffers.Builder, loginsOffset:flatbuffers.Offset) {
 
 /**
  * @param flatbuffers.Builder builder
- * @param Array.<flatbuffers.Offset> data
+ * @param Array.<number> data
  * @returns flatbuffers.Offset
  */
-static createLoginsVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
-  builder.startVector(4, data.length, 4);
+static createLoginsVector(builder:flatbuffers.Builder, data:number[] | Uint8Array):flatbuffers.Offset {
+  builder.startVector(8, data.length, 8);
   for (var i = data.length - 1; i >= 0; i--) {
-    builder.addOffset(data[i]);
+    builder.addFloat64(data[i]);
   }
   return builder.endVector();
 };
@@ -535,7 +551,7 @@ static createLoginsVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]
  * @param number numElems
  */
 static startLoginsVector(builder:flatbuffers.Builder, numElems:number) {
-  builder.startVector(4, numElems, 4);
+  builder.startVector(8, numElems, 8);
 };
 
 /**

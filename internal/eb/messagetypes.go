@@ -2,11 +2,13 @@ package eb
 
 import (
 	"github.com/levpaul/gecserv/internal/core"
-	"github.com/levpaul/gecserv/internal/ecs/entities"
+	"github.com/levpaul/gecserv/internal/fb"
 )
 
 type PlayerSyncMessage struct {
 	ToPlayerSID float64
-	Players     []*entities.PlayerE
+	Players     []*fb.PlayerT
+	Logins      []float64
+	Logouts     []float64
 	Tick        core.GameTick
 }

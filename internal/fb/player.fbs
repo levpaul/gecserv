@@ -8,5 +8,4 @@ table Player {
     posy: float;
     sid: float64;
     col: Color;
-    loginTick: uint32;
 }

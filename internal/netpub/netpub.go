@@ -12,8 +12,8 @@ import (
 var (
 	pipeErr chan<- error
 
-	pConnMap map[float64]playerConn
-	fbB      *flatbuffers.Builder
+	pConnMap  map[float64]playerConn
+	fbBuilder *flatbuffers.Builder
 )
 
 // TODO: Make this struct more generic - Sender/Reciever interface
@@ -31,7 +31,7 @@ func Start(pErr chan<- error) error {
 
 func initialize() {
 	pConnMap = make(map[float64]playerConn)
-	fbB = flatbuffers.NewBuilder(0)
+	fbBuilder = flatbuffers.NewBuilder(0)
 }
 
 func startListening() {
@@ -83,11 +83,49 @@ func startListening() {
 }
 
 func handlePlayerSync(syncData eb.N_PLAYER_SYNC_T) {
-	//conn := pConnMap[syncData.ToPlayer].conn
-	//conn.Send()
+	fbBuilder.Reset()
 
-	// TODO: Add publishing of playsync fbs over wire here
-	log.Warn().Msg("player sync not implemented")
+	packedPlayers := []flatbuffers.UOffsetT{}
+	for _, p := range syncData.Players {
+		packedPlayers = append(packedPlayers, p.Pack(fbBuilder))
+	}
+
+	fb.MapUpdateStartLoginsVector(fbBuilder, len(syncData.Players))
+	for i := len(packedPlayers) - 1; i >= 0; i-- {
+		fbBuilder.PrependUOffsetT(packedPlayers[i])
+	}
+	players := fbBuilder.EndVector(len(syncData.Players))
+
+	fb.MapUpdateStartLoginsVector(fbBuilder, len(syncData.Logins))
+	for i := len(syncData.Logins) - 1; i >= 0; i-- {
+		fbBuilder.PrependFloat64(syncData.Logins[i])
+	}
+	logins := fbBuilder.EndVector(len(syncData.Logins))
+
+	fb.MapUpdateStartLogoutsVector(fbBuilder, len(syncData.Logouts))
+	for i := len(syncData.Logouts) - 1; i >= 0; i-- {
+		fbBuilder.PrependFloat64(syncData.Logouts[i])
+	}
+	logouts := fbBuilder.EndVector(len(syncData.Logouts))
+
+	fb.MapUpdateStart(fbBuilder)
+	fb.MapUpdateAddSeq(fbBuilder, uint32(syncData.Tick))
+	fb.MapUpdateAddPsyncs(fbBuilder, players)
+	fb.MapUpdateAddLogins(fbBuilder, logins)
+	fb.MapUpdateAddLogouts(fbBuilder, logouts)
+
+	mapUpdate := fb.MapUpdateEnd(fbBuilder)
+	fbBuilder.Finish(mapUpdate)
+
+	conn := pConnMap[syncData.ToPlayerSID].conn
+	conn.Send(fbBuilder.FinishedBytes())
+
+	psyncload := fb.GetRootAsMapUpdate(fbBuilder.FinishedBytes(), 0)
+	mpupdate := &fb.MapUpdateT{}
+	psyncload.UnPackTo(mpupdate)
+	//log.Info().Msgf("Reloaded mapupdate: %+v", psyncload)
+	log.Info().Msgf("raw mapupdate: %+v, players: %+v", mpupdate,
+		mpupdate.Psyncs[0])
 }
 
 func generateNewCharacter(sid float64) *fb.PlayerT {
