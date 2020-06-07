@@ -11,7 +11,8 @@ export enum Color{
   Yellow= 3,
   Pink= 4,
   Gray= 5,
-  Orange= 6
+  Orange= 6,
+  MAXCOLOR= 7
 };
 }
 

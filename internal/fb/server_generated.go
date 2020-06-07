@@ -11,33 +11,36 @@ import (
 type Color int8
 
 const (
-	ColorRed    Color = 0
-	ColorGreen  Color = 1
-	ColorBlue   Color = 2
-	ColorYellow Color = 3
-	ColorPink   Color = 4
-	ColorGray   Color = 5
-	ColorOrange Color = 6
+	ColorRed      Color = 0
+	ColorGreen    Color = 1
+	ColorBlue     Color = 2
+	ColorYellow   Color = 3
+	ColorPink     Color = 4
+	ColorGray     Color = 5
+	ColorOrange   Color = 6
+	ColorMAXCOLOR Color = 7
 )
 
 var EnumNamesColor = map[Color]string{
-	ColorRed:    "Red",
-	ColorGreen:  "Green",
-	ColorBlue:   "Blue",
-	ColorYellow: "Yellow",
-	ColorPink:   "Pink",
-	ColorGray:   "Gray",
-	ColorOrange: "Orange",
+	ColorRed:      "Red",
+	ColorGreen:    "Green",
+	ColorBlue:     "Blue",
+	ColorYellow:   "Yellow",
+	ColorPink:     "Pink",
+	ColorGray:     "Gray",
+	ColorOrange:   "Orange",
+	ColorMAXCOLOR: "MAXCOLOR",
 }
 
 var EnumValuesColor = map[string]Color{
-	"Red":    ColorRed,
-	"Green":  ColorGreen,
-	"Blue":   ColorBlue,
-	"Yellow": ColorYellow,
-	"Pink":   ColorPink,
-	"Gray":   ColorGray,
-	"Orange": ColorOrange,
+	"Red":      ColorRed,
+	"Green":    ColorGreen,
+	"Blue":     ColorBlue,
+	"Yellow":   ColorYellow,
+	"Pink":     ColorPink,
+	"Gray":     ColorGray,
+	"Orange":   ColorOrange,
+	"MAXCOLOR": ColorMAXCOLOR,
 }
 
 func (v Color) String() string {

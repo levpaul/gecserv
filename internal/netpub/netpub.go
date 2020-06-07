@@ -150,7 +150,7 @@ func handleLogoutResponse(logoutRespT eb.N_LOGOUT_RESPONSE_T) {
 
 func generateNewCharacter(sid float64) *fb.PlayerT {
 	p := new(fb.PlayerT)
-	p.Col = fb.ColorBlue
+	p.Col = fb.Color(rand.Intn(int(fb.ColorMAXCOLOR)))
 	p.Posx = (rand.Float32()) * 500
 	p.Posy = (rand.Float32()) * 500
 	p.Sid = sid
