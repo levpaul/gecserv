@@ -3,6 +3,7 @@ package systems
 import (
 	"context"
 	"github.com/levpaul/gecserv/internal/core"
+	"github.com/levpaul/gecserv/internal/eb"
 	"github.com/levpaul/gecserv/internal/ecs/components"
 	"github.com/levpaul/gecserv/internal/ecs/entities"
 	"github.com/rs/zerolog/log"
@@ -15,7 +16,8 @@ import (
 // full update in too
 type InterestSystem struct {
 	BaseSystem
-	cc core.ComponentCollection
+	cc     core.ComponentCollection
+	events chan eb.Event
 }
 
 func (is *InterestSystem) Init() {
@@ -40,11 +42,12 @@ func (is *InterestSystem) Init() {
 		new(components.ChangeableComponent),
 		new(components.PositionalComponent),
 	})
+
+	is.events = make(chan eb.Event, 128)
+	eb.Subscribe(eb.S_REMOVED_ENT, is.events)
 }
 
 func (is *InterestSystem) Update(ctx context.Context, dt core.GameTick) {
-	// Loop through all changeable entities w/ position
-	// If changed, update interest map w/ new coordinates
 	interestMapEnts := is.sa.FilterEntitiesByCC(core.NewComponentCollection([]interface{}{
 		new(components.InterestMapComponent),
 	}))
@@ -54,13 +57,36 @@ func (is *InterestSystem) Update(ctx context.Context, dt core.GameTick) {
 	}
 	im := ime.(components.InterestMapComponent).GetInterestMap()
 
+	// First check removedEntities queue and update interest map
+	for empty := false; !empty; {
+		select {
+		case rawEvent := <-is.events:
+			switch ev := rawEvent.Data.(type) {
+			case eb.S_REMOVED_ENT_T:
+				handleRemovedEnt(core.EntityID(ev), im)
+			default:
+				log.Error().Interface("type", rawEvent.Data).Msg("Unsupported message type received on interest channel")
+			}
+		case <-ctx.Done():
+			return
+		default:
+			empty = true
+			break
+		}
+	}
+
+	// Second loop through all changeable entities w/ position
+	// If changed, update interest map w/ new coordinates
 	ents := is.sa.FilterEntitiesByCC(is.cc)
 	for en := ents.Next(); en != nil; en = ents.Next() {
+		// Check if entity changed
 		chCp, ok := en.(components.ChangeableComponent)
 		if !ok || !chCp.GetChangeable().Changed {
 			continue
 		}
+		chCp.GetChangeable().Changed = false
 
+		// Get relative interest map position
 		eid := en.ID()
 		posCp, ok := en.(components.PositionalComponent)
 		if !ok {
@@ -70,7 +96,7 @@ func (is *InterestSystem) Update(ctx context.Context, dt core.GameTick) {
 		imPosX := uint8(posCp.GetPosition().X / im.SegSizeX)
 		imPosY := uint8(posCp.GetPosition().Y / im.SegSizeY)
 
-		// Check for new entity in sector
+		// Check to see if entity is new
 		old, isInLookup := im.Lookup[eid]
 		if !isInLookup {
 			im.Imap[imPosX][imPosY] = append(im.Imap[imPosX][imPosY], en.ID())
@@ -78,7 +104,7 @@ func (is *InterestSystem) Update(ctx context.Context, dt core.GameTick) {
 			continue
 		}
 
-		// No sector position update, skip
+		// Check if no sector position update required
 		if old.X == imPosX && old.Y == imPosY {
 			continue
 		}
@@ -92,6 +118,22 @@ func (is *InterestSystem) Update(ctx context.Context, dt core.GameTick) {
 				break
 			}
 		}
-		chCp.GetChangeable().Changed = false
 	}
+}
+
+func handleRemovedEnt(en core.EntityID, imEn components.InterestMap) {
+	pos, ok := imEn.Lookup[en]
+	if !ok { // Early exit if entity is not in interest map
+		return
+	}
+
+	// Delete ent from interest map
+	im := imEn.Imap[pos.X][pos.Y]
+	for i := range im {
+		if im[i] == en {
+			im[i] = im[len(im)-1]
+			break
+		}
+	}
+	imEn.Imap[pos.X][pos.Y] = im[:len(im)-1]
 }

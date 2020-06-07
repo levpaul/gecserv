@@ -19,7 +19,6 @@ type LoginSystem struct {
 	sidsToEnts  map[float64]*entities.PlayerE
 }
 
-// TODO: The topic for loginEvents may need to be split per sector
 func (ls *LoginSystem) Init() {
 	ls.loginEvents = make(chan eb.Event, 128)
 	eb.Subscribe(eb.S_LOGIN, ls.loginEvents)
@@ -34,24 +33,15 @@ func (ls *LoginSystem) Update(ctx context.Context, dt core.GameTick) {
 	for {
 		select {
 		case l := <-ls.loginEvents:
-			switch l.Data.(type) {
+			switch data := l.Data.(type) {
 			// Network login event
 			case eb.S_LOGIN_T:
-				player, ok := l.Data.(eb.S_LOGIN_T)
-				if !ok {
-					log.Error().Interface("data", l.Data).Msg("Failed to type assert S_LOGIN message")
-					continue
-				}
-				ls.handleLogin(ctx, player)
+				ls.handleLogin(ctx, data)
 
 			// Network disconnect event
 			case eb.S_LOGOUT_T:
-				sid, ok := l.Data.(eb.S_LOGOUT_T)
-				if !ok {
-					log.Error().Interface("data", l.Data).Msg("Failed to type assert S_LOGOUT message")
-					continue
-				}
-				ls.handleDisconnect(ctx, float64(sid))
+				ls.handleDisconnect(ctx, float64(data))
+
 			default:
 				log.Error().Interface("type", l.Data).Msg("Unsupported message type received on login channel")
 			}
@@ -100,6 +90,7 @@ func (ls *LoginSystem) handleDisconnect(ctx context.Context, sid float64) {
 	ls.sa.RemoveEntity(en.ID())
 	delete(ls.sidsToEnts, en.Sid)
 }
+
 func (ls *LoginSystem) handleLogout(ctx context.Context, sid float64) {
 	en, ok := ls.sidsToEnts[sid]
 	if !ok {

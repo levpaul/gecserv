@@ -1,6 +1,7 @@
 package netpub
 
 import (
+	"fmt"
 	flatbuffers "github.com/google/flatbuffers/go"
 	"github.com/levpaul/gecserv/internal/core"
 	"github.com/levpaul/gecserv/internal/eb"
@@ -45,106 +46,69 @@ func startListening() {
 	for {
 		select {
 		case conn := <-nc:
-			switch conn.Topic {
-
+			switch data := conn.Data.(type) {
 			// A new network connection has been made
-			case eb.N_CONNECT:
-				aPConn := conn.Data.(eb.N_CONNECT_T)
-				p := generateNewCharacter(aPConn.SID) // TODO: Replace with persistence fetching
-				// use aPConn.AID later on for bookkeeping connections to logins
-				pConnMap[p.Sid] = playerConn{
-					conn: aPConn.Conn,
-					p:    p,
-				}
-				// We have established WebRTC + PlayerLogin (AID) + PlayerObject now, publish to Simulator
-				eb.Publish(eb.Event{
-					Topic: eb.S_LOGIN,
-					Data:  eb.S_LOGIN_T(p),
-				})
+			case eb.N_CONNECT_T:
+				handleNewNetworkConn(data)
 
 			// The network connection has been interrupted
-			case eb.N_DISCONN:
-				sid := float64(conn.Data.(eb.N_DISCONN_T))
-				delete(pConnMap, sid)
-				eb.Publish(eb.Event{
-					Topic: eb.S_LOGOUT,
-					Data:  eb.S_LOGOUT_T(sid),
-				})
+			case eb.N_DISCONN_T:
+				handleNetworkDisconnection(data)
 
 			// An update from the server needs to be sent to a player
-			case eb.N_PLAYER_SYNC:
-				pSyncData, ok := conn.Data.(eb.N_PLAYER_SYNC_T)
-				if !ok {
-					log.Error().Msgf("Non playersync data sent to eventbus on player sync channel - %#v", conn.Data)
-					continue
-				}
-				handlePlayerSync(pSyncData)
+			case eb.N_PLAYER_SYNC_T:
+				handlePlayerSync(data)
+				break
 
 			// Send back a successful login response to client with some bootstrapping information
-			case eb.N_LOGIN_RESPONSE:
-				loginResponse, ok := conn.Data.(eb.N_LOGIN_RESPONSE_T)
-				if !ok {
-					log.Error().Msgf("Non loginresponse data sent to eventbus on playerresponse channel - %#v", conn.Data)
-					continue
-				}
-				handleLoginResponse(loginResponse)
+			case eb.N_LOGIN_RESPONSE_T:
+				handleLoginResponse(data)
 
 			// Send back a successful logout response to client with some helper information - TODO: Currently not called anywhere
-			case eb.N_LOGOUT_RESPONSE:
-				logoutResponse, ok := conn.Data.(eb.N_LOGOUT_RESPONSE_T)
-				if !ok {
-					log.Error().Msgf("Non logoutresponse data sent to eventbus on playerresponse channel - %#v", conn.Data)
-					continue
-				}
-				handleLogoutResponse(logoutResponse)
+			case eb.N_LOGOUT_RESPONSE_T:
+				handleLogoutResponse(data)
 
 			default:
-				log.Error().Int("type", int(conn.Topic)).Msg("Unsupported message type")
+				log.Error().Int("type", int(conn.Topic)).Msg("Unsupported message type received at netpub")
+				fmt.Printf("DATA: %v", data)
 			}
 		}
 	}
 }
 
-func handlePlayerSync(syncData eb.N_PLAYER_SYNC_T) {
+func handleNewNetworkConn(data eb.N_CONNECT_T) {
+	p := generateNewCharacter(data.SID) // TODO: Replace with persistence fetching
+	// use aPConn.AID later on for bookkeeping connections to logins
+	pConnMap[p.Sid] = playerConn{
+		conn: data.Conn,
+		p:    p,
+	}
+	// We have established WebRTC + PlayerLogin (AID) + PlayerObject now, publish to Simulator
+	eb.Publish(eb.Event{
+		Topic: eb.S_LOGIN,
+		Data:  eb.S_LOGIN_T(p),
+	})
+}
+
+func handleNetworkDisconnection(data eb.N_DISCONN_T) {
+	delete(pConnMap, float64(data))
+	eb.Publish(eb.Event{
+		Topic: eb.S_LOGOUT,
+		Data:  eb.S_LOGOUT_T(data),
+	})
+}
+
+func handlePlayerSync(data eb.N_PLAYER_SYNC_T) {
 	fbBuilder.Reset()
 
-	packedPlayers := []flatbuffers.UOffsetT{}
-	for _, p := range syncData.Players {
-		packedPlayers = append(packedPlayers, p.Pack(fbBuilder))
-	}
-
-	fb.MapUpdateStartLoginsVector(fbBuilder, len(syncData.Players))
-	for i := len(packedPlayers) - 1; i >= 0; i-- {
-		fbBuilder.PrependUOffsetT(packedPlayers[i])
-	}
-	players := fbBuilder.EndVector(len(syncData.Players))
-
-	fb.MapUpdateStartLoginsVector(fbBuilder, len(syncData.Logins))
-	for i := len(syncData.Logins) - 1; i >= 0; i-- {
-		fbBuilder.PrependFloat64(syncData.Logins[i])
-	}
-	logins := fbBuilder.EndVector(len(syncData.Logins))
-
-	fb.MapUpdateStartLogoutsVector(fbBuilder, len(syncData.Logouts))
-	for i := len(syncData.Logouts) - 1; i >= 0; i-- {
-		fbBuilder.PrependFloat64(syncData.Logouts[i])
-	}
-	logouts := fbBuilder.EndVector(len(syncData.Logouts))
-
-	fb.MapUpdateStart(fbBuilder)
-	fb.MapUpdateAddSeq(fbBuilder, uint32(syncData.Tick))
-	fb.MapUpdateAddPsyncs(fbBuilder, players)
-	fb.MapUpdateAddLogins(fbBuilder, logins)
-	fb.MapUpdateAddLogouts(fbBuilder, logouts)
-	mapUpdate := fb.MapUpdateEnd(fbBuilder)
-
+	mapUpdate := data.Msg.Pack(fbBuilder)
 	fb.ServerMessageStart(fbBuilder)
 	fb.ServerMessageAddData(fbBuilder, mapUpdate)
 	fb.ServerMessageAddDataType(fbBuilder, fb.ServerMessageUMapUpdate)
 	message := fb.ServerMessageEnd(fbBuilder)
 
 	fbBuilder.Finish(message)
-	conn := pConnMap[syncData.ToPlayerSID].conn
+	conn := pConnMap[data.ToPlayerSID].conn
 	if err := conn.Send(fbBuilder.FinishedBytes()); err != nil {
 		log.Error().Err(err).Msg("Failed to send sync update")
 	}

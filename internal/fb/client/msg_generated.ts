@@ -450,11 +450,12 @@ seq():number {
 
 /**
  * @param number index
- * @returns number
+ * @param msg.Player= obj
+ * @returns msg.Player
  */
-logins(index: number):number|null {
+logins(index: number, obj?:msg.Player):msg.Player|null {
   var offset = this.bb!.__offset(this.bb_pos, 6);
-  return offset ? this.bb!.readFloat64(this.bb!.__vector(this.bb_pos + offset) + index * 8) : 0;
+  return offset ? (obj || new msg.Player()).__init(this.bb!.__indirect(this.bb!.__vector(this.bb_pos + offset) + index * 4), this.bb!) : null;
 };
 
 /**
@@ -463,14 +464,6 @@ logins(index: number):number|null {
 loginsLength():number {
   var offset = this.bb!.__offset(this.bb_pos, 6);
   return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
-};
-
-/**
- * @returns Float64Array
- */
-loginsArray():Float64Array|null {
-  var offset = this.bb!.__offset(this.bb_pos, 6);
-  return offset ? new Float64Array(this.bb!.bytes().buffer, this.bb!.bytes().byteOffset + this.bb!.__vector(this.bb_pos + offset), this.bb!.__vector_len(this.bb_pos + offset)) : null;
 };
 
 /**
@@ -541,13 +534,13 @@ static addLogins(builder:flatbuffers.Builder, loginsOffset:flatbuffers.Offset) {
 
 /**
  * @param flatbuffers.Builder builder
- * @param Array.<number> data
+ * @param Array.<flatbuffers.Offset> data
  * @returns flatbuffers.Offset
  */
-static createLoginsVector(builder:flatbuffers.Builder, data:number[] | Uint8Array):flatbuffers.Offset {
-  builder.startVector(8, data.length, 8);
+static createLoginsVector(builder:flatbuffers.Builder, data:flatbuffers.Offset[]):flatbuffers.Offset {
+  builder.startVector(4, data.length, 4);
   for (var i = data.length - 1; i >= 0; i--) {
-    builder.addFloat64(data[i]);
+    builder.addOffset(data[i]);
   }
   return builder.endVector();
 };
@@ -557,7 +550,7 @@ static createLoginsVector(builder:flatbuffers.Builder, data:number[] | Uint8Arra
  * @param number numElems
  */
 static startLoginsVector(builder:flatbuffers.Builder, numElems:number) {
-  builder.startVector(8, numElems, 8);
+  builder.startVector(4, numElems, 4);
 };
 
 /**

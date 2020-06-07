@@ -618,7 +618,7 @@ func ServerMessageEnd(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
 }
 type MapUpdateT struct {
 	Seq uint32
-	Logins []float64
+	Logins []*PlayerT
 	Logouts []float64
 	Psyncs []*PlayerT
 }
@@ -628,9 +628,13 @@ func (t *MapUpdateT) Pack(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
 	loginsOffset := flatbuffers.UOffsetT(0)
 	if t.Logins != nil {
 		loginsLength := len(t.Logins)
+		loginsOffsets := make([]flatbuffers.UOffsetT, loginsLength)
+		for j := 0; j < loginsLength; j++ {
+			loginsOffsets[j] = t.Logins[j].Pack(builder)
+		}
 		MapUpdateStartLoginsVector(builder, loginsLength)
 		for j := loginsLength - 1; j >= 0; j-- {
-			builder.PrependFloat64(t.Logins[j])
+			builder.PrependUOffsetT(loginsOffsets[j])
 		}
 		loginsOffset = builder.EndVector(loginsLength)
 	}
@@ -667,9 +671,11 @@ func (t *MapUpdateT) Pack(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
 func (rcv *MapUpdate) UnPackTo(t *MapUpdateT) {
 	t.Seq = rcv.Seq()
 	loginsLength := rcv.LoginsLength()
-	t.Logins = make([]float64, loginsLength)
+	t.Logins = make([]*PlayerT, loginsLength)
 	for j := 0; j < loginsLength; j++ {
-		t.Logins[j] = rcv.Logins(j)
+		x := Player{}
+		rcv.Logins(&x, j)
+		t.Logins[j] = x.UnPack()
 	}
 	logoutsLength := rcv.LogoutsLength()
 	t.Logouts = make([]float64, logoutsLength)
@@ -724,13 +730,16 @@ func (rcv *MapUpdate) MutateSeq(n uint32) bool {
 	return rcv._tab.MutateUint32Slot(4, n)
 }
 
-func (rcv *MapUpdate) Logins(j int) float64 {
+func (rcv *MapUpdate) Logins(obj *Player, j int) bool {
 	o := flatbuffers.UOffsetT(rcv._tab.Offset(6))
 	if o != 0 {
-		a := rcv._tab.Vector(o)
-		return rcv._tab.GetFloat64(a + flatbuffers.UOffsetT(j*8))
+		x := rcv._tab.Vector(o)
+		x += flatbuffers.UOffsetT(j) * 4
+		x = rcv._tab.Indirect(x)
+		obj.Init(rcv._tab.Bytes, x)
+		return true
 	}
-	return 0
+	return false
 }
 
 func (rcv *MapUpdate) LoginsLength() int {
@@ -739,15 +748,6 @@ func (rcv *MapUpdate) LoginsLength() int {
 		return rcv._tab.VectorLen(o)
 	}
 	return 0
-}
-
-func (rcv *MapUpdate) MutateLogins(j int, n float64) bool {
-	o := flatbuffers.UOffsetT(rcv._tab.Offset(6))
-	if o != 0 {
-		a := rcv._tab.Vector(o)
-		return rcv._tab.MutateFloat64(a+flatbuffers.UOffsetT(j*8), n)
-	}
-	return false
 }
 
 func (rcv *MapUpdate) Logouts(j int) float64 {
@@ -806,7 +806,7 @@ func MapUpdateAddLogins(builder *flatbuffers.Builder, logins flatbuffers.UOffset
 	builder.PrependUOffsetTSlot(1, flatbuffers.UOffsetT(logins), 0)
 }
 func MapUpdateStartLoginsVector(builder *flatbuffers.Builder, numElems int) flatbuffers.UOffsetT {
-	return builder.StartVector(8, numElems, 8)
+	return builder.StartVector(4, numElems, 4)
 }
 func MapUpdateAddLogouts(builder *flatbuffers.Builder, logouts flatbuffers.UOffsetT) {
 	builder.PrependUOffsetTSlot(2, flatbuffers.UOffsetT(logouts), 0)

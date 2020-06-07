@@ -66,15 +66,16 @@ func (pm *PropagatorSystem) sendCurrentFullState(en core.Entity, im components.I
 
 	currTick := pm.sa.GetSectorTick()
 
-	logins := []float64{}
+	players := []*fb.PlayerT{}
+	logins := []*fb.PlayerT{}
 	logouts := []float64{}
 
-	players := []*fb.PlayerT{}
 	for i := range im.Imap {
 		for j := range im.Imap[i] {
 			for _, e := range im.Imap[i][j] {
 				imEn := pm.sa.GetEntity(e)
 				if imEn == nil {
+					// The entity does not exist, so must have been deleted from the game - clean up interest map reference here
 					log.Warn().Msgf("Failed to get entity %v", e)
 					continue
 				}
@@ -82,9 +83,10 @@ func (pm *PropagatorSystem) sendCurrentFullState(en core.Entity, im components.I
 				if !ok { // Entity is not a player
 					continue
 				}
-				players = append(players, plEn.ToPublicFB())
 				if plEn.LoginTick == currTick {
-					logins = append(logins, plEn.Sid)
+					logins = append(logins, plEn.ToPublicFB())
+				} else {
+					players = append(players, plEn.ToPublicFB())
 				}
 			}
 		}
@@ -92,11 +94,13 @@ func (pm *PropagatorSystem) sendCurrentFullState(en core.Entity, im components.I
 
 	eb.Publish(eb.Event{
 		Topic: eb.N_PLAYER_SYNC,
-		Data: eb.N_PLAYER_SYNC_T(&eb.PlayerSyncMessage{
+		Data: eb.N_PLAYER_SYNC_T{
 			ToPlayerSID: currPlayerEn.Sid,
-			Players:     players,
-			Logins:      logins,
-			Logouts:     logouts,
-			Tick:        pm.sa.GetSectorTick(),
-		})})
+			Msg: fb.MapUpdateT{
+				Seq:     uint32(currTick),
+				Logins:  logins,
+				Logouts: logouts,
+				Psyncs:  players,
+			},
+		}})
 }
