@@ -113,19 +113,25 @@ func handlePlayerSync(syncData eb.N_PLAYER_SYNC_T) {
 	fb.MapUpdateAddPsyncs(fbBuilder, players)
 	fb.MapUpdateAddLogins(fbBuilder, logins)
 	fb.MapUpdateAddLogouts(fbBuilder, logouts)
-
 	mapUpdate := fb.MapUpdateEnd(fbBuilder)
-	fbBuilder.Finish(mapUpdate)
 
+	fb.ServerMessageStart(fbBuilder)
+	fb.ServerMessageAddData(fbBuilder, mapUpdate)
+	fb.ServerMessageAddDataType(fbBuilder, fb.ServerMessageUMapUpdate)
+	message := fb.ServerMessageEnd(fbBuilder)
+
+	fbBuilder.Finish(message)
 	conn := pConnMap[syncData.ToPlayerSID].conn
 	conn.Send(fbBuilder.FinishedBytes())
 
-	psyncload := fb.GetRootAsMapUpdate(fbBuilder.FinishedBytes(), 0)
-	mpupdate := &fb.MapUpdateT{}
-	psyncload.UnPackTo(mpupdate)
-	//log.Info().Msgf("Reloaded mapupdate: %+v", psyncload)
-	log.Info().Msgf("raw mapupdate: %+v, players: %+v", mpupdate,
-		mpupdate.Psyncs[0])
+	//psyncload := fb.GetRootAsServerMessage(fbBuilder.FinishedBytes(), 0)
+	//mpupdate := &fb.ServerMessageT{}
+	//psyncload.UnPackTo(mpupdate)
+	//x := mpupdate.Data.Value.(*fb.MapUpdateT)
+	//
+	//log.Info().Msgf("Reloaded mapupdate: %+v", x)
+	//log.Info().Msgf("raw mapupdate: %+v, players: %+v", x,
+	//	x.Psyncs[0])
 }
 
 func generateNewCharacter(sid float64) *fb.PlayerT {

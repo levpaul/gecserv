@@ -19,28 +19,28 @@ export enum Color{
  * @enum {number}
  */
 export namespace msg{
-export enum GameMessage{
+export enum ServerMessageU{
   NONE= 0,
   MapUpdate= 1
 };
 
-export function unionToGameMessage(
-  type: GameMessage,
+export function unionToServerMessageU(
+  type: ServerMessageU,
   accessor: (obj:msg.MapUpdate) => msg.MapUpdate|null
 ): msg.MapUpdate|null {
-  switch(msg.GameMessage[type]) {
+  switch(msg.ServerMessageU[type]) {
     case 'NONE': return null; 
     case 'MapUpdate': return accessor(new msg.MapUpdate())! as msg.MapUpdate;
     default: return null;
   }
 }
 
-export function unionListToGameMessage(
-  type: GameMessage, 
+export function unionListToServerMessageU(
+  type: ServerMessageU, 
   accessor: (index: number, obj:msg.MapUpdate) => msg.MapUpdate|null, 
   index: number
 ): msg.MapUpdate|null {
-  switch(msg.GameMessage[type]) {
+  switch(msg.ServerMessageU[type]) {
     case 'NONE': return null; 
     case 'MapUpdate': return accessor(index, new msg.MapUpdate())! as msg.MapUpdate;
     default: return null;
@@ -305,16 +305,16 @@ static create(builder:flatbuffers.Builder, posx:number, posy:number, sid:number,
  * @constructor
  */
 export namespace msg{
-export class Message {
+export class ServerMessage {
   bb: flatbuffers.ByteBuffer|null = null;
 
   bb_pos:number = 0;
 /**
  * @param number i
  * @param flatbuffers.ByteBuffer bb
- * @returns Message
+ * @returns ServerMessage
  */
-__init(i:number, bb:flatbuffers.ByteBuffer):Message {
+__init(i:number, bb:flatbuffers.ByteBuffer):ServerMessage {
   this.bb_pos = i;
   this.bb = bb;
   return this;
@@ -322,29 +322,29 @@ __init(i:number, bb:flatbuffers.ByteBuffer):Message {
 
 /**
  * @param flatbuffers.ByteBuffer bb
- * @param Message= obj
- * @returns Message
+ * @param ServerMessage= obj
+ * @returns ServerMessage
  */
-static getRoot(bb:flatbuffers.ByteBuffer, obj?:Message):Message {
-  return (obj || new Message()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+static getRoot(bb:flatbuffers.ByteBuffer, obj?:ServerMessage):ServerMessage {
+  return (obj || new ServerMessage()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
 /**
  * @param flatbuffers.ByteBuffer bb
- * @param Message= obj
- * @returns Message
+ * @param ServerMessage= obj
+ * @returns ServerMessage
  */
-static getSizePrefixedRoot(bb:flatbuffers.ByteBuffer, obj?:Message):Message {
+static getSizePrefixedRoot(bb:flatbuffers.ByteBuffer, obj?:ServerMessage):ServerMessage {
   bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
-  return (obj || new Message()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+  return (obj || new ServerMessage()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
 /**
- * @returns msg.GameMessage
+ * @returns msg.ServerMessageU
  */
-dataType():msg.GameMessage {
+dataType():msg.ServerMessageU {
   var offset = this.bb!.__offset(this.bb_pos, 4);
-  return offset ? /**  */ (this.bb!.readUint8(this.bb_pos + offset)) : msg.GameMessage.NONE;
+  return offset ? /**  */ (this.bb!.readUint8(this.bb_pos + offset)) : msg.ServerMessageU.NONE;
 };
 
 /**
@@ -365,10 +365,10 @@ static start(builder:flatbuffers.Builder) {
 
 /**
  * @param flatbuffers.Builder builder
- * @param msg.GameMessage dataType
+ * @param msg.ServerMessageU dataType
  */
-static addDataType(builder:flatbuffers.Builder, dataType:msg.GameMessage) {
-  builder.addFieldInt8(0, dataType, msg.GameMessage.NONE);
+static addDataType(builder:flatbuffers.Builder, dataType:msg.ServerMessageU) {
+  builder.addFieldInt8(0, dataType, msg.ServerMessageU.NONE);
 };
 
 /**
@@ -388,11 +388,11 @@ static end(builder:flatbuffers.Builder):flatbuffers.Offset {
   return offset;
 };
 
-static create(builder:flatbuffers.Builder, dataType:msg.GameMessage, dataOffset:flatbuffers.Offset):flatbuffers.Offset {
-  Message.start(builder);
-  Message.addDataType(builder, dataType);
-  Message.addData(builder, dataOffset);
-  return Message.end(builder);
+static create(builder:flatbuffers.Builder, dataType:msg.ServerMessageU, dataOffset:flatbuffers.Offset):flatbuffers.Offset {
+  ServerMessage.start(builder);
+  ServerMessage.addDataType(builder, dataType);
+  ServerMessage.addData(builder, dataOffset);
+  return ServerMessage.end(builder);
 }
 }
 }

@@ -3,12 +3,10 @@ include "core.fbs";
 
 namespace msg;
 
+union ServerMessageU { MapUpdate }
 
-// TODO: Rename this as ServerMessage
-union GameMessage { MapUpdate }
-
-table Message {
-    data: GameMessage;
+table ServerMessage {
+    data: ServerMessageU;
 }
 
 table MapUpdate {
