@@ -14,6 +14,8 @@ const (
 	N_CONNECT = 128 + iota
 	N_DISCONN
 	N_PLAYER_SYNC
+	N_LOGIN_RESPONSE
+	N_LOGOUT_RESPONSE
 	// Used as marker for event topics - insert new topics ABOVE this one
 	NUMTOPICS = 255
 )
@@ -25,9 +27,11 @@ type (
 	S_GAMETICK_DONE_T struct{}
 	S_INPUT_T         int
 	// Network messages
-	N_CONNECT_T     *core.SessionPubConn
-	N_DISCONN_T     float64
-	N_PLAYER_SYNC_T *PlayerSyncMessage
+	N_CONNECT_T         *core.SessionPubConn
+	N_DISCONN_T         float64
+	N_PLAYER_SYNC_T     *PlayerSyncMessage
+	N_LOGIN_RESPONSE_T  fb.LoginResponseT
+	N_LOGOUT_RESPONSE_T fb.LogoutResponseT
 )
 
 type EventTopic int

@@ -35,6 +35,7 @@ func (ls *LoginSystem) Update(ctx context.Context, dt core.GameTick) {
 		select {
 		case l := <-ls.loginEvents:
 			switch l.Data.(type) {
+			// Network login event
 			case eb.S_LOGIN_T:
 				player, ok := l.Data.(eb.S_LOGIN_T)
 				if !ok {
@@ -43,13 +44,14 @@ func (ls *LoginSystem) Update(ctx context.Context, dt core.GameTick) {
 				}
 				ls.handleLogin(ctx, player)
 
+			// Network disconnect event
 			case eb.S_LOGOUT_T:
 				sid, ok := l.Data.(eb.S_LOGOUT_T)
 				if !ok {
 					log.Error().Interface("data", l.Data).Msg("Failed to type assert S_LOGOUT message")
 					continue
 				}
-				ls.handleLogout(ctx, float64(sid))
+				ls.handleDisconnect(ctx, float64(sid))
 			default:
 				log.Error().Interface("type", l.Data).Msg("Unsupported message type received on login channel")
 			}
@@ -78,9 +80,16 @@ func (ls *LoginSystem) handleLogin(ctx context.Context, player *fb.PlayerT) {
 
 	ls.sa.AddEntity(pEntity)
 	ls.sidsToEnts[pEntity.Sid] = pEntity
+
+	eb.Publish(eb.Event{
+		Topic: eb.N_LOGIN_RESPONSE,
+		Data: eb.N_LOGIN_RESPONSE_T{
+			Seq:    uint32(ls.sa.GetSectorTick()),
+			Player: pEntity.ToPublicFB(),
+		}})
 }
 
-func (ls *LoginSystem) handleLogout(ctx context.Context, sid float64) {
+func (ls *LoginSystem) handleDisconnect(ctx context.Context, sid float64) {
 	log.Info().Str("SID", core.SIDStr(sid)).Msg("Player logout!")
 	en, ok := ls.sidsToEnts[sid]
 	if !ok {
@@ -90,4 +99,20 @@ func (ls *LoginSystem) handleLogout(ctx context.Context, sid float64) {
 
 	ls.sa.RemoveEntity(en.ID())
 	delete(ls.sidsToEnts, en.Sid)
+}
+func (ls *LoginSystem) handleLogout(ctx context.Context, sid float64) {
+	en, ok := ls.sidsToEnts[sid]
+	if !ok {
+		log.Error().Str("SID", core.SIDStr(sid)).Msg("Could not find entity for session during logout")
+		return
+	}
+
+	ls.handleDisconnect(ctx, sid)
+
+	eb.Publish(eb.Event{
+		Topic: eb.N_LOGOUT_RESPONSE,
+		Data: eb.N_LOGOUT_RESPONSE_T{
+			Sid: en.Sid,
+			Seq: uint32(ls.sa.GetSectorTick()),
+		}})
 }

@@ -21,28 +21,34 @@ export enum Color{
 export namespace msg{
 export enum ServerMessageU{
   NONE= 0,
-  MapUpdate= 1
+  MapUpdate= 1,
+  LoginResponse= 2,
+  LogoutResponse= 3
 };
 
 export function unionToServerMessageU(
   type: ServerMessageU,
-  accessor: (obj:msg.MapUpdate) => msg.MapUpdate|null
-): msg.MapUpdate|null {
+  accessor: (obj:msg.LoginResponse|msg.LogoutResponse|msg.MapUpdate) => msg.LoginResponse|msg.LogoutResponse|msg.MapUpdate|null
+): msg.LoginResponse|msg.LogoutResponse|msg.MapUpdate|null {
   switch(msg.ServerMessageU[type]) {
     case 'NONE': return null; 
     case 'MapUpdate': return accessor(new msg.MapUpdate())! as msg.MapUpdate;
+    case 'LoginResponse': return accessor(new msg.LoginResponse())! as msg.LoginResponse;
+    case 'LogoutResponse': return accessor(new msg.LogoutResponse())! as msg.LogoutResponse;
     default: return null;
   }
 }
 
 export function unionListToServerMessageU(
   type: ServerMessageU, 
-  accessor: (index: number, obj:msg.MapUpdate) => msg.MapUpdate|null, 
+  accessor: (index: number, obj:msg.LoginResponse|msg.LogoutResponse|msg.MapUpdate) => msg.LoginResponse|msg.LogoutResponse|msg.MapUpdate|null, 
   index: number
-): msg.MapUpdate|null {
+): msg.LoginResponse|msg.LogoutResponse|msg.MapUpdate|null {
   switch(msg.ServerMessageU[type]) {
     case 'NONE': return null; 
     case 'MapUpdate': return accessor(index, new msg.MapUpdate())! as msg.MapUpdate;
+    case 'LoginResponse': return accessor(index, new msg.LoginResponse())! as msg.LoginResponse;
+    case 'LogoutResponse': return accessor(index, new msg.LogoutResponse())! as msg.LogoutResponse;
     default: return null;
   }
 }
@@ -628,6 +634,189 @@ static create(builder:flatbuffers.Builder, seq:number, loginsOffset:flatbuffers.
   MapUpdate.addLogouts(builder, logoutsOffset);
   MapUpdate.addPsyncs(builder, psyncsOffset);
   return MapUpdate.end(builder);
+}
+}
+}
+/**
+ * @constructor
+ */
+export namespace msg{
+export class LoginResponse {
+  bb: flatbuffers.ByteBuffer|null = null;
+
+  bb_pos:number = 0;
+/**
+ * @param number i
+ * @param flatbuffers.ByteBuffer bb
+ * @returns LoginResponse
+ */
+__init(i:number, bb:flatbuffers.ByteBuffer):LoginResponse {
+  this.bb_pos = i;
+  this.bb = bb;
+  return this;
+};
+
+/**
+ * @param flatbuffers.ByteBuffer bb
+ * @param LoginResponse= obj
+ * @returns LoginResponse
+ */
+static getRoot(bb:flatbuffers.ByteBuffer, obj?:LoginResponse):LoginResponse {
+  return (obj || new LoginResponse()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @param flatbuffers.ByteBuffer bb
+ * @param LoginResponse= obj
+ * @returns LoginResponse
+ */
+static getSizePrefixedRoot(bb:flatbuffers.ByteBuffer, obj?:LoginResponse):LoginResponse {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new LoginResponse()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @returns number
+ */
+seq():number {
+  var offset = this.bb!.__offset(this.bb_pos, 4);
+  return offset ? this.bb!.readUint32(this.bb_pos + offset) : 0;
+};
+
+/**
+ * @param msg.Player= obj
+ * @returns msg.Player|null
+ */
+player(obj?:msg.Player):msg.Player|null {
+  var offset = this.bb!.__offset(this.bb_pos, 6);
+  return offset ? (obj || new msg.Player()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
+};
+
+/**
+ * @param flatbuffers.Builder builder
+ */
+static start(builder:flatbuffers.Builder) {
+  builder.startObject(2);
+};
+
+/**
+ * @param flatbuffers.Builder builder
+ * @param number seq
+ */
+static addSeq(builder:flatbuffers.Builder, seq:number) {
+  builder.addFieldInt32(0, seq, 0);
+};
+
+/**
+ * @param flatbuffers.Builder builder
+ * @param flatbuffers.Offset playerOffset
+ */
+static addPlayer(builder:flatbuffers.Builder, playerOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(1, playerOffset, 0);
+};
+
+/**
+ * @param flatbuffers.Builder builder
+ * @returns flatbuffers.Offset
+ */
+static end(builder:flatbuffers.Builder):flatbuffers.Offset {
+  var offset = builder.endObject();
+  return offset;
+};
+
+}
+}
+/**
+ * @constructor
+ */
+export namespace msg{
+export class LogoutResponse {
+  bb: flatbuffers.ByteBuffer|null = null;
+
+  bb_pos:number = 0;
+/**
+ * @param number i
+ * @param flatbuffers.ByteBuffer bb
+ * @returns LogoutResponse
+ */
+__init(i:number, bb:flatbuffers.ByteBuffer):LogoutResponse {
+  this.bb_pos = i;
+  this.bb = bb;
+  return this;
+};
+
+/**
+ * @param flatbuffers.ByteBuffer bb
+ * @param LogoutResponse= obj
+ * @returns LogoutResponse
+ */
+static getRoot(bb:flatbuffers.ByteBuffer, obj?:LogoutResponse):LogoutResponse {
+  return (obj || new LogoutResponse()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @param flatbuffers.ByteBuffer bb
+ * @param LogoutResponse= obj
+ * @returns LogoutResponse
+ */
+static getSizePrefixedRoot(bb:flatbuffers.ByteBuffer, obj?:LogoutResponse):LogoutResponse {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new LogoutResponse()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @returns number
+ */
+seq():number {
+  var offset = this.bb!.__offset(this.bb_pos, 4);
+  return offset ? this.bb!.readUint32(this.bb_pos + offset) : 0;
+};
+
+/**
+ * @returns number
+ */
+sid():number {
+  var offset = this.bb!.__offset(this.bb_pos, 6);
+  return offset ? this.bb!.readFloat64(this.bb_pos + offset) : 0.0;
+};
+
+/**
+ * @param flatbuffers.Builder builder
+ */
+static start(builder:flatbuffers.Builder) {
+  builder.startObject(2);
+};
+
+/**
+ * @param flatbuffers.Builder builder
+ * @param number seq
+ */
+static addSeq(builder:flatbuffers.Builder, seq:number) {
+  builder.addFieldInt32(0, seq, 0);
+};
+
+/**
+ * @param flatbuffers.Builder builder
+ * @param number sid
+ */
+static addSid(builder:flatbuffers.Builder, sid:number) {
+  builder.addFieldFloat64(1, sid, 0.0);
+};
+
+/**
+ * @param flatbuffers.Builder builder
+ * @returns flatbuffers.Offset
+ */
+static end(builder:flatbuffers.Builder):flatbuffers.Offset {
+  var offset = builder.endObject();
+  return offset;
+};
+
+static create(builder:flatbuffers.Builder, seq:number, sid:number):flatbuffers.Offset {
+  LogoutResponse.start(builder);
+  LogoutResponse.addSeq(builder, seq);
+  LogoutResponse.addSid(builder, sid);
+  return LogoutResponse.end(builder);
 }
 }
 }

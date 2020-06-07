@@ -50,18 +50,24 @@ func (v Color) String() string {
 type ServerMessageU byte
 
 const (
-	ServerMessageUNONE      ServerMessageU = 0
-	ServerMessageUMapUpdate ServerMessageU = 1
+	ServerMessageUNONE           ServerMessageU = 0
+	ServerMessageUMapUpdate      ServerMessageU = 1
+	ServerMessageULoginResponse  ServerMessageU = 2
+	ServerMessageULogoutResponse ServerMessageU = 3
 )
 
 var EnumNamesServerMessageU = map[ServerMessageU]string{
-	ServerMessageUNONE:      "NONE",
-	ServerMessageUMapUpdate: "MapUpdate",
+	ServerMessageUNONE:           "NONE",
+	ServerMessageUMapUpdate:      "MapUpdate",
+	ServerMessageULoginResponse:  "LoginResponse",
+	ServerMessageULogoutResponse: "LogoutResponse",
 }
 
 var EnumValuesServerMessageU = map[string]ServerMessageU{
-	"NONE":      ServerMessageUNONE,
-	"MapUpdate": ServerMessageUMapUpdate,
+	"NONE":           ServerMessageUNONE,
+	"MapUpdate":      ServerMessageUMapUpdate,
+	"LoginResponse":  ServerMessageULoginResponse,
+	"LogoutResponse": ServerMessageULogoutResponse,
 }
 
 func (v ServerMessageU) String() string {
@@ -83,6 +89,10 @@ func (t *ServerMessageUT) Pack(builder *flatbuffers.Builder) flatbuffers.UOffset
 	switch t.Type {
 	case ServerMessageUMapUpdate:
 		return t.Value.(*MapUpdateT).Pack(builder)
+	case ServerMessageULoginResponse:
+		return t.Value.(*LoginResponseT).Pack(builder)
+	case ServerMessageULogoutResponse:
+		return t.Value.(*LogoutResponseT).Pack(builder)
 	}
 	return 0
 }
@@ -92,6 +102,12 @@ func (rcv ServerMessageU) UnPack(table flatbuffers.Table) *ServerMessageUT {
 	case ServerMessageUMapUpdate:
 		x := MapUpdate{_tab: table}
 		return &ServerMessageUT{ Type: ServerMessageUMapUpdate, Value: x.UnPack() }
+	case ServerMessageULoginResponse:
+		x := LoginResponse{_tab: table}
+		return &ServerMessageUT{ Type: ServerMessageULoginResponse, Value: x.UnPack() }
+	case ServerMessageULogoutResponse:
+		x := LogoutResponse{_tab: table}
+		return &ServerMessageUT{ Type: ServerMessageULogoutResponse, Value: x.UnPack() }
 	}
 	return nil
 }
@@ -805,6 +821,170 @@ func MapUpdateStartPsyncsVector(builder *flatbuffers.Builder, numElems int) flat
 	return builder.StartVector(4, numElems, 4)
 }
 func MapUpdateEnd(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
+	return builder.EndObject()
+}
+type LoginResponseT struct {
+	Seq uint32
+	Player *PlayerT
+}
+
+func (t *LoginResponseT) Pack(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
+	if t == nil { return 0 }
+	playerOffset := t.Player.Pack(builder)
+	LoginResponseStart(builder)
+	LoginResponseAddSeq(builder, t.Seq)
+	LoginResponseAddPlayer(builder, playerOffset)
+	return LoginResponseEnd(builder)
+}
+
+func (rcv *LoginResponse) UnPackTo(t *LoginResponseT) {
+	t.Seq = rcv.Seq()
+	t.Player = rcv.Player(nil).UnPack()
+}
+
+func (rcv *LoginResponse) UnPack() *LoginResponseT {
+	if rcv == nil { return nil }
+	t := &LoginResponseT{}
+	rcv.UnPackTo(t)
+	return t
+}
+
+type LoginResponse struct {
+	_tab flatbuffers.Table
+}
+
+func GetRootAsLoginResponse(buf []byte, offset flatbuffers.UOffsetT) *LoginResponse {
+	n := flatbuffers.GetUOffsetT(buf[offset:])
+	x := &LoginResponse{}
+	x.Init(buf, n+offset)
+	return x
+}
+
+func (rcv *LoginResponse) Init(buf []byte, i flatbuffers.UOffsetT) {
+	rcv._tab.Bytes = buf
+	rcv._tab.Pos = i
+}
+
+func (rcv *LoginResponse) Table() flatbuffers.Table {
+	return rcv._tab
+}
+
+func (rcv *LoginResponse) Seq() uint32 {
+	o := flatbuffers.UOffsetT(rcv._tab.Offset(4))
+	if o != 0 {
+		return rcv._tab.GetUint32(o + rcv._tab.Pos)
+	}
+	return 0
+}
+
+func (rcv *LoginResponse) MutateSeq(n uint32) bool {
+	return rcv._tab.MutateUint32Slot(4, n)
+}
+
+func (rcv *LoginResponse) Player(obj *Player) *Player {
+	o := flatbuffers.UOffsetT(rcv._tab.Offset(6))
+	if o != 0 {
+		x := rcv._tab.Indirect(o + rcv._tab.Pos)
+		if obj == nil {
+			obj = new(Player)
+		}
+		obj.Init(rcv._tab.Bytes, x)
+		return obj
+	}
+	return nil
+}
+
+func LoginResponseStart(builder *flatbuffers.Builder) {
+	builder.StartObject(2)
+}
+func LoginResponseAddSeq(builder *flatbuffers.Builder, seq uint32) {
+	builder.PrependUint32Slot(0, seq, 0)
+}
+func LoginResponseAddPlayer(builder *flatbuffers.Builder, player flatbuffers.UOffsetT) {
+	builder.PrependUOffsetTSlot(1, flatbuffers.UOffsetT(player), 0)
+}
+func LoginResponseEnd(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
+	return builder.EndObject()
+}
+type LogoutResponseT struct {
+	Seq uint32
+	Sid float64
+}
+
+func (t *LogoutResponseT) Pack(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
+	if t == nil { return 0 }
+	LogoutResponseStart(builder)
+	LogoutResponseAddSeq(builder, t.Seq)
+	LogoutResponseAddSid(builder, t.Sid)
+	return LogoutResponseEnd(builder)
+}
+
+func (rcv *LogoutResponse) UnPackTo(t *LogoutResponseT) {
+	t.Seq = rcv.Seq()
+	t.Sid = rcv.Sid()
+}
+
+func (rcv *LogoutResponse) UnPack() *LogoutResponseT {
+	if rcv == nil { return nil }
+	t := &LogoutResponseT{}
+	rcv.UnPackTo(t)
+	return t
+}
+
+type LogoutResponse struct {
+	_tab flatbuffers.Table
+}
+
+func GetRootAsLogoutResponse(buf []byte, offset flatbuffers.UOffsetT) *LogoutResponse {
+	n := flatbuffers.GetUOffsetT(buf[offset:])
+	x := &LogoutResponse{}
+	x.Init(buf, n+offset)
+	return x
+}
+
+func (rcv *LogoutResponse) Init(buf []byte, i flatbuffers.UOffsetT) {
+	rcv._tab.Bytes = buf
+	rcv._tab.Pos = i
+}
+
+func (rcv *LogoutResponse) Table() flatbuffers.Table {
+	return rcv._tab
+}
+
+func (rcv *LogoutResponse) Seq() uint32 {
+	o := flatbuffers.UOffsetT(rcv._tab.Offset(4))
+	if o != 0 {
+		return rcv._tab.GetUint32(o + rcv._tab.Pos)
+	}
+	return 0
+}
+
+func (rcv *LogoutResponse) MutateSeq(n uint32) bool {
+	return rcv._tab.MutateUint32Slot(4, n)
+}
+
+func (rcv *LogoutResponse) Sid() float64 {
+	o := flatbuffers.UOffsetT(rcv._tab.Offset(6))
+	if o != 0 {
+		return rcv._tab.GetFloat64(o + rcv._tab.Pos)
+	}
+	return 0.0
+}
+
+func (rcv *LogoutResponse) MutateSid(n float64) bool {
+	return rcv._tab.MutateFloat64Slot(6, n)
+}
+
+func LogoutResponseStart(builder *flatbuffers.Builder) {
+	builder.StartObject(2)
+}
+func LogoutResponseAddSeq(builder *flatbuffers.Builder, seq uint32) {
+	builder.PrependUint32Slot(0, seq, 0)
+}
+func LogoutResponseAddSid(builder *flatbuffers.Builder, sid float64) {
+	builder.PrependFloat64Slot(1, sid, 0.0)
+}
+func LogoutResponseEnd(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
 	return builder.EndObject()
 }
 type PlayerInputT struct {

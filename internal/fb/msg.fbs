@@ -3,7 +3,11 @@ include "core.fbs";
 
 namespace msg;
 
-union ServerMessageU { MapUpdate }
+union ServerMessageU {
+    MapUpdate,
+    LoginResponse,
+    LogoutResponse,
+}
 
 table ServerMessage {
     data: ServerMessageU;
@@ -14,6 +18,16 @@ table MapUpdate {
     logins: [float64];
     logouts: [float64];
     psyncs: [Player];
+}
+
+table LoginResponse {
+    seq: uint32;
+    player: Player;
+}
+
+table LogoutResponse {
+    seq: uint32;
+    sid: float64;
 }
 
 enum PlayerAction: uint8 { W_DOWN, W_UP, A_DOWN, A_UP, S_DOWN, S_UP, D_DOWN, D_UP, M1_DOWN, M1_UP, M2_DOWN, M2_UP}

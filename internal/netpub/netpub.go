@@ -39,12 +39,15 @@ func startListening() {
 	eb.Subscribe(eb.N_CONNECT, nc)
 	eb.Subscribe(eb.N_DISCONN, nc)
 	eb.Subscribe(eb.N_PLAYER_SYNC, nc)
+	eb.Subscribe(eb.N_LOGIN_RESPONSE, nc)
+	eb.Subscribe(eb.N_LOGOUT_RESPONSE, nc)
 
 	for {
 		select {
 		case conn := <-nc:
 			switch conn.Topic {
 
+			// A new network connection has been made
 			case eb.N_CONNECT:
 				aPConn := conn.Data.(eb.N_CONNECT_T)
 				p := generateNewCharacter(aPConn.SID) // TODO: Replace with persistence fetching
@@ -59,6 +62,7 @@ func startListening() {
 					Data:  eb.S_LOGIN_T(p),
 				})
 
+			// The network connection has been interrupted
 			case eb.N_DISCONN:
 				sid := float64(conn.Data.(eb.N_DISCONN_T))
 				delete(pConnMap, sid)
@@ -67,6 +71,7 @@ func startListening() {
 					Data:  eb.S_LOGOUT_T(sid),
 				})
 
+			// An update from the server needs to be sent to a player
 			case eb.N_PLAYER_SYNC:
 				pSyncData, ok := conn.Data.(eb.N_PLAYER_SYNC_T)
 				if !ok {
@@ -75,8 +80,26 @@ func startListening() {
 				}
 				handlePlayerSync(pSyncData)
 
+			// Send back a successful login response to client with some bootstrapping information
+			case eb.N_LOGIN_RESPONSE:
+				loginResponse, ok := conn.Data.(eb.N_LOGIN_RESPONSE_T)
+				if !ok {
+					log.Error().Msgf("Non loginresponse data sent to eventbus on playerresponse channel - %#v", conn.Data)
+					continue
+				}
+				handleLoginResponse(loginResponse)
+
+			// Send back a successful logout response to client with some helper information - TODO: Currently not called anywhere
+			case eb.N_LOGOUT_RESPONSE:
+				logoutResponse, ok := conn.Data.(eb.N_LOGOUT_RESPONSE_T)
+				if !ok {
+					log.Error().Msgf("Non logoutresponse data sent to eventbus on playerresponse channel - %#v", conn.Data)
+					continue
+				}
+				handleLogoutResponse(logoutResponse)
+
 			default:
-				log.Error().Msg("Unsupported message type ")
+				log.Error().Int("type", int(conn.Topic)).Msg("Unsupported message type")
 			}
 		}
 	}
@@ -122,23 +145,50 @@ func handlePlayerSync(syncData eb.N_PLAYER_SYNC_T) {
 
 	fbBuilder.Finish(message)
 	conn := pConnMap[syncData.ToPlayerSID].conn
-	conn.Send(fbBuilder.FinishedBytes())
+	if err := conn.Send(fbBuilder.FinishedBytes()); err != nil {
+		log.Error().Err(err).Msg("Failed to send sync update")
+	}
+}
 
-	//psyncload := fb.GetRootAsServerMessage(fbBuilder.FinishedBytes(), 0)
-	//mpupdate := &fb.ServerMessageT{}
-	//psyncload.UnPackTo(mpupdate)
-	//x := mpupdate.Data.Value.(*fb.MapUpdateT)
-	//
-	//log.Info().Msgf("Reloaded mapupdate: %+v", x)
-	//log.Info().Msgf("raw mapupdate: %+v, players: %+v", x,
-	//	x.Psyncs[0])
+func handleLoginResponse(loginRespT eb.N_LOGIN_RESPONSE_T) {
+	fbBuilder.Reset()
+	lrT := fb.LoginResponseT(loginRespT)
+	resp := lrT.Pack(fbBuilder)
+
+	fb.ServerMessageStart(fbBuilder)
+	fb.ServerMessageAddData(fbBuilder, resp)
+	fb.ServerMessageAddDataType(fbBuilder, fb.ServerMessageULoginResponse)
+	message := fb.ServerMessageEnd(fbBuilder)
+
+	fbBuilder.Finish(message)
+	conn := pConnMap[loginRespT.Player.Sid].conn
+	if err := conn.Send(fbBuilder.FinishedBytes()); err != nil {
+		log.Error().Err(err).Msg("Failed to send login response")
+	}
+}
+
+func handleLogoutResponse(logoutRespT eb.N_LOGOUT_RESPONSE_T) {
+	fbBuilder.Reset()
+	lrT := fb.LogoutResponseT(logoutRespT)
+	resp := lrT.Pack(fbBuilder)
+
+	fb.ServerMessageStart(fbBuilder)
+	fb.ServerMessageAddData(fbBuilder, resp)
+	fb.ServerMessageAddDataType(fbBuilder, fb.ServerMessageULoginResponse)
+	message := fb.ServerMessageEnd(fbBuilder)
+
+	fbBuilder.Finish(message)
+	conn := pConnMap[logoutRespT.Sid].conn
+	if err := conn.Send(fbBuilder.FinishedBytes()); err != nil {
+		log.Error().Err(err).Msg("Failed to send logout response")
+	}
 }
 
 func generateNewCharacter(sid float64) *fb.PlayerT {
 	p := new(fb.PlayerT)
 	p.Col = fb.ColorBlue
-	p.Posx = (rand.Float32()) * 1000
-	p.Posy = (rand.Float32()) * 1000
+	p.Posx = (rand.Float32()) * 500
+	p.Posy = (rand.Float32()) * 500
 	p.Sid = sid
 
 	return p
