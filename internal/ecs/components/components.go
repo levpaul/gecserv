@@ -6,12 +6,21 @@ import (
 )
 
 // ==================================================================
-type Positional fb.Vec2T
+type Position fb.Vec2T
 
-func (p *Positional) GetPosition() *Positional { return p }
+func (p *Position) GetPosition() *Position { return p }
 
-type PositionalComponent interface {
-	GetPosition() *Positional
+type PositionComponent interface {
+	GetPosition() *Position
+}
+
+// ==================================================================
+type Momentum fb.Vec2T
+
+func (m *Momentum) GetMomentum() *Momentum { return m }
+
+type MoveableComponent interface {
+	GetMomentum() *Momentum
 }
 
 // ==================================================================

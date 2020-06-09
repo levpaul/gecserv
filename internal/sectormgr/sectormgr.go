@@ -23,6 +23,7 @@ func addDefaultSector() {
 	sa := ecs.AddNewSector()
 
 	sa.AddSystem(new(systems.LoginSystem))
+	sa.AddSystem(new(systems.PlayerSystem))
 	sa.AddSystem(new(systems.InterestSystem))
 	sa.AddSystem(new(systems.PropagatorSystem))
 }

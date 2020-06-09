@@ -92,12 +92,30 @@ func initPeerConnection(peerConnection *webrtc.PeerConnection) (*webrtc.DataChan
 	})
 
 	dataChannel.OnMessage(func(msg webrtc.DataChannelMessage) {
-		log.Info().Str("msg", string(msg.Data)).Msg("Received message")
 		pmsg := fb.GetRootAsPlayerMessage(msg.Data, 0)
 		if pmsg == nil {
-			log.Warn().Msg("Invalid message received")
+			log.Warn().Str("msg", string(msg.Data)).Msg("Invalid message received")
+			return
 		}
-		// TODO: Send to event bus to be handled by a system
+
+		switch pmsg.DataType() {
+		case fb.PlayerMessageUPlayerInput:
+			unpacked := pmsg.UnPack()
+			if unpacked.Data.Value == nil {
+				log.Info().Msg("WTF")
+			}
+
+			eb.Publish(eb.Event{
+				Topic: eb.N_PLAYER_INPUT,
+				Data: eb.PlayerInputMsg{
+					FromPlayerSID: sid,
+					Msg:           *pmsg.UnPack().Data.Value.(*fb.PlayerInputT),
+				}})
+
+		default:
+			log.Warn().Str("type", pmsg.DataType().String()).Msg("Unsupported player message type recieved")
+			return
+		}
 	})
 	return dataChannel, nil
 }

@@ -40,7 +40,7 @@ func (is *InterestSystem) Init() {
 	is.sa.AddEntity(iMEnt)
 	is.cc = core.NewComponentCollection([]interface{}{
 		new(components.ChangeableComponent),
-		new(components.PositionalComponent),
+		new(components.PositionComponent),
 	})
 
 	is.events = make(chan eb.Event, 128)
@@ -88,7 +88,7 @@ func (is *InterestSystem) Update(ctx context.Context, dt core.GameTick) {
 
 		// Get relative interest map position
 		eid := en.ID()
-		posCp, ok := en.(components.PositionalComponent)
+		posCp, ok := en.(components.PositionComponent)
 		if !ok {
 			log.Error().Uint32("entity", uint32(eid)).Msg("Failed to turn entity into position component at interest system")
 			continue

@@ -17,6 +17,7 @@ const (
 	N_PLAYER_SYNC
 	N_LOGIN_RESPONSE
 	N_LOGOUT_RESPONSE
+	N_PLAYER_INPUT
 	// Used as marker for event topics - insert new topics ABOVE this one
 	NUMTOPICS = 255
 )
@@ -35,7 +36,7 @@ type (
 	N_PLAYER_SYNC_T     MapUpdateMsg
 	N_LOGIN_RESPONSE_T  fb.LoginResponseT
 	N_LOGOUT_RESPONSE_T fb.LogoutResponseT
-	N_PLAYER_INPUT      PlayerInputMsg
+	N_PLAYER_INPUT_T    PlayerInputMsg
 )
 
 type EventTopic int

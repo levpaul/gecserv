@@ -58,7 +58,8 @@ func (ls *LoginSystem) handleLogin(ctx context.Context, player *fb.PlayerT) {
 
 	pEntity := &entities.PlayerE{
 		BaseEntity: entities.NewBaseEntity(),
-		Positional: components.Positional{player.Posx, player.Posy},
+		Position:   components.Position{player.Posx, player.Posy},
+		Momentum:   components.Momentum{0, 0},
 		Changeable: components.Changeable{true},
 		NetworkedSession: components.NetworkedSession{
 			Sid:       player.Sid,

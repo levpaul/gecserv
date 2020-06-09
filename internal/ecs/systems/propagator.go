@@ -24,7 +24,7 @@ func (pm *PropagatorSystem) Init() {
 	pm.cc = core.NewComponentCollection([]interface{}{
 		new(components.StateHistoryComponent),
 		new(components.NetworkedSessionComponent),
-		new(components.PositionalComponent),
+		new(components.PositionComponent),
 	})
 }
 func (pm *PropagatorSystem) Update(ctx context.Context, dt core.GameTick) {

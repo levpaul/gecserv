@@ -7,7 +7,8 @@ import (
 
 type PlayerE struct {
 	*BaseEntity
-	components.Positional
+	components.Position
+	components.Momentum
 	components.Changeable
 	components.NetworkedSession
 	components.StateHistory
@@ -18,8 +19,8 @@ type PlayerE struct {
 // suitable for message transfer
 func (p *PlayerE) ToPublicFB() *fb.PlayerT {
 	return &fb.PlayerT{
-		Posx: p.X,
-		Posy: p.Y,
+		Posx: p.Position.X,
+		Posy: p.Position.Y,
 		Sid:  p.Sid,
 		Col:  p.Col,
 	}
