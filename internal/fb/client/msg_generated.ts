@@ -60,12 +60,10 @@ export function unionListToServerMessageU(
  */
 export namespace msg{
 export enum PlayerAction{
-  W_DOWN= 0,
-  A_DOWN= 1,
-  S_DOWN= 2,
-  D_DOWN= 3,
-  M1_DOWN= 4,
-  M2_DOWN= 5
+  FORWARD= 0,
+  BACKWARD= 1,
+  LEFT= 2,
+  RIGHT= 3
 };
 }
 

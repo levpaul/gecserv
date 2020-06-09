@@ -35,18 +35,10 @@ table LogoutResponse {
 // CLIENT MESSAGES
 
 enum PlayerAction: uint8 {
-    W_DOWN,
-    A_DOWN,
-    S_DOWN,
-    D_DOWN,
-    M1_DOWN,
-    M2_DOWN,
-    //W_UP,
-    //A_UP,
-    //S_UP,
-    //D_UP,
-    //M1_UP,
-    //M2_UP
+    FORWARD,
+    BACKWARD,
+    LEFT,
+    RIGHT,
 }
 
 union PlayerMessageU {

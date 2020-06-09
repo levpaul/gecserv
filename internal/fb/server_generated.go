@@ -118,30 +118,24 @@ func (rcv ServerMessageU) UnPack(table flatbuffers.Table) *ServerMessageUT {
 type PlayerAction byte
 
 const (
-	PlayerActionW_DOWN  PlayerAction = 0
-	PlayerActionA_DOWN  PlayerAction = 1
-	PlayerActionS_DOWN  PlayerAction = 2
-	PlayerActionD_DOWN  PlayerAction = 3
-	PlayerActionM1_DOWN PlayerAction = 4
-	PlayerActionM2_DOWN PlayerAction = 5
+	PlayerActionFORWARD  PlayerAction = 0
+	PlayerActionBACKWARD PlayerAction = 1
+	PlayerActionLEFT     PlayerAction = 2
+	PlayerActionRIGHT    PlayerAction = 3
 )
 
 var EnumNamesPlayerAction = map[PlayerAction]string{
-	PlayerActionW_DOWN:  "W_DOWN",
-	PlayerActionA_DOWN:  "A_DOWN",
-	PlayerActionS_DOWN:  "S_DOWN",
-	PlayerActionD_DOWN:  "D_DOWN",
-	PlayerActionM1_DOWN: "M1_DOWN",
-	PlayerActionM2_DOWN: "M2_DOWN",
+	PlayerActionFORWARD:  "FORWARD",
+	PlayerActionBACKWARD: "BACKWARD",
+	PlayerActionLEFT:     "LEFT",
+	PlayerActionRIGHT:    "RIGHT",
 }
 
 var EnumValuesPlayerAction = map[string]PlayerAction{
-	"W_DOWN":  PlayerActionW_DOWN,
-	"A_DOWN":  PlayerActionA_DOWN,
-	"S_DOWN":  PlayerActionS_DOWN,
-	"D_DOWN":  PlayerActionD_DOWN,
-	"M1_DOWN": PlayerActionM1_DOWN,
-	"M2_DOWN": PlayerActionM2_DOWN,
+	"FORWARD":  PlayerActionFORWARD,
+	"BACKWARD": PlayerActionBACKWARD,
+	"LEFT":     PlayerActionLEFT,
+	"RIGHT":    PlayerActionRIGHT,
 }
 
 func (v PlayerAction) String() string {
