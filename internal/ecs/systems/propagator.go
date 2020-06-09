@@ -75,8 +75,6 @@ func (pm *PropagatorSystem) sendCurrentFullState(en core.Entity, im components.I
 			for _, e := range im.Imap[i][j] {
 				imEn := pm.sa.GetEntity(e)
 				if imEn == nil {
-					// The entity does not exist, so must have been deleted from the game - clean up interest map reference here
-					log.Warn().Msgf("Failed to get entity %v", e)
 					continue
 				}
 				plEn, ok := imEn.(*entities.PlayerE)

@@ -1,9 +1,9 @@
 package ingest
 
 import (
-	"encoding/json"
 	"github.com/levpaul/gecserv/internal/core"
 	"github.com/levpaul/gecserv/internal/eb"
+	"github.com/levpaul/gecserv/internal/fb"
 	"github.com/levpaul/gecserv/pkg/signal"
 	"github.com/pion/webrtc"
 	"github.com/rs/zerolog/log"
@@ -91,23 +91,13 @@ func initPeerConnection(peerConnection *webrtc.PeerConnection) (*webrtc.DataChan
 		})
 	})
 
-	// Register text message handling -TODO: Make this publish to validation topic
 	dataChannel.OnMessage(func(msg webrtc.DataChannelMessage) {
-		// figure out type of message
-		// for input type:
-		//   -> send as event on eb which will be processed by inputsystem
-
-		messageType := struct{ Type string }{}
-		err := json.Unmarshal(msg.Data, &messageType)
-		if err != nil {
-			log.Err(err).Str("Message Data", string(msg.Data)).Msg("Error unmarshalling message from client")
-			return
+		log.Info().Str("msg", string(msg.Data)).Msg("Received message")
+		pmsg := fb.GetRootAsPlayerMessage(msg.Data, 0)
+		if pmsg == nil {
+			log.Warn().Msg("Invalid message received")
 		}
-
-		if messageType.Type == "getchars" {
-			log.Info().Msg("Sending other chars state")
-			//conn.SendOtherCharsState()
-		}
+		// TODO: Send to event bus to be handled by a system
 	})
 	return dataChannel, nil
 }

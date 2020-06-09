@@ -119,47 +119,29 @@ type PlayerAction byte
 
 const (
 	PlayerActionW_DOWN  PlayerAction = 0
-	PlayerActionW_UP    PlayerAction = 1
-	PlayerActionA_DOWN  PlayerAction = 2
-	PlayerActionA_UP    PlayerAction = 3
-	PlayerActionS_DOWN  PlayerAction = 4
-	PlayerActionS_UP    PlayerAction = 5
-	PlayerActionD_DOWN  PlayerAction = 6
-	PlayerActionD_UP    PlayerAction = 7
-	PlayerActionM1_DOWN PlayerAction = 8
-	PlayerActionM1_UP   PlayerAction = 9
-	PlayerActionM2_DOWN PlayerAction = 10
-	PlayerActionM2_UP   PlayerAction = 11
+	PlayerActionA_DOWN  PlayerAction = 1
+	PlayerActionS_DOWN  PlayerAction = 2
+	PlayerActionD_DOWN  PlayerAction = 3
+	PlayerActionM1_DOWN PlayerAction = 4
+	PlayerActionM2_DOWN PlayerAction = 5
 )
 
 var EnumNamesPlayerAction = map[PlayerAction]string{
 	PlayerActionW_DOWN:  "W_DOWN",
-	PlayerActionW_UP:    "W_UP",
 	PlayerActionA_DOWN:  "A_DOWN",
-	PlayerActionA_UP:    "A_UP",
 	PlayerActionS_DOWN:  "S_DOWN",
-	PlayerActionS_UP:    "S_UP",
 	PlayerActionD_DOWN:  "D_DOWN",
-	PlayerActionD_UP:    "D_UP",
 	PlayerActionM1_DOWN: "M1_DOWN",
-	PlayerActionM1_UP:   "M1_UP",
 	PlayerActionM2_DOWN: "M2_DOWN",
-	PlayerActionM2_UP:   "M2_UP",
 }
 
 var EnumValuesPlayerAction = map[string]PlayerAction{
 	"W_DOWN":  PlayerActionW_DOWN,
-	"W_UP":    PlayerActionW_UP,
 	"A_DOWN":  PlayerActionA_DOWN,
-	"A_UP":    PlayerActionA_UP,
 	"S_DOWN":  PlayerActionS_DOWN,
-	"S_UP":    PlayerActionS_UP,
 	"D_DOWN":  PlayerActionD_DOWN,
-	"D_UP":    PlayerActionD_UP,
 	"M1_DOWN": PlayerActionM1_DOWN,
-	"M1_UP":   PlayerActionM1_UP,
 	"M2_DOWN": PlayerActionM2_DOWN,
-	"M2_UP":   PlayerActionM2_UP,
 }
 
 func (v PlayerAction) String() string {
@@ -167,6 +149,55 @@ func (v PlayerAction) String() string {
 		return s
 	}
 	return "PlayerAction(" + strconv.FormatInt(int64(v), 10) + ")"
+}
+
+type PlayerMessageU byte
+
+const (
+	PlayerMessageUNONE        PlayerMessageU = 0
+	PlayerMessageUPlayerInput PlayerMessageU = 1
+)
+
+var EnumNamesPlayerMessageU = map[PlayerMessageU]string{
+	PlayerMessageUNONE:        "NONE",
+	PlayerMessageUPlayerInput: "PlayerInput",
+}
+
+var EnumValuesPlayerMessageU = map[string]PlayerMessageU{
+	"NONE":        PlayerMessageUNONE,
+	"PlayerInput": PlayerMessageUPlayerInput,
+}
+
+func (v PlayerMessageU) String() string {
+	if s, ok := EnumNamesPlayerMessageU[v]; ok {
+		return s
+	}
+	return "PlayerMessageU(" + strconv.FormatInt(int64(v), 10) + ")"
+}
+
+type PlayerMessageUT struct {
+	Type PlayerMessageU
+	Value interface{}
+}
+
+func (t *PlayerMessageUT) Pack(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
+	if t == nil {
+		return 0
+	}
+	switch t.Type {
+	case PlayerMessageUPlayerInput:
+		return t.Value.(*PlayerInputT).Pack(builder)
+	}
+	return 0
+}
+
+func (rcv PlayerMessageU) UnPack(table flatbuffers.Table) *PlayerMessageUT {
+	switch rcv {
+	case PlayerMessageUPlayerInput:
+		x := PlayerInput{_tab: table}
+		return &PlayerMessageUT{ Type: PlayerMessageUPlayerInput, Value: x.UnPack() }
+	}
+	return nil
 }
 
 type Vec2T struct {
@@ -988,6 +1019,89 @@ func LogoutResponseAddSid(builder *flatbuffers.Builder, sid float64) {
 	builder.PrependFloat64Slot(1, sid, 0.0)
 }
 func LogoutResponseEnd(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
+	return builder.EndObject()
+}
+type PlayerMessageT struct {
+	Data *PlayerMessageUT
+}
+
+func (t *PlayerMessageT) Pack(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
+	if t == nil { return 0 }
+	dataOffset := t.Data.Pack(builder)
+	
+	PlayerMessageStart(builder)
+	if t.Data != nil {
+		PlayerMessageAddDataType(builder, t.Data.Type)
+	}
+	PlayerMessageAddData(builder, dataOffset)
+	return PlayerMessageEnd(builder)
+}
+
+func (rcv *PlayerMessage) UnPackTo(t *PlayerMessageT) {
+	dataTable := flatbuffers.Table{}
+	if rcv.Data(&dataTable) {
+		t.Data = rcv.DataType().UnPack(dataTable)
+	}
+}
+
+func (rcv *PlayerMessage) UnPack() *PlayerMessageT {
+	if rcv == nil { return nil }
+	t := &PlayerMessageT{}
+	rcv.UnPackTo(t)
+	return t
+}
+
+type PlayerMessage struct {
+	_tab flatbuffers.Table
+}
+
+func GetRootAsPlayerMessage(buf []byte, offset flatbuffers.UOffsetT) *PlayerMessage {
+	n := flatbuffers.GetUOffsetT(buf[offset:])
+	x := &PlayerMessage{}
+	x.Init(buf, n+offset)
+	return x
+}
+
+func (rcv *PlayerMessage) Init(buf []byte, i flatbuffers.UOffsetT) {
+	rcv._tab.Bytes = buf
+	rcv._tab.Pos = i
+}
+
+func (rcv *PlayerMessage) Table() flatbuffers.Table {
+	return rcv._tab
+}
+
+func (rcv *PlayerMessage) DataType() PlayerMessageU {
+	o := flatbuffers.UOffsetT(rcv._tab.Offset(4))
+	if o != 0 {
+		return PlayerMessageU(rcv._tab.GetByte(o + rcv._tab.Pos))
+	}
+	return 0
+}
+
+func (rcv *PlayerMessage) MutateDataType(n PlayerMessageU) bool {
+	return rcv._tab.MutateByteSlot(4, byte(n))
+}
+
+func (rcv *PlayerMessage) Data(obj *flatbuffers.Table) bool {
+	o := flatbuffers.UOffsetT(rcv._tab.Offset(6))
+	if o != 0 {
+		rcv._tab.Union(obj, o)
+		return true
+	}
+	return false
+}
+
+func PlayerMessageStart(builder *flatbuffers.Builder) {
+	builder.StartObject(2)
+}
+func PlayerMessageAddDataType(builder *flatbuffers.Builder, dataType PlayerMessageU) {
+	builder.PrependByteSlot(0, byte(dataType), 0)
+}
+func PlayerMessageAddData(builder *flatbuffers.Builder, data flatbuffers.UOffsetT) {
+	builder.PrependUOffsetTSlot(1, flatbuffers.UOffsetT(data), 0)
+}
+func PlayerMessageEnd(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
 	return builder.EndObject()
 }
 type PlayerInputT struct {

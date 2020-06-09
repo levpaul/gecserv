@@ -35,6 +35,7 @@ type (
 	N_PLAYER_SYNC_T     MapUpdateMsg
 	N_LOGIN_RESPONSE_T  fb.LoginResponseT
 	N_LOGOUT_RESPONSE_T fb.LogoutResponseT
+	N_PLAYER_INPUT      PlayerInputMsg
 )
 
 type EventTopic int

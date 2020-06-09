@@ -61,18 +61,45 @@ export function unionListToServerMessageU(
 export namespace msg{
 export enum PlayerAction{
   W_DOWN= 0,
-  W_UP= 1,
-  A_DOWN= 2,
-  A_UP= 3,
-  S_DOWN= 4,
-  S_UP= 5,
-  D_DOWN= 6,
-  D_UP= 7,
-  M1_DOWN= 8,
-  M1_UP= 9,
-  M2_DOWN= 10,
-  M2_UP= 11
+  A_DOWN= 1,
+  S_DOWN= 2,
+  D_DOWN= 3,
+  M1_DOWN= 4,
+  M2_DOWN= 5
 };
+}
+
+/**
+ * @enum {number}
+ */
+export namespace msg{
+export enum PlayerMessageU{
+  NONE= 0,
+  PlayerInput= 1
+};
+
+export function unionToPlayerMessageU(
+  type: PlayerMessageU,
+  accessor: (obj:msg.PlayerInput) => msg.PlayerInput|null
+): msg.PlayerInput|null {
+  switch(msg.PlayerMessageU[type]) {
+    case 'NONE': return null; 
+    case 'PlayerInput': return accessor(new msg.PlayerInput())! as msg.PlayerInput;
+    default: return null;
+  }
+}
+
+export function unionListToPlayerMessageU(
+  type: PlayerMessageU, 
+  accessor: (index: number, obj:msg.PlayerInput) => msg.PlayerInput|null, 
+  index: number
+): msg.PlayerInput|null {
+  switch(msg.PlayerMessageU[type]) {
+    case 'NONE': return null; 
+    case 'PlayerInput': return accessor(index, new msg.PlayerInput())! as msg.PlayerInput;
+    default: return null;
+  }
+}
 }
 
 /**
@@ -811,6 +838,101 @@ static create(builder:flatbuffers.Builder, seq:number, sid:number):flatbuffers.O
   LogoutResponse.addSeq(builder, seq);
   LogoutResponse.addSid(builder, sid);
   return LogoutResponse.end(builder);
+}
+}
+}
+/**
+ * @constructor
+ */
+export namespace msg{
+export class PlayerMessage {
+  bb: flatbuffers.ByteBuffer|null = null;
+
+  bb_pos:number = 0;
+/**
+ * @param number i
+ * @param flatbuffers.ByteBuffer bb
+ * @returns PlayerMessage
+ */
+__init(i:number, bb:flatbuffers.ByteBuffer):PlayerMessage {
+  this.bb_pos = i;
+  this.bb = bb;
+  return this;
+};
+
+/**
+ * @param flatbuffers.ByteBuffer bb
+ * @param PlayerMessage= obj
+ * @returns PlayerMessage
+ */
+static getRoot(bb:flatbuffers.ByteBuffer, obj?:PlayerMessage):PlayerMessage {
+  return (obj || new PlayerMessage()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @param flatbuffers.ByteBuffer bb
+ * @param PlayerMessage= obj
+ * @returns PlayerMessage
+ */
+static getSizePrefixedRoot(bb:flatbuffers.ByteBuffer, obj?:PlayerMessage):PlayerMessage {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new PlayerMessage()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @returns msg.PlayerMessageU
+ */
+dataType():msg.PlayerMessageU {
+  var offset = this.bb!.__offset(this.bb_pos, 4);
+  return offset ? /**  */ (this.bb!.readUint8(this.bb_pos + offset)) : msg.PlayerMessageU.NONE;
+};
+
+/**
+ * @param flatbuffers.Table obj
+ * @returns ?flatbuffers.Table
+ */
+data<T extends flatbuffers.Table>(obj:T):T|null {
+  var offset = this.bb!.__offset(this.bb_pos, 6);
+  return offset ? this.bb!.__union(obj, this.bb_pos + offset) : null;
+};
+
+/**
+ * @param flatbuffers.Builder builder
+ */
+static start(builder:flatbuffers.Builder) {
+  builder.startObject(2);
+};
+
+/**
+ * @param flatbuffers.Builder builder
+ * @param msg.PlayerMessageU dataType
+ */
+static addDataType(builder:flatbuffers.Builder, dataType:msg.PlayerMessageU) {
+  builder.addFieldInt8(0, dataType, msg.PlayerMessageU.NONE);
+};
+
+/**
+ * @param flatbuffers.Builder builder
+ * @param flatbuffers.Offset dataOffset
+ */
+static addData(builder:flatbuffers.Builder, dataOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(1, dataOffset, 0);
+};
+
+/**
+ * @param flatbuffers.Builder builder
+ * @returns flatbuffers.Offset
+ */
+static end(builder:flatbuffers.Builder):flatbuffers.Offset {
+  var offset = builder.endObject();
+  return offset;
+};
+
+static create(builder:flatbuffers.Builder, dataType:msg.PlayerMessageU, dataOffset:flatbuffers.Offset):flatbuffers.Offset {
+  PlayerMessage.start(builder);
+  PlayerMessage.addDataType(builder, dataType);
+  PlayerMessage.addData(builder, dataOffset);
+  return PlayerMessage.end(builder);
 }
 }
 }
