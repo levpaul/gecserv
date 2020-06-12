@@ -2,6 +2,7 @@ package systems
 
 import (
 	"context"
+	"github.com/levpaul/gecserv/internal/config"
 	"github.com/levpaul/gecserv/internal/core"
 	"github.com/levpaul/gecserv/internal/eb"
 	"github.com/levpaul/gecserv/internal/ecs/entities"
@@ -46,7 +47,6 @@ func (ps *PlayerSystem) Update(ctx context.Context, dt core.GameTick) {
 }
 
 func (ps *PlayerSystem) handlePlayerInput(sid float64, actions []fb.PlayerAction, dt core.GameTick) {
-	log.Info().Msg("update")
 	p, ok := ps.players[sid]
 	if !ok {
 		log.Warn().Float64("sid", sid).Msg("player not found in handlePlayerInput")
@@ -55,9 +55,10 @@ func (ps *PlayerSystem) handlePlayerInput(sid float64, actions []fb.PlayerAction
 
 	var moveDecel float32 = 10
 	var moveSpeed float32 = 300
+	var tickScaling = float32(dt) / float32(config.TickRate)
 
-	p.Momentum.X -= p.Momentum.X * moveDecel * float32(dt)
-	p.Momentum.Y -= p.Momentum.Y * moveDecel * float32(dt)
+	p.Momentum.X -= p.Momentum.X * moveDecel * tickScaling
+	p.Momentum.Y -= p.Momentum.Y * moveDecel * tickScaling
 
 	moveF := false
 	moveB := false
@@ -89,25 +90,25 @@ func (ps *PlayerSystem) handlePlayerInput(sid float64, actions []fb.PlayerAction
 	}
 	if !(moveL && moveR) && (moveL || moveR) {
 		if moveL {
-			dirX = -1
-		} else {
 			dirX = 1
+		} else {
+			dirX = -1
 		}
 	}
 
 	//this.direction.normalize(); // this ensures consistent movements in all directions - does it??
 
 	if moveF || moveB {
-		p.Momentum.Y += float32(dirY) * moveSpeed * float32(dt)
+		p.Momentum.Y += float32(dirY) * moveSpeed * tickScaling
 	}
 	if moveL || moveR {
-		p.Momentum.X += float32(dirX) * moveSpeed * float32(dt)
+		p.Momentum.X += float32(dirX) * moveSpeed * tickScaling
 	}
 
-	p.Position.X += p.Momentum.X * float32(dt)
-	p.Position.Y += p.Momentum.Y * float32(dt)
+	p.Position.X += p.Momentum.X * tickScaling
+	p.Position.Y += p.Momentum.Y * tickScaling
 
-	log.Info().Float32("pos", p.Position.X).Msg("update")
+	// TODO: Allow camera rotation relative WASD controls
 	//this.vec.setFromMatrixColumn( this.oC.object.matrix, 0 );
 	//this.game.char.position.addScaledVector( this.vec, this.velocity.x * timeDelta);
 	//this.vec.crossVectors( this.oC.object.up, this.vec );
