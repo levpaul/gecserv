@@ -91,6 +91,7 @@ func handleNewNetworkConn(data eb.N_CONNECT_T) {
 }
 
 func handleNetworkDisconnection(data eb.N_DISCONN_T) {
+	log.Info().Float64("SID", float64(data)).Msg("Player disconnected")
 	delete(pConnMap, float64(data))
 	eb.Publish(eb.Event{
 		Topic: eb.S_LOGOUT,

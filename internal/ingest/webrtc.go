@@ -92,30 +92,34 @@ func initPeerConnection(peerConnection *webrtc.PeerConnection) (*webrtc.DataChan
 	})
 
 	dataChannel.OnMessage(func(msg webrtc.DataChannelMessage) {
-		pmsg := fb.GetRootAsPlayerMessage(msg.Data, 0)
-		if pmsg == nil {
-			log.Warn().Str("msg", string(msg.Data)).Msg("Invalid message received")
-			return
-		}
-
-		switch pmsg.DataType() {
-		case fb.PlayerMessageUPlayerInput:
-			unpacked := pmsg.UnPack()
-			if unpacked.Data.Value == nil {
-				log.Info().Msg("WTF")
-			}
-
-			eb.Publish(eb.Event{
-				Topic: eb.N_PLAYER_INPUT,
-				Data: eb.PlayerInputMsg{
-					FromPlayerSID: sid,
-					Msg:           *pmsg.UnPack().Data.Value.(*fb.PlayerInputT),
-				}})
-
-		default:
-			log.Warn().Str("type", pmsg.DataType().String()).Msg("Unsupported player message type recieved")
-			return
-		}
+		handlePlayerInputMessage(dataChannel, msg, sid)
 	})
 	return dataChannel, nil
+}
+
+func handlePlayerInputMessage(dc *webrtc.DataChannel, msg webrtc.DataChannelMessage, sid float64) {
+	pmsg := fb.GetRootAsPlayerMessage(msg.Data, 0)
+	if pmsg == nil {
+		log.Warn().Str("msg", string(msg.Data)).Msg("Invalid message received")
+		return
+	}
+
+	switch pmsg.DataType() {
+	case fb.PlayerMessageUPlayerInput:
+		unpacked := pmsg.UnPack()
+		if unpacked.Data.Value == nil {
+			log.Info().Msg("WTF")
+		}
+
+		eb.Publish(eb.Event{
+			Topic: eb.N_PLAYER_INPUT,
+			Data: eb.PlayerInputMsg{
+				FromPlayerSID: sid,
+				Msg:           *pmsg.UnPack().Data.Value.(*fb.PlayerInputT),
+			}})
+
+	default:
+		log.Warn().Str("type", pmsg.DataType().String()).Msg("Unsupported player message type recieved")
+		return
+	}
 }

@@ -30,7 +30,6 @@ func (ps *PlayerSystem) Update(ctx context.Context, dt core.GameTick) {
 		select {
 		case l := <-ps.events:
 			switch data := l.Data.(type) {
-			//case eb.N_PLAYER_INPUT_T:
 			case eb.PlayerInputMsg:
 				// TODO: Read Seq and interweave appropriately
 				ps.handlePlayerInput(data.FromPlayerSID, data.Msg.Actions, dt)
