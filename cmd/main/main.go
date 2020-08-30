@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/levpaul/gecserv/internal/cmdflags"
 	"github.com/levpaul/gecserv/internal/config"
 	"github.com/levpaul/gecserv/internal/debug"
@@ -13,8 +14,11 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 	"math/rand"
+	"net/http"
 	"os"
 	"time"
+
+	_ "net/http/pprof"
 )
 
 func init() {
@@ -25,10 +29,16 @@ func init() {
 var pipelineErrCh = make(chan error)
 
 func main() {
+	// #TODO: Consider moving this to devmode
+	go func() {
+		fmt.Println(http.ListenAndServe("localhost:6060", nil))
+	}()
+
 	if *cmdflags.DevMode == true {
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 		viper.SetConfigName("dev")
 		go debug.StartDebugServer()
+
 	}
 
 	config.Init()
