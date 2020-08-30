@@ -3,6 +3,7 @@ package ecs
 import (
 	"context"
 	"github.com/levpaul/gecserv/internal/core"
+	"github.com/levpaul/gecserv/internal/eb"
 	"github.com/levpaul/gecserv/internal/ecs/components"
 	"github.com/levpaul/gecserv/internal/ecs/entities"
 	"github.com/rs/zerolog/log"
@@ -54,8 +55,13 @@ func (sa *SectorAdmin) AddEntity(en core.Entity) {
 	sa.entities[en.ID()] = en
 }
 
+// Remove entity from entity list and send event
 func (sa *SectorAdmin) RemoveEntity(en core.EntityID) {
 	delete(sa.entities, en)
+	eb.Publish(eb.Event{
+		Topic: eb.S_REMOVED_ENT,
+		Data:  eb.S_REMOVED_ENT_T(en),
+	})
 }
 
 type entityIterator struct {

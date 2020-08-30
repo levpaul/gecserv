@@ -8,6 +8,7 @@ import (
 
 var (
 	GameTickDuration time.Duration
+	TickRate         int
 )
 
 func Init() {
@@ -18,5 +19,6 @@ func Init() {
 		panic(fmt.Errorf("Fatal error config file: %s \n", err))
 	}
 
-	GameTickDuration = time.Second / time.Duration(viper.GetInt("game.tickrate"))
+	TickRate = viper.GetInt("game.tickrate")
+	GameTickDuration = time.Second / time.Duration(TickRate)
 }

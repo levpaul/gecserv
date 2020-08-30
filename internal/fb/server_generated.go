@@ -11,33 +11,36 @@ import (
 type Color int8
 
 const (
-	ColorRed    Color = 0
-	ColorGreen  Color = 1
-	ColorBlue   Color = 2
-	ColorYellow Color = 3
-	ColorPink   Color = 4
-	ColorGray   Color = 5
-	ColorOrange Color = 6
+	ColorRed      Color = 0
+	ColorGreen    Color = 1
+	ColorBlue     Color = 2
+	ColorYellow   Color = 3
+	ColorPink     Color = 4
+	ColorGray     Color = 5
+	ColorOrange   Color = 6
+	ColorMAXCOLOR Color = 7
 )
 
 var EnumNamesColor = map[Color]string{
-	ColorRed:    "Red",
-	ColorGreen:  "Green",
-	ColorBlue:   "Blue",
-	ColorYellow: "Yellow",
-	ColorPink:   "Pink",
-	ColorGray:   "Gray",
-	ColorOrange: "Orange",
+	ColorRed:      "Red",
+	ColorGreen:    "Green",
+	ColorBlue:     "Blue",
+	ColorYellow:   "Yellow",
+	ColorPink:     "Pink",
+	ColorGray:     "Gray",
+	ColorOrange:   "Orange",
+	ColorMAXCOLOR: "MAXCOLOR",
 }
 
 var EnumValuesColor = map[string]Color{
-	"Red":    ColorRed,
-	"Green":  ColorGreen,
-	"Blue":   ColorBlue,
-	"Yellow": ColorYellow,
-	"Pink":   ColorPink,
-	"Gray":   ColorGray,
-	"Orange": ColorOrange,
+	"Red":      ColorRed,
+	"Green":    ColorGreen,
+	"Blue":     ColorBlue,
+	"Yellow":   ColorYellow,
+	"Pink":     ColorPink,
+	"Gray":     ColorGray,
+	"Orange":   ColorOrange,
+	"MAXCOLOR": ColorMAXCOLOR,
 }
 
 func (v Color) String() string {
@@ -47,51 +50,67 @@ func (v Color) String() string {
 	return "Color(" + strconv.FormatInt(int64(v), 10) + ")"
 }
 
-type GameMessage byte
+type ServerMessageU byte
 
 const (
-	GameMessageNONE      GameMessage = 0
-	GameMessageMapUpdate GameMessage = 1
+	ServerMessageUNONE           ServerMessageU = 0
+	ServerMessageUMapUpdate      ServerMessageU = 1
+	ServerMessageULoginResponse  ServerMessageU = 2
+	ServerMessageULogoutResponse ServerMessageU = 3
 )
 
-var EnumNamesGameMessage = map[GameMessage]string{
-	GameMessageNONE:      "NONE",
-	GameMessageMapUpdate: "MapUpdate",
+var EnumNamesServerMessageU = map[ServerMessageU]string{
+	ServerMessageUNONE:           "NONE",
+	ServerMessageUMapUpdate:      "MapUpdate",
+	ServerMessageULoginResponse:  "LoginResponse",
+	ServerMessageULogoutResponse: "LogoutResponse",
 }
 
-var EnumValuesGameMessage = map[string]GameMessage{
-	"NONE":      GameMessageNONE,
-	"MapUpdate": GameMessageMapUpdate,
+var EnumValuesServerMessageU = map[string]ServerMessageU{
+	"NONE":           ServerMessageUNONE,
+	"MapUpdate":      ServerMessageUMapUpdate,
+	"LoginResponse":  ServerMessageULoginResponse,
+	"LogoutResponse": ServerMessageULogoutResponse,
 }
 
-func (v GameMessage) String() string {
-	if s, ok := EnumNamesGameMessage[v]; ok {
+func (v ServerMessageU) String() string {
+	if s, ok := EnumNamesServerMessageU[v]; ok {
 		return s
 	}
-	return "GameMessage(" + strconv.FormatInt(int64(v), 10) + ")"
+	return "ServerMessageU(" + strconv.FormatInt(int64(v), 10) + ")"
 }
 
-type GameMessageT struct {
-	Type GameMessage
+type ServerMessageUT struct {
+	Type ServerMessageU
 	Value interface{}
 }
 
-func (t *GameMessageT) Pack(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
+func (t *ServerMessageUT) Pack(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
 	if t == nil {
 		return 0
 	}
 	switch t.Type {
-	case GameMessageMapUpdate:
+	case ServerMessageUMapUpdate:
 		return t.Value.(*MapUpdateT).Pack(builder)
+	case ServerMessageULoginResponse:
+		return t.Value.(*LoginResponseT).Pack(builder)
+	case ServerMessageULogoutResponse:
+		return t.Value.(*LogoutResponseT).Pack(builder)
 	}
 	return 0
 }
 
-func (rcv GameMessage) UnPack(table flatbuffers.Table) *GameMessageT {
+func (rcv ServerMessageU) UnPack(table flatbuffers.Table) *ServerMessageUT {
 	switch rcv {
-	case GameMessageMapUpdate:
+	case ServerMessageUMapUpdate:
 		x := MapUpdate{_tab: table}
-		return &GameMessageT{ Type: GameMessageMapUpdate, Value: x.UnPack() }
+		return &ServerMessageUT{ Type: ServerMessageUMapUpdate, Value: x.UnPack() }
+	case ServerMessageULoginResponse:
+		x := LoginResponse{_tab: table}
+		return &ServerMessageUT{ Type: ServerMessageULoginResponse, Value: x.UnPack() }
+	case ServerMessageULogoutResponse:
+		x := LogoutResponse{_tab: table}
+		return &ServerMessageUT{ Type: ServerMessageULogoutResponse, Value: x.UnPack() }
 	}
 	return nil
 }
@@ -99,48 +118,24 @@ func (rcv GameMessage) UnPack(table flatbuffers.Table) *GameMessageT {
 type PlayerAction byte
 
 const (
-	PlayerActionW_DOWN  PlayerAction = 0
-	PlayerActionW_UP    PlayerAction = 1
-	PlayerActionA_DOWN  PlayerAction = 2
-	PlayerActionA_UP    PlayerAction = 3
-	PlayerActionS_DOWN  PlayerAction = 4
-	PlayerActionS_UP    PlayerAction = 5
-	PlayerActionD_DOWN  PlayerAction = 6
-	PlayerActionD_UP    PlayerAction = 7
-	PlayerActionM1_DOWN PlayerAction = 8
-	PlayerActionM1_UP   PlayerAction = 9
-	PlayerActionM2_DOWN PlayerAction = 10
-	PlayerActionM2_UP   PlayerAction = 11
+	PlayerActionFORWARD  PlayerAction = 0
+	PlayerActionBACKWARD PlayerAction = 1
+	PlayerActionLEFT     PlayerAction = 2
+	PlayerActionRIGHT    PlayerAction = 3
 )
 
 var EnumNamesPlayerAction = map[PlayerAction]string{
-	PlayerActionW_DOWN:  "W_DOWN",
-	PlayerActionW_UP:    "W_UP",
-	PlayerActionA_DOWN:  "A_DOWN",
-	PlayerActionA_UP:    "A_UP",
-	PlayerActionS_DOWN:  "S_DOWN",
-	PlayerActionS_UP:    "S_UP",
-	PlayerActionD_DOWN:  "D_DOWN",
-	PlayerActionD_UP:    "D_UP",
-	PlayerActionM1_DOWN: "M1_DOWN",
-	PlayerActionM1_UP:   "M1_UP",
-	PlayerActionM2_DOWN: "M2_DOWN",
-	PlayerActionM2_UP:   "M2_UP",
+	PlayerActionFORWARD:  "FORWARD",
+	PlayerActionBACKWARD: "BACKWARD",
+	PlayerActionLEFT:     "LEFT",
+	PlayerActionRIGHT:    "RIGHT",
 }
 
 var EnumValuesPlayerAction = map[string]PlayerAction{
-	"W_DOWN":  PlayerActionW_DOWN,
-	"W_UP":    PlayerActionW_UP,
-	"A_DOWN":  PlayerActionA_DOWN,
-	"A_UP":    PlayerActionA_UP,
-	"S_DOWN":  PlayerActionS_DOWN,
-	"S_UP":    PlayerActionS_UP,
-	"D_DOWN":  PlayerActionD_DOWN,
-	"D_UP":    PlayerActionD_UP,
-	"M1_DOWN": PlayerActionM1_DOWN,
-	"M1_UP":   PlayerActionM1_UP,
-	"M2_DOWN": PlayerActionM2_DOWN,
-	"M2_UP":   PlayerActionM2_UP,
+	"FORWARD":  PlayerActionFORWARD,
+	"BACKWARD": PlayerActionBACKWARD,
+	"LEFT":     PlayerActionLEFT,
+	"RIGHT":    PlayerActionRIGHT,
 }
 
 func (v PlayerAction) String() string {
@@ -148,6 +143,55 @@ func (v PlayerAction) String() string {
 		return s
 	}
 	return "PlayerAction(" + strconv.FormatInt(int64(v), 10) + ")"
+}
+
+type PlayerMessageU byte
+
+const (
+	PlayerMessageUNONE        PlayerMessageU = 0
+	PlayerMessageUPlayerInput PlayerMessageU = 1
+)
+
+var EnumNamesPlayerMessageU = map[PlayerMessageU]string{
+	PlayerMessageUNONE:        "NONE",
+	PlayerMessageUPlayerInput: "PlayerInput",
+}
+
+var EnumValuesPlayerMessageU = map[string]PlayerMessageU{
+	"NONE":        PlayerMessageUNONE,
+	"PlayerInput": PlayerMessageUPlayerInput,
+}
+
+func (v PlayerMessageU) String() string {
+	if s, ok := EnumNamesPlayerMessageU[v]; ok {
+		return s
+	}
+	return "PlayerMessageU(" + strconv.FormatInt(int64(v), 10) + ")"
+}
+
+type PlayerMessageUT struct {
+	Type PlayerMessageU
+	Value interface{}
+}
+
+func (t *PlayerMessageUT) Pack(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
+	if t == nil {
+		return 0
+	}
+	switch t.Type {
+	case PlayerMessageUPlayerInput:
+		return t.Value.(*PlayerInputT).Pack(builder)
+	}
+	return 0
+}
+
+func (rcv PlayerMessageU) UnPack(table flatbuffers.Table) *PlayerMessageUT {
+	switch rcv {
+	case PlayerMessageUPlayerInput:
+		x := PlayerInput{_tab: table}
+		return &PlayerMessageUT{ Type: PlayerMessageUPlayerInput, Value: x.UnPack() }
+	}
+	return nil
 }
 
 type Vec2T struct {
@@ -405,7 +449,6 @@ type PlayerT struct {
 	Posy float32
 	Sid float64
 	Col Color
-	LastAck uint32
 }
 
 func (t *PlayerT) Pack(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
@@ -415,7 +458,6 @@ func (t *PlayerT) Pack(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
 	PlayerAddPosy(builder, t.Posy)
 	PlayerAddSid(builder, t.Sid)
 	PlayerAddCol(builder, t.Col)
-	PlayerAddLastAck(builder, t.LastAck)
 	return PlayerEnd(builder)
 }
 
@@ -424,7 +466,6 @@ func (rcv *Player) UnPackTo(t *PlayerT) {
 	t.Posy = rcv.Posy()
 	t.Sid = rcv.Sid()
 	t.Col = rcv.Col()
-	t.LastAck = rcv.LastAck()
 }
 
 func (rcv *Player) UnPack() *PlayerT {
@@ -502,20 +543,8 @@ func (rcv *Player) MutateCol(n Color) bool {
 	return rcv._tab.MutateInt8Slot(10, int8(n))
 }
 
-func (rcv *Player) LastAck() uint32 {
-	o := flatbuffers.UOffsetT(rcv._tab.Offset(12))
-	if o != 0 {
-		return rcv._tab.GetUint32(o + rcv._tab.Pos)
-	}
-	return 0
-}
-
-func (rcv *Player) MutateLastAck(n uint32) bool {
-	return rcv._tab.MutateUint32Slot(12, n)
-}
-
 func PlayerStart(builder *flatbuffers.Builder) {
-	builder.StartObject(5)
+	builder.StartObject(4)
 }
 func PlayerAddPosx(builder *flatbuffers.Builder, posx float32) {
 	builder.PrependFloat32Slot(0, posx, 0.0)
@@ -529,75 +558,72 @@ func PlayerAddSid(builder *flatbuffers.Builder, sid float64) {
 func PlayerAddCol(builder *flatbuffers.Builder, col Color) {
 	builder.PrependInt8Slot(3, int8(col), 0)
 }
-func PlayerAddLastAck(builder *flatbuffers.Builder, lastAck uint32) {
-	builder.PrependUint32Slot(4, lastAck, 0)
-}
 func PlayerEnd(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
 	return builder.EndObject()
 }
-type MessageT struct {
-	Data *GameMessageT
+type ServerMessageT struct {
+	Data *ServerMessageUT
 }
 
-func (t *MessageT) Pack(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
+func (t *ServerMessageT) Pack(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
 	if t == nil { return 0 }
 	dataOffset := t.Data.Pack(builder)
 	
-	MessageStart(builder)
+	ServerMessageStart(builder)
 	if t.Data != nil {
-		MessageAddDataType(builder, t.Data.Type)
+		ServerMessageAddDataType(builder, t.Data.Type)
 	}
-	MessageAddData(builder, dataOffset)
-	return MessageEnd(builder)
+	ServerMessageAddData(builder, dataOffset)
+	return ServerMessageEnd(builder)
 }
 
-func (rcv *Message) UnPackTo(t *MessageT) {
+func (rcv *ServerMessage) UnPackTo(t *ServerMessageT) {
 	dataTable := flatbuffers.Table{}
 	if rcv.Data(&dataTable) {
 		t.Data = rcv.DataType().UnPack(dataTable)
 	}
 }
 
-func (rcv *Message) UnPack() *MessageT {
+func (rcv *ServerMessage) UnPack() *ServerMessageT {
 	if rcv == nil { return nil }
-	t := &MessageT{}
+	t := &ServerMessageT{}
 	rcv.UnPackTo(t)
 	return t
 }
 
-type Message struct {
+type ServerMessage struct {
 	_tab flatbuffers.Table
 }
 
-func GetRootAsMessage(buf []byte, offset flatbuffers.UOffsetT) *Message {
+func GetRootAsServerMessage(buf []byte, offset flatbuffers.UOffsetT) *ServerMessage {
 	n := flatbuffers.GetUOffsetT(buf[offset:])
-	x := &Message{}
+	x := &ServerMessage{}
 	x.Init(buf, n+offset)
 	return x
 }
 
-func (rcv *Message) Init(buf []byte, i flatbuffers.UOffsetT) {
+func (rcv *ServerMessage) Init(buf []byte, i flatbuffers.UOffsetT) {
 	rcv._tab.Bytes = buf
 	rcv._tab.Pos = i
 }
 
-func (rcv *Message) Table() flatbuffers.Table {
+func (rcv *ServerMessage) Table() flatbuffers.Table {
 	return rcv._tab
 }
 
-func (rcv *Message) DataType() GameMessage {
+func (rcv *ServerMessage) DataType() ServerMessageU {
 	o := flatbuffers.UOffsetT(rcv._tab.Offset(4))
 	if o != 0 {
-		return GameMessage(rcv._tab.GetByte(o + rcv._tab.Pos))
+		return ServerMessageU(rcv._tab.GetByte(o + rcv._tab.Pos))
 	}
 	return 0
 }
 
-func (rcv *Message) MutateDataType(n GameMessage) bool {
+func (rcv *ServerMessage) MutateDataType(n ServerMessageU) bool {
 	return rcv._tab.MutateByteSlot(4, byte(n))
 }
 
-func (rcv *Message) Data(obj *flatbuffers.Table) bool {
+func (rcv *ServerMessage) Data(obj *flatbuffers.Table) bool {
 	o := flatbuffers.UOffsetT(rcv._tab.Offset(6))
 	if o != 0 {
 		rcv._tab.Union(obj, o)
@@ -606,16 +632,16 @@ func (rcv *Message) Data(obj *flatbuffers.Table) bool {
 	return false
 }
 
-func MessageStart(builder *flatbuffers.Builder) {
+func ServerMessageStart(builder *flatbuffers.Builder) {
 	builder.StartObject(2)
 }
-func MessageAddDataType(builder *flatbuffers.Builder, dataType GameMessage) {
+func ServerMessageAddDataType(builder *flatbuffers.Builder, dataType ServerMessageU) {
 	builder.PrependByteSlot(0, byte(dataType), 0)
 }
-func MessageAddData(builder *flatbuffers.Builder, data flatbuffers.UOffsetT) {
+func ServerMessageAddData(builder *flatbuffers.Builder, data flatbuffers.UOffsetT) {
 	builder.PrependUOffsetTSlot(1, flatbuffers.UOffsetT(data), 0)
 }
-func MessageEnd(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
+func ServerMessageEnd(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
 	return builder.EndObject()
 }
 type MapUpdateT struct {
@@ -823,6 +849,253 @@ func MapUpdateStartPsyncsVector(builder *flatbuffers.Builder, numElems int) flat
 	return builder.StartVector(4, numElems, 4)
 }
 func MapUpdateEnd(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
+	return builder.EndObject()
+}
+type LoginResponseT struct {
+	Seq uint32
+	Player *PlayerT
+}
+
+func (t *LoginResponseT) Pack(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
+	if t == nil { return 0 }
+	playerOffset := t.Player.Pack(builder)
+	LoginResponseStart(builder)
+	LoginResponseAddSeq(builder, t.Seq)
+	LoginResponseAddPlayer(builder, playerOffset)
+	return LoginResponseEnd(builder)
+}
+
+func (rcv *LoginResponse) UnPackTo(t *LoginResponseT) {
+	t.Seq = rcv.Seq()
+	t.Player = rcv.Player(nil).UnPack()
+}
+
+func (rcv *LoginResponse) UnPack() *LoginResponseT {
+	if rcv == nil { return nil }
+	t := &LoginResponseT{}
+	rcv.UnPackTo(t)
+	return t
+}
+
+type LoginResponse struct {
+	_tab flatbuffers.Table
+}
+
+func GetRootAsLoginResponse(buf []byte, offset flatbuffers.UOffsetT) *LoginResponse {
+	n := flatbuffers.GetUOffsetT(buf[offset:])
+	x := &LoginResponse{}
+	x.Init(buf, n+offset)
+	return x
+}
+
+func (rcv *LoginResponse) Init(buf []byte, i flatbuffers.UOffsetT) {
+	rcv._tab.Bytes = buf
+	rcv._tab.Pos = i
+}
+
+func (rcv *LoginResponse) Table() flatbuffers.Table {
+	return rcv._tab
+}
+
+func (rcv *LoginResponse) Seq() uint32 {
+	o := flatbuffers.UOffsetT(rcv._tab.Offset(4))
+	if o != 0 {
+		return rcv._tab.GetUint32(o + rcv._tab.Pos)
+	}
+	return 0
+}
+
+func (rcv *LoginResponse) MutateSeq(n uint32) bool {
+	return rcv._tab.MutateUint32Slot(4, n)
+}
+
+func (rcv *LoginResponse) Player(obj *Player) *Player {
+	o := flatbuffers.UOffsetT(rcv._tab.Offset(6))
+	if o != 0 {
+		x := rcv._tab.Indirect(o + rcv._tab.Pos)
+		if obj == nil {
+			obj = new(Player)
+		}
+		obj.Init(rcv._tab.Bytes, x)
+		return obj
+	}
+	return nil
+}
+
+func LoginResponseStart(builder *flatbuffers.Builder) {
+	builder.StartObject(2)
+}
+func LoginResponseAddSeq(builder *flatbuffers.Builder, seq uint32) {
+	builder.PrependUint32Slot(0, seq, 0)
+}
+func LoginResponseAddPlayer(builder *flatbuffers.Builder, player flatbuffers.UOffsetT) {
+	builder.PrependUOffsetTSlot(1, flatbuffers.UOffsetT(player), 0)
+}
+func LoginResponseEnd(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
+	return builder.EndObject()
+}
+type LogoutResponseT struct {
+	Seq uint32
+	Sid float64
+}
+
+func (t *LogoutResponseT) Pack(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
+	if t == nil { return 0 }
+	LogoutResponseStart(builder)
+	LogoutResponseAddSeq(builder, t.Seq)
+	LogoutResponseAddSid(builder, t.Sid)
+	return LogoutResponseEnd(builder)
+}
+
+func (rcv *LogoutResponse) UnPackTo(t *LogoutResponseT) {
+	t.Seq = rcv.Seq()
+	t.Sid = rcv.Sid()
+}
+
+func (rcv *LogoutResponse) UnPack() *LogoutResponseT {
+	if rcv == nil { return nil }
+	t := &LogoutResponseT{}
+	rcv.UnPackTo(t)
+	return t
+}
+
+type LogoutResponse struct {
+	_tab flatbuffers.Table
+}
+
+func GetRootAsLogoutResponse(buf []byte, offset flatbuffers.UOffsetT) *LogoutResponse {
+	n := flatbuffers.GetUOffsetT(buf[offset:])
+	x := &LogoutResponse{}
+	x.Init(buf, n+offset)
+	return x
+}
+
+func (rcv *LogoutResponse) Init(buf []byte, i flatbuffers.UOffsetT) {
+	rcv._tab.Bytes = buf
+	rcv._tab.Pos = i
+}
+
+func (rcv *LogoutResponse) Table() flatbuffers.Table {
+	return rcv._tab
+}
+
+func (rcv *LogoutResponse) Seq() uint32 {
+	o := flatbuffers.UOffsetT(rcv._tab.Offset(4))
+	if o != 0 {
+		return rcv._tab.GetUint32(o + rcv._tab.Pos)
+	}
+	return 0
+}
+
+func (rcv *LogoutResponse) MutateSeq(n uint32) bool {
+	return rcv._tab.MutateUint32Slot(4, n)
+}
+
+func (rcv *LogoutResponse) Sid() float64 {
+	o := flatbuffers.UOffsetT(rcv._tab.Offset(6))
+	if o != 0 {
+		return rcv._tab.GetFloat64(o + rcv._tab.Pos)
+	}
+	return 0.0
+}
+
+func (rcv *LogoutResponse) MutateSid(n float64) bool {
+	return rcv._tab.MutateFloat64Slot(6, n)
+}
+
+func LogoutResponseStart(builder *flatbuffers.Builder) {
+	builder.StartObject(2)
+}
+func LogoutResponseAddSeq(builder *flatbuffers.Builder, seq uint32) {
+	builder.PrependUint32Slot(0, seq, 0)
+}
+func LogoutResponseAddSid(builder *flatbuffers.Builder, sid float64) {
+	builder.PrependFloat64Slot(1, sid, 0.0)
+}
+func LogoutResponseEnd(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
+	return builder.EndObject()
+}
+type PlayerMessageT struct {
+	Data *PlayerMessageUT
+}
+
+func (t *PlayerMessageT) Pack(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
+	if t == nil { return 0 }
+	dataOffset := t.Data.Pack(builder)
+	
+	PlayerMessageStart(builder)
+	if t.Data != nil {
+		PlayerMessageAddDataType(builder, t.Data.Type)
+	}
+	PlayerMessageAddData(builder, dataOffset)
+	return PlayerMessageEnd(builder)
+}
+
+func (rcv *PlayerMessage) UnPackTo(t *PlayerMessageT) {
+	dataTable := flatbuffers.Table{}
+	if rcv.Data(&dataTable) {
+		t.Data = rcv.DataType().UnPack(dataTable)
+	}
+}
+
+func (rcv *PlayerMessage) UnPack() *PlayerMessageT {
+	if rcv == nil { return nil }
+	t := &PlayerMessageT{}
+	rcv.UnPackTo(t)
+	return t
+}
+
+type PlayerMessage struct {
+	_tab flatbuffers.Table
+}
+
+func GetRootAsPlayerMessage(buf []byte, offset flatbuffers.UOffsetT) *PlayerMessage {
+	n := flatbuffers.GetUOffsetT(buf[offset:])
+	x := &PlayerMessage{}
+	x.Init(buf, n+offset)
+	return x
+}
+
+func (rcv *PlayerMessage) Init(buf []byte, i flatbuffers.UOffsetT) {
+	rcv._tab.Bytes = buf
+	rcv._tab.Pos = i
+}
+
+func (rcv *PlayerMessage) Table() flatbuffers.Table {
+	return rcv._tab
+}
+
+func (rcv *PlayerMessage) DataType() PlayerMessageU {
+	o := flatbuffers.UOffsetT(rcv._tab.Offset(4))
+	if o != 0 {
+		return PlayerMessageU(rcv._tab.GetByte(o + rcv._tab.Pos))
+	}
+	return 0
+}
+
+func (rcv *PlayerMessage) MutateDataType(n PlayerMessageU) bool {
+	return rcv._tab.MutateByteSlot(4, byte(n))
+}
+
+func (rcv *PlayerMessage) Data(obj *flatbuffers.Table) bool {
+	o := flatbuffers.UOffsetT(rcv._tab.Offset(6))
+	if o != 0 {
+		rcv._tab.Union(obj, o)
+		return true
+	}
+	return false
+}
+
+func PlayerMessageStart(builder *flatbuffers.Builder) {
+	builder.StartObject(2)
+}
+func PlayerMessageAddDataType(builder *flatbuffers.Builder, dataType PlayerMessageU) {
+	builder.PrependByteSlot(0, byte(dataType), 0)
+}
+func PlayerMessageAddData(builder *flatbuffers.Builder, data flatbuffers.UOffsetT) {
+	builder.PrependUOffsetTSlot(1, flatbuffers.UOffsetT(data), 0)
+}
+func PlayerMessageEnd(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
 	return builder.EndObject()
 }
 type PlayerInputT struct {

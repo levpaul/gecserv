@@ -15,26 +15,36 @@ type PositionComponent interface {
 }
 
 // ==================================================================
-type NetworkSession struct {
-	Sid float64
-}
+type Momentum fb.Vec2T
 
-type NetworkSessionComponent interface {
-	GetNetworkSession() *NetworkSession
-}
+func (m *Momentum) GetMomentum() *Momentum { return m }
 
-func (n *NetworkSession) GetNetworkSession() *NetworkSession { return n }
+type MoveableComponent interface {
+	GetMomentum() *Momentum
+}
 
 // ==================================================================
-type Color struct {
+type NetworkedSession struct {
+	Sid       float64
+	LoginTick core.GameTick
+}
+
+type NetworkedSessionComponent interface {
+	GetNetworkSession() *NetworkedSession
+}
+
+func (n *NetworkedSession) GetNetworkSession() *NetworkedSession { return n }
+
+// ==================================================================
+type Colored struct {
 	Col fb.Color
 }
 
-type ColorComponent interface {
-	GetColor() *Color
+type ColoredComponent interface {
+	GetColor() *Colored
 }
 
-func (c *Color) GetColor() *Color {
+func (c *Colored) GetColor() *Colored {
 	return c
 }
 

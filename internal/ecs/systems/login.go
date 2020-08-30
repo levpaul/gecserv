@@ -19,7 +19,6 @@ type LoginSystem struct {
 	sidsToEnts  map[float64]*entities.PlayerE
 }
 
-// TODO: The topic for loginEvents may need to be split per sector
 func (ls *LoginSystem) Init() {
 	ls.loginEvents = make(chan eb.Event, 128)
 	eb.Subscribe(eb.S_LOGIN, ls.loginEvents)
@@ -34,22 +33,15 @@ func (ls *LoginSystem) Update(ctx context.Context, dt core.GameTick) {
 	for {
 		select {
 		case l := <-ls.loginEvents:
-			switch l.Data.(type) {
+			switch data := l.Data.(type) {
+			// Network login event
 			case eb.S_LOGIN_T:
-				player, ok := l.Data.(eb.S_LOGIN_T)
-				if !ok {
-					log.Error().Interface("data", l.Data).Msg("Failed to type assert S_LOGIN message")
-					continue
-				}
-				ls.handleLogin(ctx, player)
+				ls.handleLogin(ctx, data)
 
+			// Network disconnect event
 			case eb.S_LOGOUT_T:
-				sid, ok := l.Data.(eb.S_LOGOUT_T)
-				if !ok {
-					log.Error().Interface("data", l.Data).Msg("Failed to type assert S_LOGOUT message")
-					continue
-				}
-				ls.handleLogout(ctx, float64(sid))
+				ls.handleDisconnect(ctx, float64(data))
+
 			default:
 				log.Error().Interface("type", l.Data).Msg("Unsupported message type received on login channel")
 			}
@@ -65,19 +57,30 @@ func (ls *LoginSystem) handleLogin(ctx context.Context, player *fb.PlayerT) {
 	log.Info().Str("SID", core.SIDStr(player.Sid)).Msg("New player login!")
 
 	pEntity := &entities.PlayerE{
-		BaseEntity:     entities.NewBaseEntity(),
-		Position:       components.Position{player.Posx, player.Posy},
-		Changeable:     components.Changeable{true},
-		NetworkSession: components.NetworkSession{player.Sid},
-		StateHistory:   components.StateHistory{},
-		Color:          components.Color{player.Col},
+		BaseEntity: entities.NewBaseEntity(),
+		Position:   components.Position{player.Posx, player.Posy},
+		Momentum:   components.Momentum{0, 0},
+		Changeable: components.Changeable{true},
+		NetworkedSession: components.NetworkedSession{
+			Sid:       player.Sid,
+			LoginTick: ls.sa.GetSectorTick(),
+		},
+		StateHistory: components.StateHistory{},
+		Colored:      components.Colored{player.Col},
 	}
 
 	ls.sa.AddEntity(pEntity)
 	ls.sidsToEnts[pEntity.Sid] = pEntity
+
+	eb.Publish(eb.Event{
+		Topic: eb.N_LOGIN_RESPONSE,
+		Data: eb.N_LOGIN_RESPONSE_T{
+			Seq:    uint32(ls.sa.GetSectorTick()),
+			Player: pEntity.ToPublicFB(),
+		}})
 }
 
-func (ls *LoginSystem) handleLogout(ctx context.Context, sid float64) {
+func (ls *LoginSystem) handleDisconnect(ctx context.Context, sid float64) {
 	log.Info().Str("SID", core.SIDStr(sid)).Msg("Player logout!")
 	en, ok := ls.sidsToEnts[sid]
 	if !ok {
@@ -87,4 +90,21 @@ func (ls *LoginSystem) handleLogout(ctx context.Context, sid float64) {
 
 	ls.sa.RemoveEntity(en.ID())
 	delete(ls.sidsToEnts, en.Sid)
+}
+
+func (ls *LoginSystem) handleLogout(ctx context.Context, sid float64) {
+	en, ok := ls.sidsToEnts[sid]
+	if !ok {
+		log.Error().Str("SID", core.SIDStr(sid)).Msg("Could not find entity for session during logout")
+		return
+	}
+
+	ls.handleDisconnect(ctx, sid)
+
+	eb.Publish(eb.Event{
+		Topic: eb.N_LOGOUT_RESPONSE,
+		Data: eb.N_LOGOUT_RESPONSE_T{
+			Sid: en.Sid,
+			Seq: uint32(ls.sa.GetSectorTick()),
+		}})
 }

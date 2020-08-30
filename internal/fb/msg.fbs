@@ -3,12 +3,16 @@ include "core.fbs";
 
 namespace msg;
 
+// SERVER MESSAGES
 
-// TODO: Rename this as ServerMessage
-union GameMessage { MapUpdate }
+union ServerMessageU {
+    MapUpdate,
+    LoginResponse,
+    LogoutResponse,
+}
 
-table Message {
-    data: GameMessage;
+table ServerMessage {
+    data: ServerMessageU;
 }
 
 table MapUpdate {
@@ -18,7 +22,32 @@ table MapUpdate {
     psyncs: [Player];
 }
 
-enum PlayerAction: uint8 { W_DOWN, W_UP, A_DOWN, A_UP, S_DOWN, S_UP, D_DOWN, D_UP, M1_DOWN, M1_UP, M2_DOWN, M2_UP}
+table LoginResponse {
+    seq: uint32;
+    player: Player;
+}
+
+table LogoutResponse {
+    seq: uint32;
+    sid: float64;
+}
+
+// CLIENT MESSAGES
+
+enum PlayerAction: uint8 {
+    FORWARD,
+    BACKWARD,
+    LEFT,
+    RIGHT,
+}
+
+union PlayerMessageU {
+    PlayerInput,
+}
+
+table PlayerMessage {
+    data: PlayerMessageU;
+}
 
 table PlayerInput {
     seq: uint32;

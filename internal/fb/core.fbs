@@ -1,6 +1,6 @@
 namespace msg;
 
-enum Color:byte { Red = 0, Green, Blue, Yellow, Pink, Gray, Orange}
+enum Color:byte { Red = 0, Green, Blue, Yellow, Pink, Gray, Orange, MAXCOLOR}
 
 struct Vec2 {
   x: float;

@@ -1,11 +1,8 @@
 package debug
 
 import (
-	flatbuffers "github.com/google/flatbuffers/go"
-	"github.com/levpaul/gecserv/internal/fb"
 	"github.com/rs/zerolog/log"
 	"math"
-	"math/rand"
 	"net"
 	"os"
 )
@@ -63,27 +60,27 @@ func (c *client) handleInputLine(input string) {
 	log.Print("Echo: ", input)
 }
 
-func genRandomPlayer() []byte {
-	mss := new(fb.MessageT)
-	mss.Data = &fb.GameMessageT{
-		Type: fb.GameMessageMapUpdate,
-		Value: &fb.MapUpdateT{
-			Seq: 12342345,
-			Logins: []*fb.PlayerT{{
-				Posx: rand.Float32() * 10,
-				Posy: rand.Float32() * 10,
-				Sid:  count,
-				Col:  fb.ColorBlue,
-			}},
-			Logouts: nil,
-			Psyncs:  nil,
-		},
-	}
-
-	count += tiny
-
-	b := flatbuffers.NewBuilder(1024)
-	b.Finish(mss.Pack(b))
-
-	return b.FinishedBytes()
-}
+//func genRandomPlayer() []byte {
+//	mss := new(fb.MessageT)
+//	mss.Data = &fb.GameMessageT{
+//		Type: fb.GameMessageMapUpdate,
+//		Value: &fb.MapUpdateT{
+//			Seq: 12342345,
+//			Logins: []*fb.PlayerT{{
+//				Posx: rand.Float32() * 10,
+//				Posy: rand.Float32() * 10,
+//				Sid:  count,
+//				Col:  fb.ColorBlue,
+//			}},
+//			Logouts: nil,
+//			Psyncs:  nil,
+//		},
+//	}
+//
+//	count += tiny
+//
+//	b := flatbuffers.NewBuilder(1024)
+//	b.Finish(mss.Pack(b))
+//
+//	return b.FinishedBytes()
+//}

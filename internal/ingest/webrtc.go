@@ -1,9 +1,9 @@
 package ingest
 
 import (
-	"encoding/json"
 	"github.com/levpaul/gecserv/internal/core"
 	"github.com/levpaul/gecserv/internal/eb"
+	"github.com/levpaul/gecserv/internal/fb"
 	"github.com/levpaul/gecserv/pkg/signal"
 	"github.com/pion/webrtc"
 	"github.com/rs/zerolog/log"
@@ -91,23 +91,35 @@ func initPeerConnection(peerConnection *webrtc.PeerConnection) (*webrtc.DataChan
 		})
 	})
 
-	// Register text message handling -TODO: Make this publish to validation topic
 	dataChannel.OnMessage(func(msg webrtc.DataChannelMessage) {
-		// figure out type of message
-		// for input type:
-		//   -> send as event on eb which will be processed by inputsystem
-
-		messageType := struct{ Type string }{}
-		err := json.Unmarshal(msg.Data, &messageType)
-		if err != nil {
-			log.Err(err).Str("Message Data", string(msg.Data)).Msg("Error unmarshalling message from client")
-			return
-		}
-
-		if messageType.Type == "getchars" {
-			log.Info().Msg("Sending other chars state")
-			//conn.SendOtherCharsState()
-		}
+		handlePlayerInputMessage(dataChannel, msg, sid)
 	})
 	return dataChannel, nil
+}
+
+func handlePlayerInputMessage(dc *webrtc.DataChannel, msg webrtc.DataChannelMessage, sid float64) {
+	pmsg := fb.GetRootAsPlayerMessage(msg.Data, 0)
+	if pmsg == nil {
+		log.Warn().Str("msg", string(msg.Data)).Msg("Invalid message received")
+		return
+	}
+
+	switch pmsg.DataType() {
+	case fb.PlayerMessageUPlayerInput:
+		unpacked := pmsg.UnPack()
+		if unpacked.Data.Value == nil {
+			log.Info().Msg("WTF")
+		}
+
+		eb.Publish(eb.Event{
+			Topic: eb.N_PLAYER_INPUT,
+			Data: eb.PlayerInputMsg{
+				FromPlayerSID: sid,
+				Msg:           *pmsg.UnPack().Data.Value.(*fb.PlayerInputT),
+			}})
+
+	default:
+		log.Warn().Str("type", pmsg.DataType().String()).Msg("Unsupported player message type recieved")
+		return
+	}
 }

@@ -1,10 +1,11 @@
 include "core.fbs";
 namespace msg;
 
+// Public player representation
+
 table Player {
     posx: float;
     posy: float;
     sid: float64;
     col: Color;
-    lastAck: uint32;
 }

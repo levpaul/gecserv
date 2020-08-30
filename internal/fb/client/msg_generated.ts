@@ -11,36 +11,94 @@ export enum Color{
   Yellow= 3,
   Pink= 4,
   Gray= 5,
-  Orange= 6
-}};
+  Orange= 6,
+  MAXCOLOR= 7
+};
+}
 
 /**
  * @enum {number}
  */
 export namespace msg{
-export enum GameMessage{
+export enum ServerMessageU{
   NONE= 0,
-  MapUpdate= 1
-}};
+  MapUpdate= 1,
+  LoginResponse= 2,
+  LogoutResponse= 3
+};
+
+export function unionToServerMessageU(
+  type: ServerMessageU,
+  accessor: (obj:msg.LoginResponse|msg.LogoutResponse|msg.MapUpdate) => msg.LoginResponse|msg.LogoutResponse|msg.MapUpdate|null
+): msg.LoginResponse|msg.LogoutResponse|msg.MapUpdate|null {
+  switch(msg.ServerMessageU[type]) {
+    case 'NONE': return null; 
+    case 'MapUpdate': return accessor(new msg.MapUpdate())! as msg.MapUpdate;
+    case 'LoginResponse': return accessor(new msg.LoginResponse())! as msg.LoginResponse;
+    case 'LogoutResponse': return accessor(new msg.LogoutResponse())! as msg.LogoutResponse;
+    default: return null;
+  }
+}
+
+export function unionListToServerMessageU(
+  type: ServerMessageU, 
+  accessor: (index: number, obj:msg.LoginResponse|msg.LogoutResponse|msg.MapUpdate) => msg.LoginResponse|msg.LogoutResponse|msg.MapUpdate|null, 
+  index: number
+): msg.LoginResponse|msg.LogoutResponse|msg.MapUpdate|null {
+  switch(msg.ServerMessageU[type]) {
+    case 'NONE': return null; 
+    case 'MapUpdate': return accessor(index, new msg.MapUpdate())! as msg.MapUpdate;
+    case 'LoginResponse': return accessor(index, new msg.LoginResponse())! as msg.LoginResponse;
+    case 'LogoutResponse': return accessor(index, new msg.LogoutResponse())! as msg.LogoutResponse;
+    default: return null;
+  }
+}
+}
 
 /**
  * @enum {number}
  */
 export namespace msg{
 export enum PlayerAction{
-  W_DOWN= 0,
-  W_UP= 1,
-  A_DOWN= 2,
-  A_UP= 3,
-  S_DOWN= 4,
-  S_UP= 5,
-  D_DOWN= 6,
-  D_UP= 7,
-  M1_DOWN= 8,
-  M1_UP= 9,
-  M2_DOWN= 10,
-  M2_UP= 11
-}};
+  FORWARD= 0,
+  BACKWARD= 1,
+  LEFT= 2,
+  RIGHT= 3
+};
+}
+
+/**
+ * @enum {number}
+ */
+export namespace msg{
+export enum PlayerMessageU{
+  NONE= 0,
+  PlayerInput= 1
+};
+
+export function unionToPlayerMessageU(
+  type: PlayerMessageU,
+  accessor: (obj:msg.PlayerInput) => msg.PlayerInput|null
+): msg.PlayerInput|null {
+  switch(msg.PlayerMessageU[type]) {
+    case 'NONE': return null; 
+    case 'PlayerInput': return accessor(new msg.PlayerInput())! as msg.PlayerInput;
+    default: return null;
+  }
+}
+
+export function unionListToPlayerMessageU(
+  type: PlayerMessageU, 
+  accessor: (index: number, obj:msg.PlayerInput) => msg.PlayerInput|null, 
+  index: number
+): msg.PlayerInput|null {
+  switch(msg.PlayerMessageU[type]) {
+    case 'NONE': return null; 
+    case 'PlayerInput': return accessor(index, new msg.PlayerInput())! as msg.PlayerInput;
+    default: return null;
+  }
+}
+}
 
 /**
  * @constructor
@@ -218,18 +276,10 @@ col():msg.Color {
 };
 
 /**
- * @returns number
- */
-lastAck():number {
-  var offset = this.bb!.__offset(this.bb_pos, 12);
-  return offset ? this.bb!.readUint32(this.bb_pos + offset) : 0;
-};
-
-/**
  * @param flatbuffers.Builder builder
  */
 static start(builder:flatbuffers.Builder) {
-  builder.startObject(5);
+  builder.startObject(4);
 };
 
 /**
@@ -266,14 +316,6 @@ static addCol(builder:flatbuffers.Builder, col:msg.Color) {
 
 /**
  * @param flatbuffers.Builder builder
- * @param number lastAck
- */
-static addLastAck(builder:flatbuffers.Builder, lastAck:number) {
-  builder.addFieldInt32(4, lastAck, 0);
-};
-
-/**
- * @param flatbuffers.Builder builder
  * @returns flatbuffers.Offset
  */
 static end(builder:flatbuffers.Builder):flatbuffers.Offset {
@@ -281,13 +323,12 @@ static end(builder:flatbuffers.Builder):flatbuffers.Offset {
   return offset;
 };
 
-static create(builder:flatbuffers.Builder, posx:number, posy:number, sid:number, col:msg.Color, lastAck:number):flatbuffers.Offset {
+static create(builder:flatbuffers.Builder, posx:number, posy:number, sid:number, col:msg.Color):flatbuffers.Offset {
   Player.start(builder);
   Player.addPosx(builder, posx);
   Player.addPosy(builder, posy);
   Player.addSid(builder, sid);
   Player.addCol(builder, col);
-  Player.addLastAck(builder, lastAck);
   return Player.end(builder);
 }
 }
@@ -296,16 +337,16 @@ static create(builder:flatbuffers.Builder, posx:number, posy:number, sid:number,
  * @constructor
  */
 export namespace msg{
-export class Message {
+export class ServerMessage {
   bb: flatbuffers.ByteBuffer|null = null;
 
   bb_pos:number = 0;
 /**
  * @param number i
  * @param flatbuffers.ByteBuffer bb
- * @returns Message
+ * @returns ServerMessage
  */
-__init(i:number, bb:flatbuffers.ByteBuffer):Message {
+__init(i:number, bb:flatbuffers.ByteBuffer):ServerMessage {
   this.bb_pos = i;
   this.bb = bb;
   return this;
@@ -313,29 +354,29 @@ __init(i:number, bb:flatbuffers.ByteBuffer):Message {
 
 /**
  * @param flatbuffers.ByteBuffer bb
- * @param Message= obj
- * @returns Message
+ * @param ServerMessage= obj
+ * @returns ServerMessage
  */
-static getRoot(bb:flatbuffers.ByteBuffer, obj?:Message):Message {
-  return (obj || new Message()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+static getRoot(bb:flatbuffers.ByteBuffer, obj?:ServerMessage):ServerMessage {
+  return (obj || new ServerMessage()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
 /**
  * @param flatbuffers.ByteBuffer bb
- * @param Message= obj
- * @returns Message
+ * @param ServerMessage= obj
+ * @returns ServerMessage
  */
-static getSizePrefixedRoot(bb:flatbuffers.ByteBuffer, obj?:Message):Message {
+static getSizePrefixedRoot(bb:flatbuffers.ByteBuffer, obj?:ServerMessage):ServerMessage {
   bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
-  return (obj || new Message()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+  return (obj || new ServerMessage()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
 /**
- * @returns msg.GameMessage
+ * @returns msg.ServerMessageU
  */
-dataType():msg.GameMessage {
+dataType():msg.ServerMessageU {
   var offset = this.bb!.__offset(this.bb_pos, 4);
-  return offset ? /**  */ (this.bb!.readUint8(this.bb_pos + offset)) : msg.GameMessage.NONE;
+  return offset ? /**  */ (this.bb!.readUint8(this.bb_pos + offset)) : msg.ServerMessageU.NONE;
 };
 
 /**
@@ -356,10 +397,10 @@ static start(builder:flatbuffers.Builder) {
 
 /**
  * @param flatbuffers.Builder builder
- * @param msg.GameMessage dataType
+ * @param msg.ServerMessageU dataType
  */
-static addDataType(builder:flatbuffers.Builder, dataType:msg.GameMessage) {
-  builder.addFieldInt8(0, dataType, msg.GameMessage.NONE);
+static addDataType(builder:flatbuffers.Builder, dataType:msg.ServerMessageU) {
+  builder.addFieldInt8(0, dataType, msg.ServerMessageU.NONE);
 };
 
 /**
@@ -379,11 +420,11 @@ static end(builder:flatbuffers.Builder):flatbuffers.Offset {
   return offset;
 };
 
-static create(builder:flatbuffers.Builder, dataType:msg.GameMessage, dataOffset:flatbuffers.Offset):flatbuffers.Offset {
-  Message.start(builder);
-  Message.addDataType(builder, dataType);
-  Message.addData(builder, dataOffset);
-  return Message.end(builder);
+static create(builder:flatbuffers.Builder, dataType:msg.ServerMessageU, dataOffset:flatbuffers.Offset):flatbuffers.Offset {
+  ServerMessage.start(builder);
+  ServerMessage.addDataType(builder, dataType);
+  ServerMessage.addData(builder, dataOffset);
+  return ServerMessage.end(builder);
 }
 }
 }
@@ -612,6 +653,284 @@ static create(builder:flatbuffers.Builder, seq:number, loginsOffset:flatbuffers.
   MapUpdate.addLogouts(builder, logoutsOffset);
   MapUpdate.addPsyncs(builder, psyncsOffset);
   return MapUpdate.end(builder);
+}
+}
+}
+/**
+ * @constructor
+ */
+export namespace msg{
+export class LoginResponse {
+  bb: flatbuffers.ByteBuffer|null = null;
+
+  bb_pos:number = 0;
+/**
+ * @param number i
+ * @param flatbuffers.ByteBuffer bb
+ * @returns LoginResponse
+ */
+__init(i:number, bb:flatbuffers.ByteBuffer):LoginResponse {
+  this.bb_pos = i;
+  this.bb = bb;
+  return this;
+};
+
+/**
+ * @param flatbuffers.ByteBuffer bb
+ * @param LoginResponse= obj
+ * @returns LoginResponse
+ */
+static getRoot(bb:flatbuffers.ByteBuffer, obj?:LoginResponse):LoginResponse {
+  return (obj || new LoginResponse()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @param flatbuffers.ByteBuffer bb
+ * @param LoginResponse= obj
+ * @returns LoginResponse
+ */
+static getSizePrefixedRoot(bb:flatbuffers.ByteBuffer, obj?:LoginResponse):LoginResponse {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new LoginResponse()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @returns number
+ */
+seq():number {
+  var offset = this.bb!.__offset(this.bb_pos, 4);
+  return offset ? this.bb!.readUint32(this.bb_pos + offset) : 0;
+};
+
+/**
+ * @param msg.Player= obj
+ * @returns msg.Player|null
+ */
+player(obj?:msg.Player):msg.Player|null {
+  var offset = this.bb!.__offset(this.bb_pos, 6);
+  return offset ? (obj || new msg.Player()).__init(this.bb!.__indirect(this.bb_pos + offset), this.bb!) : null;
+};
+
+/**
+ * @param flatbuffers.Builder builder
+ */
+static start(builder:flatbuffers.Builder) {
+  builder.startObject(2);
+};
+
+/**
+ * @param flatbuffers.Builder builder
+ * @param number seq
+ */
+static addSeq(builder:flatbuffers.Builder, seq:number) {
+  builder.addFieldInt32(0, seq, 0);
+};
+
+/**
+ * @param flatbuffers.Builder builder
+ * @param flatbuffers.Offset playerOffset
+ */
+static addPlayer(builder:flatbuffers.Builder, playerOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(1, playerOffset, 0);
+};
+
+/**
+ * @param flatbuffers.Builder builder
+ * @returns flatbuffers.Offset
+ */
+static end(builder:flatbuffers.Builder):flatbuffers.Offset {
+  var offset = builder.endObject();
+  return offset;
+};
+
+}
+}
+/**
+ * @constructor
+ */
+export namespace msg{
+export class LogoutResponse {
+  bb: flatbuffers.ByteBuffer|null = null;
+
+  bb_pos:number = 0;
+/**
+ * @param number i
+ * @param flatbuffers.ByteBuffer bb
+ * @returns LogoutResponse
+ */
+__init(i:number, bb:flatbuffers.ByteBuffer):LogoutResponse {
+  this.bb_pos = i;
+  this.bb = bb;
+  return this;
+};
+
+/**
+ * @param flatbuffers.ByteBuffer bb
+ * @param LogoutResponse= obj
+ * @returns LogoutResponse
+ */
+static getRoot(bb:flatbuffers.ByteBuffer, obj?:LogoutResponse):LogoutResponse {
+  return (obj || new LogoutResponse()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @param flatbuffers.ByteBuffer bb
+ * @param LogoutResponse= obj
+ * @returns LogoutResponse
+ */
+static getSizePrefixedRoot(bb:flatbuffers.ByteBuffer, obj?:LogoutResponse):LogoutResponse {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new LogoutResponse()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @returns number
+ */
+seq():number {
+  var offset = this.bb!.__offset(this.bb_pos, 4);
+  return offset ? this.bb!.readUint32(this.bb_pos + offset) : 0;
+};
+
+/**
+ * @returns number
+ */
+sid():number {
+  var offset = this.bb!.__offset(this.bb_pos, 6);
+  return offset ? this.bb!.readFloat64(this.bb_pos + offset) : 0.0;
+};
+
+/**
+ * @param flatbuffers.Builder builder
+ */
+static start(builder:flatbuffers.Builder) {
+  builder.startObject(2);
+};
+
+/**
+ * @param flatbuffers.Builder builder
+ * @param number seq
+ */
+static addSeq(builder:flatbuffers.Builder, seq:number) {
+  builder.addFieldInt32(0, seq, 0);
+};
+
+/**
+ * @param flatbuffers.Builder builder
+ * @param number sid
+ */
+static addSid(builder:flatbuffers.Builder, sid:number) {
+  builder.addFieldFloat64(1, sid, 0.0);
+};
+
+/**
+ * @param flatbuffers.Builder builder
+ * @returns flatbuffers.Offset
+ */
+static end(builder:flatbuffers.Builder):flatbuffers.Offset {
+  var offset = builder.endObject();
+  return offset;
+};
+
+static create(builder:flatbuffers.Builder, seq:number, sid:number):flatbuffers.Offset {
+  LogoutResponse.start(builder);
+  LogoutResponse.addSeq(builder, seq);
+  LogoutResponse.addSid(builder, sid);
+  return LogoutResponse.end(builder);
+}
+}
+}
+/**
+ * @constructor
+ */
+export namespace msg{
+export class PlayerMessage {
+  bb: flatbuffers.ByteBuffer|null = null;
+
+  bb_pos:number = 0;
+/**
+ * @param number i
+ * @param flatbuffers.ByteBuffer bb
+ * @returns PlayerMessage
+ */
+__init(i:number, bb:flatbuffers.ByteBuffer):PlayerMessage {
+  this.bb_pos = i;
+  this.bb = bb;
+  return this;
+};
+
+/**
+ * @param flatbuffers.ByteBuffer bb
+ * @param PlayerMessage= obj
+ * @returns PlayerMessage
+ */
+static getRoot(bb:flatbuffers.ByteBuffer, obj?:PlayerMessage):PlayerMessage {
+  return (obj || new PlayerMessage()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @param flatbuffers.ByteBuffer bb
+ * @param PlayerMessage= obj
+ * @returns PlayerMessage
+ */
+static getSizePrefixedRoot(bb:flatbuffers.ByteBuffer, obj?:PlayerMessage):PlayerMessage {
+  bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
+  return (obj || new PlayerMessage()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @returns msg.PlayerMessageU
+ */
+dataType():msg.PlayerMessageU {
+  var offset = this.bb!.__offset(this.bb_pos, 4);
+  return offset ? /**  */ (this.bb!.readUint8(this.bb_pos + offset)) : msg.PlayerMessageU.NONE;
+};
+
+/**
+ * @param flatbuffers.Table obj
+ * @returns ?flatbuffers.Table
+ */
+data<T extends flatbuffers.Table>(obj:T):T|null {
+  var offset = this.bb!.__offset(this.bb_pos, 6);
+  return offset ? this.bb!.__union(obj, this.bb_pos + offset) : null;
+};
+
+/**
+ * @param flatbuffers.Builder builder
+ */
+static start(builder:flatbuffers.Builder) {
+  builder.startObject(2);
+};
+
+/**
+ * @param flatbuffers.Builder builder
+ * @param msg.PlayerMessageU dataType
+ */
+static addDataType(builder:flatbuffers.Builder, dataType:msg.PlayerMessageU) {
+  builder.addFieldInt8(0, dataType, msg.PlayerMessageU.NONE);
+};
+
+/**
+ * @param flatbuffers.Builder builder
+ * @param flatbuffers.Offset dataOffset
+ */
+static addData(builder:flatbuffers.Builder, dataOffset:flatbuffers.Offset) {
+  builder.addFieldOffset(1, dataOffset, 0);
+};
+
+/**
+ * @param flatbuffers.Builder builder
+ * @returns flatbuffers.Offset
+ */
+static end(builder:flatbuffers.Builder):flatbuffers.Offset {
+  var offset = builder.endObject();
+  return offset;
+};
+
+static create(builder:flatbuffers.Builder, dataType:msg.PlayerMessageU, dataOffset:flatbuffers.Offset):flatbuffers.Offset {
+  PlayerMessage.start(builder);
+  PlayerMessage.addDataType(builder, dataType);
+  PlayerMessage.addData(builder, dataOffset);
+  return PlayerMessage.end(builder);
 }
 }
 }
