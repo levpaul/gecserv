@@ -13,8 +13,7 @@ export enum Color{
   Gray= 5,
   Orange= 6,
   MAXCOLOR= 7
-};
-}
+}};
 
 /**
  * @enum {number}
@@ -25,35 +24,7 @@ export enum ServerMessageU{
   MapUpdate= 1,
   LoginResponse= 2,
   LogoutResponse= 3
-};
-
-export function unionToServerMessageU(
-  type: ServerMessageU,
-  accessor: (obj:msg.LoginResponse|msg.LogoutResponse|msg.MapUpdate) => msg.LoginResponse|msg.LogoutResponse|msg.MapUpdate|null
-): msg.LoginResponse|msg.LogoutResponse|msg.MapUpdate|null {
-  switch(msg.ServerMessageU[type]) {
-    case 'NONE': return null; 
-    case 'MapUpdate': return accessor(new msg.MapUpdate())! as msg.MapUpdate;
-    case 'LoginResponse': return accessor(new msg.LoginResponse())! as msg.LoginResponse;
-    case 'LogoutResponse': return accessor(new msg.LogoutResponse())! as msg.LogoutResponse;
-    default: return null;
-  }
-}
-
-export function unionListToServerMessageU(
-  type: ServerMessageU, 
-  accessor: (index: number, obj:msg.LoginResponse|msg.LogoutResponse|msg.MapUpdate) => msg.LoginResponse|msg.LogoutResponse|msg.MapUpdate|null, 
-  index: number
-): msg.LoginResponse|msg.LogoutResponse|msg.MapUpdate|null {
-  switch(msg.ServerMessageU[type]) {
-    case 'NONE': return null; 
-    case 'MapUpdate': return accessor(index, new msg.MapUpdate())! as msg.MapUpdate;
-    case 'LoginResponse': return accessor(index, new msg.LoginResponse())! as msg.LoginResponse;
-    case 'LogoutResponse': return accessor(index, new msg.LogoutResponse())! as msg.LogoutResponse;
-    default: return null;
-  }
-}
-}
+}};
 
 /**
  * @enum {number}
@@ -64,8 +35,7 @@ export enum PlayerAction{
   BACKWARD= 1,
   LEFT= 2,
   RIGHT= 3
-};
-}
+}};
 
 /**
  * @enum {number}
@@ -74,31 +44,7 @@ export namespace msg{
 export enum PlayerMessageU{
   NONE= 0,
   PlayerInput= 1
-};
-
-export function unionToPlayerMessageU(
-  type: PlayerMessageU,
-  accessor: (obj:msg.PlayerInput) => msg.PlayerInput|null
-): msg.PlayerInput|null {
-  switch(msg.PlayerMessageU[type]) {
-    case 'NONE': return null; 
-    case 'PlayerInput': return accessor(new msg.PlayerInput())! as msg.PlayerInput;
-    default: return null;
-  }
-}
-
-export function unionListToPlayerMessageU(
-  type: PlayerMessageU, 
-  accessor: (index: number, obj:msg.PlayerInput) => msg.PlayerInput|null, 
-  index: number
-): msg.PlayerInput|null {
-  switch(msg.PlayerMessageU[type]) {
-    case 'NONE': return null; 
-    case 'PlayerInput': return accessor(index, new msg.PlayerInput())! as msg.PlayerInput;
-    default: return null;
-  }
-}
-}
+}};
 
 /**
  * @constructor
@@ -743,6 +689,12 @@ static end(builder:flatbuffers.Builder):flatbuffers.Offset {
   return offset;
 };
 
+static create(builder:flatbuffers.Builder, seq:number, playerOffset:flatbuffers.Offset):flatbuffers.Offset {
+  LoginResponse.start(builder);
+  LoginResponse.addSeq(builder, seq);
+  LoginResponse.addPlayer(builder, playerOffset);
+  return LoginResponse.end(builder);
+}
 }
 }
 /**
@@ -1006,10 +958,18 @@ actionsArray():Uint8Array|null {
 };
 
 /**
+ * @returns number
+ */
+camAngle():number {
+  var offset = this.bb!.__offset(this.bb_pos, 8);
+  return offset ? this.bb!.readFloat64(this.bb_pos + offset) : 0.0;
+};
+
+/**
  * @param flatbuffers.Builder builder
  */
 static start(builder:flatbuffers.Builder) {
-  builder.startObject(2);
+  builder.startObject(3);
 };
 
 /**
@@ -1051,6 +1011,14 @@ static startActionsVector(builder:flatbuffers.Builder, numElems:number) {
 
 /**
  * @param flatbuffers.Builder builder
+ * @param number camAngle
+ */
+static addCamAngle(builder:flatbuffers.Builder, camAngle:number) {
+  builder.addFieldFloat64(2, camAngle, 0.0);
+};
+
+/**
+ * @param flatbuffers.Builder builder
  * @returns flatbuffers.Offset
  */
 static end(builder:flatbuffers.Builder):flatbuffers.Offset {
@@ -1058,10 +1026,11 @@ static end(builder:flatbuffers.Builder):flatbuffers.Offset {
   return offset;
 };
 
-static create(builder:flatbuffers.Builder, seq:number, actionsOffset:flatbuffers.Offset):flatbuffers.Offset {
+static create(builder:flatbuffers.Builder, seq:number, actionsOffset:flatbuffers.Offset, camAngle:number):flatbuffers.Offset {
   PlayerInput.start(builder);
   PlayerInput.addSeq(builder, seq);
   PlayerInput.addActions(builder, actionsOffset);
+  PlayerInput.addCamAngle(builder, camAngle);
   return PlayerInput.end(builder);
 }
 }

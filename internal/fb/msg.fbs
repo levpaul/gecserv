@@ -52,5 +52,6 @@ table PlayerMessage {
 table PlayerInput {
     seq: uint32;
     actions: [PlayerAction];
+    camAngle: float64;
 }
 

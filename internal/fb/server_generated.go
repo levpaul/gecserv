@@ -1101,6 +1101,7 @@ func PlayerMessageEnd(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
 type PlayerInputT struct {
 	Seq uint32
 	Actions []PlayerAction
+	CamAngle float64
 }
 
 func (t *PlayerInputT) Pack(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
@@ -1117,6 +1118,7 @@ func (t *PlayerInputT) Pack(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
 	PlayerInputStart(builder)
 	PlayerInputAddSeq(builder, t.Seq)
 	PlayerInputAddActions(builder, actionsOffset)
+	PlayerInputAddCamAngle(builder, t.CamAngle)
 	return PlayerInputEnd(builder)
 }
 
@@ -1127,6 +1129,7 @@ func (rcv *PlayerInput) UnPackTo(t *PlayerInputT) {
 	for j := 0; j < actionsLength; j++ {
 		t.Actions[j] = rcv.Actions(j)
 	}
+	t.CamAngle = rcv.CamAngle()
 }
 
 func (rcv *PlayerInput) UnPack() *PlayerInputT {
@@ -1202,8 +1205,20 @@ func (rcv *PlayerInput) MutateActions(j int, n PlayerAction) bool {
 	return false
 }
 
+func (rcv *PlayerInput) CamAngle() float64 {
+	o := flatbuffers.UOffsetT(rcv._tab.Offset(8))
+	if o != 0 {
+		return rcv._tab.GetFloat64(o + rcv._tab.Pos)
+	}
+	return 0.0
+}
+
+func (rcv *PlayerInput) MutateCamAngle(n float64) bool {
+	return rcv._tab.MutateFloat64Slot(8, n)
+}
+
 func PlayerInputStart(builder *flatbuffers.Builder) {
-	builder.StartObject(2)
+	builder.StartObject(3)
 }
 func PlayerInputAddSeq(builder *flatbuffers.Builder, seq uint32) {
 	builder.PrependUint32Slot(0, seq, 0)
@@ -1213,6 +1228,9 @@ func PlayerInputAddActions(builder *flatbuffers.Builder, actions flatbuffers.UOf
 }
 func PlayerInputStartActionsVector(builder *flatbuffers.Builder, numElems int) flatbuffers.UOffsetT {
 	return builder.StartVector(1, numElems, 1)
+}
+func PlayerInputAddCamAngle(builder *flatbuffers.Builder, camAngle float64) {
+	builder.PrependFloat64Slot(2, camAngle, 0.0)
 }
 func PlayerInputEnd(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
 	return builder.EndObject()

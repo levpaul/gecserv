@@ -8,6 +8,7 @@ import (
 	"github.com/levpaul/gecserv/internal/ecs/entities"
 	"github.com/levpaul/gecserv/internal/fb"
 	"github.com/rs/zerolog/log"
+	"math"
 )
 
 // PlayerSystem is repsonsible for reading current inputs and moving player
@@ -32,7 +33,7 @@ func (ps *PlayerSystem) Update(ctx context.Context, dt core.GameTick) {
 			switch data := l.Data.(type) {
 			case eb.PlayerInputMsg:
 				// TODO: Read Seq and interweave appropriately
-				ps.handlePlayerInput(data.FromPlayerSID, data.Msg.Actions, dt)
+				ps.handlePlayerInput(data.FromPlayerSID, data.Msg.Actions, data.Msg.CamAngle, dt)
 
 			default:
 				log.Error().Interface("type", data).Msg("Unsupported message type received on player channel")
@@ -45,10 +46,18 @@ func (ps *PlayerSystem) Update(ctx context.Context, dt core.GameTick) {
 	}
 }
 
-func (ps *PlayerSystem) handlePlayerInput(sid float64, actions []fb.PlayerAction, dt core.GameTick) {
+func (ps *PlayerSystem) handlePlayerInput(sid float64, actions []fb.PlayerAction, camAngle float64, dt core.GameTick) {
 	p, ok := ps.players[sid]
 	if !ok {
 		log.Warn().Float64("sid", sid).Msg("player not found in handlePlayerInput")
+		return
+	}
+	if p.Momentum.X == 0 && p.Momentum.Y == 0 && len(actions) == 0 {
+		return
+	}
+	if p.Momentum.X < 0.0001 && p.Momentum.Y < 0.0001 && len(actions) == 0 {
+		p.Momentum.X = 0
+		p.Momentum.Y = 0
 		return
 	}
 
@@ -80,14 +89,14 @@ func (ps *PlayerSystem) handlePlayerInput(sid float64, actions []fb.PlayerAction
 
 	dirY := 0
 	dirX := 0
-	if !(moveF && moveB) && (moveF || moveB) {
+	if moveF != moveB {
 		if moveF {
 			dirY = 1
 		} else {
 			dirY = -1
 		}
 	}
-	if !(moveL && moveR) && (moveL || moveR) {
+	if moveL != moveR {
 		if moveL {
 			dirX = 1
 		} else {
@@ -95,14 +104,20 @@ func (ps *PlayerSystem) handlePlayerInput(sid float64, actions []fb.PlayerAction
 		}
 	}
 
-	//this.direction.normalize(); // this ensures consistent movements in all directions - does it??
+	// DEBUG
 
-	if moveF || moveB {
-		p.Momentum.Y += float32(dirY) * moveSpeed * tickScaling
-	}
-	if moveL || moveR {
-		p.Momentum.X += float32(dirX) * moveSpeed * tickScaling
-	}
+	newForceX := float32(dirX) * moveSpeed * tickScaling
+	newForceY := float32(dirY) * moveSpeed * tickScaling
+	cosAngle := float32(math.Cos(camAngle))
+	sinAngle := float32(math.Sin(camAngle))
+	newForceX = newForceX*cosAngle - newForceY*sinAngle
+	newForceY = newForceY*cosAngle + newForceX*sinAngle
+
+	log.Info().Float64("Angle", camAngle).Float32("xforce", newForceX).Float32("yforce", newForceY).
+		Float32("xmomen", p.Momentum.X).Float32("ymomen", p.Momentum.Y).Send()
+
+	p.Momentum.X += newForceX
+	p.Momentum.Y += newForceY
 
 	p.Position.X += p.Momentum.X * tickScaling
 	p.Position.Y += p.Momentum.Y * tickScaling
