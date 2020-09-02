@@ -104,27 +104,14 @@ func (ps *PlayerSystem) handlePlayerInput(sid float64, actions []fb.PlayerAction
 		}
 	}
 
-	// DEBUG
-
-	newForceX := float32(dirX) * moveSpeed * tickScaling
-	newForceY := float32(dirY) * moveSpeed * tickScaling
+	rawForceX := float32(dirX) * moveSpeed * tickScaling
+	rawForceY := float32(dirY) * moveSpeed * tickScaling
 	cosAngle := float32(math.Cos(camAngle))
-	sinAngle := float32(math.Sin(camAngle))
-	newForceX = newForceX*cosAngle - newForceY*sinAngle
-	newForceY = newForceY*cosAngle + newForceX*sinAngle
+	sinAngle := -float32(math.Sin(camAngle))
 
-	log.Info().Float64("Angle", camAngle).Float32("xforce", newForceX).Float32("yforce", newForceY).
-		Float32("xmomen", p.Momentum.X).Float32("ymomen", p.Momentum.Y).Send()
-
-	p.Momentum.X += newForceX
-	p.Momentum.Y += newForceY
+	p.Momentum.X += rawForceX*cosAngle - rawForceY*sinAngle
+	p.Momentum.Y += rawForceY*cosAngle + rawForceX*sinAngle
 
 	p.Position.X += p.Momentum.X * tickScaling
 	p.Position.Y += p.Momentum.Y * tickScaling
-
-	// TODO: Allow camera rotation relative WASD controls
-	//this.vec.setFromMatrixColumn( this.oC.object.matrix, 0 );
-	//this.game.char.position.addScaledVector( this.vec, this.velocity.x * timeDelta);
-	//this.vec.crossVectors( this.oC.object.up, this.vec );
-	//this.game.char.position.addScaledVector( this.vec, this.velocity.z * timeDelta);
 }
