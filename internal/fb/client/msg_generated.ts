@@ -208,8 +208,24 @@ posy():number {
 /**
  * @returns number
  */
-sid():number {
+momx():number {
   var offset = this.bb!.__offset(this.bb_pos, 8);
+  return offset ? this.bb!.readFloat32(this.bb_pos + offset) : 0.0;
+};
+
+/**
+ * @returns number
+ */
+momy():number {
+  var offset = this.bb!.__offset(this.bb_pos, 10);
+  return offset ? this.bb!.readFloat32(this.bb_pos + offset) : 0.0;
+};
+
+/**
+ * @returns number
+ */
+sid():number {
+  var offset = this.bb!.__offset(this.bb_pos, 12);
   return offset ? this.bb!.readFloat64(this.bb_pos + offset) : 0.0;
 };
 
@@ -217,7 +233,7 @@ sid():number {
  * @returns msg.Color
  */
 col():msg.Color {
-  var offset = this.bb!.__offset(this.bb_pos, 10);
+  var offset = this.bb!.__offset(this.bb_pos, 14);
   return offset ? /**  */ (this.bb!.readInt8(this.bb_pos + offset)) : msg.Color.Red;
 };
 
@@ -225,7 +241,7 @@ col():msg.Color {
  * @param flatbuffers.Builder builder
  */
 static start(builder:flatbuffers.Builder) {
-  builder.startObject(4);
+  builder.startObject(6);
 };
 
 /**
@@ -246,10 +262,26 @@ static addPosy(builder:flatbuffers.Builder, posy:number) {
 
 /**
  * @param flatbuffers.Builder builder
+ * @param number momx
+ */
+static addMomx(builder:flatbuffers.Builder, momx:number) {
+  builder.addFieldFloat32(2, momx, 0.0);
+};
+
+/**
+ * @param flatbuffers.Builder builder
+ * @param number momy
+ */
+static addMomy(builder:flatbuffers.Builder, momy:number) {
+  builder.addFieldFloat32(3, momy, 0.0);
+};
+
+/**
+ * @param flatbuffers.Builder builder
  * @param number sid
  */
 static addSid(builder:flatbuffers.Builder, sid:number) {
-  builder.addFieldFloat64(2, sid, 0.0);
+  builder.addFieldFloat64(4, sid, 0.0);
 };
 
 /**
@@ -257,7 +289,7 @@ static addSid(builder:flatbuffers.Builder, sid:number) {
  * @param msg.Color col
  */
 static addCol(builder:flatbuffers.Builder, col:msg.Color) {
-  builder.addFieldInt8(3, col, msg.Color.Red);
+  builder.addFieldInt8(5, col, msg.Color.Red);
 };
 
 /**
@@ -269,10 +301,12 @@ static end(builder:flatbuffers.Builder):flatbuffers.Offset {
   return offset;
 };
 
-static create(builder:flatbuffers.Builder, posx:number, posy:number, sid:number, col:msg.Color):flatbuffers.Offset {
+static create(builder:flatbuffers.Builder, posx:number, posy:number, momx:number, momy:number, sid:number, col:msg.Color):flatbuffers.Offset {
   Player.start(builder);
   Player.addPosx(builder, posx);
   Player.addPosy(builder, posy);
+  Player.addMomx(builder, momx);
+  Player.addMomy(builder, momy);
   Player.addSid(builder, sid);
   Player.addCol(builder, col);
   return Player.end(builder);

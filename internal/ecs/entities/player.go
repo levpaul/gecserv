@@ -21,6 +21,8 @@ func (p *PlayerE) ToPublicFB() *fb.PlayerT {
 	return &fb.PlayerT{
 		Posx: p.Position.X,
 		Posy: p.Position.Y,
+		Momx: p.Momentum.X,
+		Momy: p.Momentum.Y,
 		Sid:  p.Sid,
 		Col:  p.Col,
 	}

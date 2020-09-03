@@ -14,7 +14,7 @@ const (
 	MaxTickDiff = 15
 )
 
-// PropagatorSystem is repsonsible for reading sending relevant updates to players
+// PropagatorSystem is repsonsible for sending relevant updates to players
 type PropagatorSystem struct {
 	BaseSystem
 	cc core.ComponentCollection
@@ -70,6 +70,7 @@ func (pm *PropagatorSystem) sendCurrentFullState(en core.Entity, im components.I
 	logins := []*fb.PlayerT{}
 	logouts := []float64{}
 
+	// Loop through all interest maps in the sector get all logins and players
 	for i := range im.Imap {
 		for j := range im.Imap[i] {
 			for _, e := range im.Imap[i][j] {

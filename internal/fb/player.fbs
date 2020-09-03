@@ -6,6 +6,8 @@ namespace msg;
 table Player {
     posx: float;
     posy: float;
+    momx: float;
+    momy: float;
     sid: float64;
     col: Color;
 }

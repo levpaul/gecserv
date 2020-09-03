@@ -447,6 +447,8 @@ func MapEnd(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
 type PlayerT struct {
 	Posx float32
 	Posy float32
+	Momx float32
+	Momy float32
 	Sid float64
 	Col Color
 }
@@ -456,6 +458,8 @@ func (t *PlayerT) Pack(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
 	PlayerStart(builder)
 	PlayerAddPosx(builder, t.Posx)
 	PlayerAddPosy(builder, t.Posy)
+	PlayerAddMomx(builder, t.Momx)
+	PlayerAddMomy(builder, t.Momy)
 	PlayerAddSid(builder, t.Sid)
 	PlayerAddCol(builder, t.Col)
 	return PlayerEnd(builder)
@@ -464,6 +468,8 @@ func (t *PlayerT) Pack(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
 func (rcv *Player) UnPackTo(t *PlayerT) {
 	t.Posx = rcv.Posx()
 	t.Posy = rcv.Posy()
+	t.Momx = rcv.Momx()
+	t.Momy = rcv.Momy()
 	t.Sid = rcv.Sid()
 	t.Col = rcv.Col()
 }
@@ -519,8 +525,32 @@ func (rcv *Player) MutatePosy(n float32) bool {
 	return rcv._tab.MutateFloat32Slot(6, n)
 }
 
-func (rcv *Player) Sid() float64 {
+func (rcv *Player) Momx() float32 {
 	o := flatbuffers.UOffsetT(rcv._tab.Offset(8))
+	if o != 0 {
+		return rcv._tab.GetFloat32(o + rcv._tab.Pos)
+	}
+	return 0.0
+}
+
+func (rcv *Player) MutateMomx(n float32) bool {
+	return rcv._tab.MutateFloat32Slot(8, n)
+}
+
+func (rcv *Player) Momy() float32 {
+	o := flatbuffers.UOffsetT(rcv._tab.Offset(10))
+	if o != 0 {
+		return rcv._tab.GetFloat32(o + rcv._tab.Pos)
+	}
+	return 0.0
+}
+
+func (rcv *Player) MutateMomy(n float32) bool {
+	return rcv._tab.MutateFloat32Slot(10, n)
+}
+
+func (rcv *Player) Sid() float64 {
+	o := flatbuffers.UOffsetT(rcv._tab.Offset(12))
 	if o != 0 {
 		return rcv._tab.GetFloat64(o + rcv._tab.Pos)
 	}
@@ -528,11 +558,11 @@ func (rcv *Player) Sid() float64 {
 }
 
 func (rcv *Player) MutateSid(n float64) bool {
-	return rcv._tab.MutateFloat64Slot(8, n)
+	return rcv._tab.MutateFloat64Slot(12, n)
 }
 
 func (rcv *Player) Col() Color {
-	o := flatbuffers.UOffsetT(rcv._tab.Offset(10))
+	o := flatbuffers.UOffsetT(rcv._tab.Offset(14))
 	if o != 0 {
 		return Color(rcv._tab.GetInt8(o + rcv._tab.Pos))
 	}
@@ -540,11 +570,11 @@ func (rcv *Player) Col() Color {
 }
 
 func (rcv *Player) MutateCol(n Color) bool {
-	return rcv._tab.MutateInt8Slot(10, int8(n))
+	return rcv._tab.MutateInt8Slot(14, int8(n))
 }
 
 func PlayerStart(builder *flatbuffers.Builder) {
-	builder.StartObject(4)
+	builder.StartObject(6)
 }
 func PlayerAddPosx(builder *flatbuffers.Builder, posx float32) {
 	builder.PrependFloat32Slot(0, posx, 0.0)
@@ -552,11 +582,17 @@ func PlayerAddPosx(builder *flatbuffers.Builder, posx float32) {
 func PlayerAddPosy(builder *flatbuffers.Builder, posy float32) {
 	builder.PrependFloat32Slot(1, posy, 0.0)
 }
+func PlayerAddMomx(builder *flatbuffers.Builder, momx float32) {
+	builder.PrependFloat32Slot(2, momx, 0.0)
+}
+func PlayerAddMomy(builder *flatbuffers.Builder, momy float32) {
+	builder.PrependFloat32Slot(3, momy, 0.0)
+}
 func PlayerAddSid(builder *flatbuffers.Builder, sid float64) {
-	builder.PrependFloat64Slot(2, sid, 0.0)
+	builder.PrependFloat64Slot(4, sid, 0.0)
 }
 func PlayerAddCol(builder *flatbuffers.Builder, col Color) {
-	builder.PrependInt8Slot(3, int8(col), 0)
+	builder.PrependInt8Slot(5, int8(col), 0)
 }
 func PlayerEnd(builder *flatbuffers.Builder) flatbuffers.UOffsetT {
 	return builder.EndObject()
