@@ -18,8 +18,33 @@ var (
 	minMomentum float32 = 0.1
 )
 
-// PlayerSystem is repsonsible for reading current inputs and moving player
-// and updating interest mapping
+/* PlayerSystem is repsonsible for reading current inputs and moving player
+ and updating interest mapping. It also needs to handle out of order messages
+ as well as dropped messages and delayed messages.
+
+Basically the PS will need to handle resimulating the world up to THRESHOLD times
+per tick.
+
+
+Simple decision flow can be summarized as follows:
+GameTick happens - tick _n_
+<LOCK BUS ENQUEUE (bus should stage for next tick)>
+1. Pull message from bus - messages should be in a list of priorityQueue based on desc tickSeq per player.
+   Messages will contain all actions taken by player between their lastAck and tickSeq
+2. If player's last action was simulated; compare actionWindow for mispredictions; IF MISPREDICT:
+ - We need to resimulate - the question is how can we minimize what we need to resim here.
+ - Worst case - go through all players with simulated actions first; find the lowest tickSeq for mispredictions
+     and then simulate the world entirely from that point until n. Then process the rest of the players
+ - Better case - only resimulate the player and any other entities player interacted with .... seems like this
+     approach will blow up though in dense areas quite quickly. The effort of search here could be overproportional
+     compared to simply resimulating
+3. ElIf message tickSeq >= n; then simulate action based on worldState n and action at N in the actionWindow,
+     stage entity changes
+4. ElIf message tickSeq > n; then skip
+5. ElIf player has no message - simulate player action based on last input
+6. Update player buffer value to send back to player so they can tweak the time dilation on their end
+7. Allow interest system to detect changes related to each player for the tick and send updates.
+*/
 type PlayerSystem struct {
 	BaseSystem
 	events  chan eb.Event
